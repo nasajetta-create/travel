@@ -43,6 +43,89 @@
 --shadow:none;
 --ctFood:#243530;--ctTrans:#243530;--ctStay:#243530;--ctShop:#243530;--ctTix:#243530;--ctDaily:#243530;--ctMisc:#243530;
 }}
+:root[data-skin="white"]{
+--bg:#FFFFFF;--card:#FFFFFF;--cardBd:#E8E8E8;--tx:#1A1A1A;--tx2:#666666;--tx3:#9A9A9A;--line:#F0F0F0;
+--acc:#0F766E;--accBg:#E6F4F1;--accTx:#0B5A50;--accOn:#ffffff;
+--in:#FFFFFF;--inBd:#DDDDDD;--ro:#F7F7F7;
+--dash:#FFFFFF;--dashTx:#1A1A1A;--dashTx2:#999999;--dashAcc:#0F766E;--dashBar:#EDEDED;
+--hdr:#FFFFFF;--hdrTx:#1A1A1A;--shadow:none;
+--ctFood:#F5F5F5;--ctTrans:#F5F5F5;--ctStay:#F5F5F5;--ctShop:#F5F5F5;--ctTix:#F5F5F5;--ctDaily:#F5F5F5;--ctMisc:#F5F5F5;
+}
+:root[data-skin="white"] header{border-bottom:1px solid #EAEAEA}
+:root[data-skin="white"] .dash{border:1px solid #E8E8E8}
+:root[data-skin="sky"]{
+--bg:#F4F7FA;--card:#FFFFFF;--cardBd:rgba(0,0,0,0);--tx:#243342;--tx2:#5D7285;--tx3:#93A7B8;--line:#EDF2F7;
+--acc:#3B82C4;--accBg:#E3F0FB;--accTx:#1E5A8E;--accOn:#ffffff;
+--in:#FFFFFF;--inBd:#D5E1EB;--ro:#EFF4F9;
+--dash:#3B82C4;--dashTx:#ffffff;--dashTx2:#CFE4F7;--dashAcc:#BFE0FF;--dashBar:rgba(255,255,255,.28);
+--hdr:#3B82C4;--hdrTx:#ffffff;--shadow:0 1px 3px rgba(50,90,130,.08);
+--ctFood:#EAF2F9;--ctTrans:#EAF2F9;--ctStay:#EAF2F9;--ctShop:#EAF2F9;--ctTix:#EAF2F9;--ctDaily:#EAF2F9;--ctMisc:#EAF2F9;
+}
+:root[data-skin="matcha"]{
+--bg:#F3F6EF;--card:#FFFFFF;--cardBd:rgba(0,0,0,0);--tx:#2D3A2B;--tx2:#6C7C6A;--tx3:#9BAF9A;--line:#ECF1E6;
+--acc:#6B9080;--accBg:#E3EDE7;--accTx:#3F5D50;--accOn:#ffffff;
+--in:#FFFFFF;--inBd:#D9E2D4;--ro:#EFF3EA;
+--dash:#6B9080;--dashTx:#ffffff;--dashTx2:#D4E5DC;--dashAcc:#CDEBDA;--dashBar:rgba(255,255,255,.28);
+--hdr:#6B9080;--hdrTx:#ffffff;--shadow:0 1px 3px rgba(90,120,100,.08);
+--ctFood:#EDF3EA;--ctTrans:#EDF3EA;--ctStay:#EDF3EA;--ctShop:#EDF3EA;--ctTix:#EDF3EA;--ctDaily:#EDF3EA;--ctMisc:#EDF3EA;
+}
+:root[data-skin="white"][data-theme="dark"]{
+--bg:#111111;--card:#1A1A1A;--cardBd:#262626;--tx:#EDEDED;--tx2:#9A9A9A;--tx3:#666666;--line:#262626;
+--acc:#2DD4A7;--accBg:#12332B;--accTx:#7DE8C9;--accOn:#0B1F19;
+--in:#151515;--inBd:#333333;--ro:#151515;
+--dash:#1A1A1A;--dashTx:#EDEDED;--dashTx2:#777777;--dashAcc:#2DD4A7;--dashBar:#262626;
+--hdr:#161616;--hdrTx:#EDEDED;
+--ctFood:#222222;--ctTrans:#222222;--ctStay:#222222;--ctShop:#222222;--ctTix:#222222;--ctDaily:#222222;--ctMisc:#222222;
+}
+:root[data-skin="sky"][data-theme="dark"]{
+--bg:#0F1620;--card:#182230;--cardBd:#243244;--tx:#E2EAF2;--tx2:#8FA6BA;--tx3:#5F7488;--line:#243244;
+--acc:#63A9E8;--accBg:#1B3450;--accTx:#A8CFF2;--accOn:#0B1826;
+--in:#131C29;--inBd:#2C3E54;--ro:#131C29;
+--dash:#182230;--dashTx:#E2EAF2;--dashTx2:#5F7488;--dashAcc:#63A9E8;--dashBar:#243244;
+--hdr:#131C29;--hdrTx:#E2EAF2;
+--ctFood:#1E2B3C;--ctTrans:#1E2B3C;--ctStay:#1E2B3C;--ctShop:#1E2B3C;--ctTix:#1E2B3C;--ctDaily:#1E2B3C;--ctMisc:#1E2B3C;
+}
+:root[data-skin="matcha"][data-theme="dark"]{
+--bg:#121712;--card:#1B221A;--cardBd:#283226;--tx:#E5EDE2;--tx2:#96A893;--tx3:#5F6F5C;--line:#283226;
+--acc:#8FBCA6;--accBg:#243B2F;--accTx:#BCE0CC;--accOn:#101B14;
+--in:#151B14;--inBd:#33402F;--ro:#151B14;
+--dash:#1B221A;--dashTx:#E5EDE2;--dashTx2:#5F6F5C;--dashAcc:#8FBCA6;--dashBar:#283226;
+--hdr:#151B14;--hdrTx:#E5EDE2;
+--ctFood:#242E22;--ctTrans:#242E22;--ctStay:#242E22;--ctShop:#242E22;--ctTix:#242E22;--ctDaily:#242E22;--ctMisc:#242E22;
+}
+@media (prefers-color-scheme: dark){
+:root[data-skin="white"]:not([data-theme="light"]){
+--bg:#111111;--card:#1A1A1A;--cardBd:#262626;--tx:#EDEDED;--tx2:#9A9A9A;--tx3:#666666;--line:#262626;
+--acc:#2DD4A7;--accBg:#12332B;--accTx:#7DE8C9;--accOn:#0B1F19;
+--in:#151515;--inBd:#333333;--ro:#151515;
+--dash:#1A1A1A;--dashTx:#EDEDED;--dashTx2:#777777;--dashAcc:#2DD4A7;--dashBar:#262626;
+--hdr:#161616;--hdrTx:#EDEDED;
+--ctFood:#222222;--ctTrans:#222222;--ctStay:#222222;--ctShop:#222222;--ctTix:#222222;--ctDaily:#222222;--ctMisc:#222222;
+}
+:root[data-skin="sky"]:not([data-theme="light"]){
+--bg:#0F1620;--card:#182230;--cardBd:#243244;--tx:#E2EAF2;--tx2:#8FA6BA;--tx3:#5F7488;--line:#243244;
+--acc:#63A9E8;--accBg:#1B3450;--accTx:#A8CFF2;--accOn:#0B1826;
+--in:#131C29;--inBd:#2C3E54;--ro:#131C29;
+--dash:#182230;--dashTx:#E2EAF2;--dashTx2:#5F7488;--dashAcc:#63A9E8;--dashBar:#243244;
+--hdr:#131C29;--hdrTx:#E2EAF2;
+--ctFood:#1E2B3C;--ctTrans:#1E2B3C;--ctStay:#1E2B3C;--ctShop:#1E2B3C;--ctTix:#1E2B3C;--ctDaily:#1E2B3C;--ctMisc:#1E2B3C;
+}
+:root[data-skin="matcha"]:not([data-theme="light"]){
+--bg:#121712;--card:#1B221A;--cardBd:#283226;--tx:#E5EDE2;--tx2:#96A893;--tx3:#5F6F5C;--line:#283226;
+--acc:#8FBCA6;--accBg:#243B2F;--accTx:#BCE0CC;--accOn:#101B14;
+--in:#151B14;--inBd:#33402F;--ro:#151B14;
+--dash:#1B221A;--dashTx:#E5EDE2;--dashTx2:#5F6F5C;--dashAcc:#8FBCA6;--dashBar:#283226;
+--hdr:#151B14;--hdrTx:#E5EDE2;
+--ctFood:#242E22;--ctTrans:#242E22;--ctStay:#242E22;--ctShop:#242E22;--ctTix:#242E22;--ctDaily:#242E22;--ctMisc:#242E22;
+}}
+table.st.grid th+th,table.st.grid td+td{border-left:1px solid var(--line)}
+table.st.grid th,table.st.grid td{padding-left:6px;padding-right:6px}
+table.st.grid tr:nth-child(even) td{background:var(--ro)}
+.mclean{background:var(--card);border:1px solid var(--inBd);border-radius:10px;padding:8px 11px;margin-top:6px;display:flex;align-items:center;gap:8px}
+.mclean .cn{font-size:14.5px;font-weight:600}
+.mclean .cs{font-size:11px;color:var(--tx3);margin-top:1px}
+.mclean .cv{font-size:16px;font-weight:700;margin-left:auto;white-space:nowrap}
+.mclean.zero{opacity:.5}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:system-ui,-apple-system,"Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--tx);margin:0;font-size:16px}
 #wrap{max-width:520px;margin:0 auto;min-height:100vh}
@@ -329,8 +412,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 14;
-var VER = 'T0710-14';
+var CODE_VERSION = 15;
+var VER = 'T0710-15';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍜','餐飲'],['trans','🚇','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -372,7 +455,9 @@ var HELPQA = [
  {q:'新旅程怎麼快速建成員？', a:'成員區按「📇 從舊旅程帶入」，勾選要帶入的人，一鍵複製名字、帳戶、徽章、人頭數。', k:'帶入 舊旅程 成員 快速'},
  {q:'App 怎麼更新版本？', a:'有新版時頂部會出現「🔄 有新版本，點此更新」，點了自動重整。也可以手動重新整理頁面。', k:'更新 版本 新版 重整'},
  {q:'成員之間借錢怎麼記？', a:'記一筆最上面切到「💸 借款」：選誰借出、借給誰、金額即可。借款會進結算互相沖抵，但不算進總支出和統計。', k:'借款 借錢 週轉 現金'},
- {q:'轉帳後怎麼對帳核銷？', a:'付款方轉完打勾＝🟡已轉待確認；收款人本人會看到「✅確認收到」鈕（或一鍵核銷），按了才變已核銷。勾錯可在已完成區展開取消。', k:'核銷 對帳 確認收到 已轉'}
+ {q:'轉帳後怎麼對帳核銷？', a:'付款方轉完打勾＝🟡已轉待確認；收款人本人會看到「✅確認收到」鈕（或一鍵核銷），按了才變已核銷。勾錯可在已完成區展開取消。', k:'核銷 對帳 確認收到 已轉'},
+ {q:'畫面上的切換鈕是什麼？', a:'待付卡：「我的/全團」換顯示範圍、「日期/收款人」換分組。結算表：「📋詳細/✨清爽」換表格樣式。統計：📊直條/🧱堆疊/🍩圓餅/🗓️月曆換圖表。旅程頁：上排深淺色、下排主題配色（經典/純白/天藍/抹茶）。全部只影響自己手機。', k:'切換 模式 按鈕 詳細 清爽 主題 全團'},
+ {q:'怎麼換主題配色？', a:'旅程頁最上面第二排：經典（莫蘭迪）、純白、天藍、抹茶四種，跟深淺色可自由組合，只影響這支手機。', k:'主題 配色 皮膚 純白 天藍 抹茶'}
 ];
 
 var S = loadS();
@@ -381,10 +466,13 @@ var editId = null;
 var _ct = null;
 var _convCur = null;
 
-function loadS(){ var s = null; try{ s = JSON.parse(localStorage.getItem(LSKEY)); }catch(e){} if(!s || !s.trips) s = { ver:1, cur:null, trips:{}, rateCache:{} }; if(!s.me) s.me = {}; if(!s.privExp) s.privExp = {}; if(!s.lock) s.lock = {}; if(!s.theme) s.theme = ''; if(!s.chartView) s.chartView = 'donut'; if(!s.cv2){ s.cv2 = 1; s.chartView = 'donut'; } if(!s.pvView) s.pvView = 'date'; if(!s.pvScope) s.pvScope = 'me'; if(!s.dismiss) s.dismiss = {}; return s; }
+function loadS(){ var s = null; try{ s = JSON.parse(localStorage.getItem(LSKEY)); }catch(e){} if(!s || !s.trips) s = { ver:1, cur:null, trips:{}, rateCache:{} }; if(!s.me) s.me = {}; if(!s.privExp) s.privExp = {}; if(!s.lock) s.lock = {}; if(!s.theme) s.theme = ''; if(!s.chartView) s.chartView = 'donut'; if(!s.cv2){ s.cv2 = 1; s.chartView = 'donut'; } if(!s.pvView) s.pvView = 'date'; if(!s.pvScope) s.pvScope = 'me'; if(!s.skin) s.skin = ''; if(!s.tblView) s.tblView = 'detail'; if(!s.dismiss) s.dismiss = {}; return s; }
 function safeName(s){ return String(s || '').replace(/[\\/:*?"<>|]/g, '_'); }
 function money(home, v){ return '<span class="cur">' + home + ' </span>' + fmt(v); }
-function applyTheme(){ document.documentElement.setAttribute('data-theme', S.theme || ''); }
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', S.theme || '');
+  document.documentElement.setAttribute('data-skin', S.skin || '');
+}
 function me(){ return (S.cur && S.me[S.cur]) ? S.me[S.cur] : null; }
 function privList(){ var t = trip(); if(!t) return []; if(!S.privExp[t.code]) S.privExp[t.code] = []; return S.privExp[t.code]; }
 function lockObj(){ if(!S.cur) return {}; if(!S.lock[S.cur]) S.lock[S.cur] = {}; return S.lock[S.cur]; }
@@ -1336,7 +1424,8 @@ function buildPayCard(t, M){
     doneL.forEach(function(it){ html += payRowHtml(t, it, scope === 'all'); });
     html += '</details>';
   }
-  html += '<div class="sumrow" style="margin-top:8px;border-top:1px dashed var(--line);padding-top:6px;font-size:13.5px"><span>待轉合計 <b style="color:var(--warnTx)">' + fmt(pendSum) + '</b></span><span>已轉待確認 ' + fmt(waitSum) + '</span></div></div>';
+  html += '<div class="sumrow" style="margin-top:8px;border-top:1px dashed var(--line);padding-top:6px;font-size:13.5px"><span>待轉合計 <b style="color:var(--warnTx)">' + fmt(pendSum) + '</b></span><span>已轉待確認 ' + fmt(waitSum) + '</span></div>' +
+    '<div class="hint" style="margin-top:4px">切換鈕：「我的/全團」＝顯示範圍｜「日期/收款人」＝分組方式。勾＝已轉帳，收款人再按確認＝核銷。</div></div>';
   return html;
 }
 function bindPay(box, rerender){
@@ -1388,6 +1477,36 @@ function bindPay(box, rerender){
   });
   bindSa(box);
 }
+function tbvSeg(){
+  return '<span class="cseg"><span data-tbv="detail"' + (S.tblView !== 'clean' ? ' class="on"' : '') + '>📋 詳細</span><span data-tbv="clean"' + (S.tblView === 'clean' ? ' class="on"' : '') + '>✨ 清爽</span></span>';
+}
+function memberStatHtml(t, paid, share, opts){
+  opts = opts || {};
+  if(S.tblView === 'clean'){
+    var h = '';
+    t.members.forEach(function(m){
+      var p = paid[m.id] || 0, s = share[m.id] || 0;
+      if(opts.skipZero && p < 0.5 && s < 0.5) return;
+      var b = p - s;
+      var settled = Math.abs(b) < 0.5;
+      h += '<div class="mclean' + (settled && p < 0.5 ? ' zero' : '') + '">' + bdg(m.id, 18) +
+        '<div><div class="cn">' + esc(m.name || '?') + '</div><div class="cs">已付 ' + fmt(p) + '｜應付 ' + fmt(s) + '</div></div>' +
+        '<span class="cv ' + (b > 0.5 ? 'pos' : (b < -0.5 ? 'neg' : '')) + '"' + (settled ? ' style="color:var(--tx3);font-size:13px"' : '') + '>' + (settled ? '結清' : (b > 0 ? '+' : '') + fmt(b)) + '</span></div>';
+    });
+    return h;
+  }
+  var h2 = '<table class="st grid"><tr><th>成員</th>' + (opts.weight ? '<th>人頭</th>' : '') + '<th>已付</th><th>應付</th><th>差額</th></tr>';
+  t.members.forEach(function(m){
+    var p = paid[m.id] || 0, s = share[m.id] || 0;
+    if(opts.skipZero && p < 0.5 && s < 0.5) return;
+    var b = p - s, cls = b > 0.5 ? 'pos' : (b < -0.5 ? 'neg' : ''), sign = b > 0.5 ? '+' : '';
+    var fn = m.famId && famName(t, m.famId);
+    h2 += '<tr><td>' + bdg(m.id, 18) + ' ' + esc(m.name || '?') + (fn ? '<span style="font-size:10px;color:var(--tx3)">·' + esc(fn) + '</span>' : '') + '</td>' +
+      (opts.weight ? '<td>' + weightOf(t, m.id) + '</td>' : '') +
+      '<td>' + fmt(p) + '</td><td>' + fmt(s) + '</td><td class="' + cls + '">' + sign + fmt(b) + '</td></tr>';
+  });
+  return h2 + '</table>';
+}
 function renderSettle(){
   var t = trip();
   var box = document.getElementById('settleBox');
@@ -1407,15 +1526,9 @@ function renderSettle(){
     html += '<div class="card" style="border:2px solid var(--warnBd)"><div class="hint">⚠️ 尚未設定「我是誰」，看不到你的個人待付與提醒。</div>' +
       '<button class="btn sub mini" id="btnGoMe" style="margin-top:6px">去旅程頁設定我是誰 →</button></div>';
   }
-  html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">成員總覽（全程）</div><table class="st"><tr><th>成員</th><th>人頭</th><th>已付</th><th>應付</th><th>差額</th></tr>';
-  t.members.forEach(function(m){
-    var b = (M.overall.paid[m.id] || 0) - (M.overall.share[m.id] || 0);
-    var cls = b > 0.5 ? 'pos' : (b < -0.5 ? 'neg' : '');
-    var sign = b > 0.5 ? '+' : '';
-    var fn = m.famId && famName(t, m.famId);
-    html += '<tr><td>' + bdg(m.id, 18) + ' ' + esc(m.name) + (fn ? '<span style="font-size:10px;color:var(--tx3)">·' + esc(fn) + '</span>' : '') + '</td><td>' + weightOf(t, m.id) + '</td><td>' + fmt(M.overall.paid[m.id] || 0) + '</td><td>' + fmt(M.overall.share[m.id] || 0) + '</td><td class="' + cls + '">' + sign + fmt(b) + '</td></tr>';
-  });
-  html += '</table><div class="hint" style="margin-top:4px">基金入金與基金支付不列入個人已付/應付，於下方基金區塊單獨結算。</div></div>';
+  html += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span class="lbl" style="margin:0;font-weight:600;color:var(--tx)">成員總覽（全程）</span>' + tbvSeg() + '</div>' +
+    memberStatHtml(t, M.overall.paid, M.overall.share, { weight: true }) +
+    '<div class="hint" style="margin-top:6px">📋 詳細＝完整欄位｜✨ 清爽＝只看差額。基金入金與基金支付不列入個人已付/應付，於下方基金區塊單獨結算。</div></div>';
   var tday = todayISO();
   M.days.forEach(function(dy, di){
     var wd = '';
@@ -1424,16 +1537,8 @@ function renderSettle(){
     var open = isToday || (di === 0 && M.days.every(function(d2){ return d2.date !== tday; }));
     var st = dy.done ? '<span class="pos">✅ 已結清 ' + fmt(dy.total) + '</span>' : '<span style="color:var(--warnTx)">未結清 ' + fmt(dy.total) + '</span>';
     html += '<details class="day"' + (open && !dy.done ? ' open' : '') + '><summary><span><span class="arr">▶</span>' + dy.date.slice(5).replace('-','/') + wd + (isToday ? ' 今天' : '') + '</span>' + st + '</summary><div class="dbody">';
-    var anyRow = false, dayTbl = '';
-    t.members.forEach(function(m){
-      var p = dy.calc.paid[m.id] || 0, s = dy.calc.share[m.id] || 0;
-      if(p < 0.5 && s < 0.5) return;
-      anyRow = true;
-      var b = p - s;
-      dayTbl += '<tr><td>' + bdg(m.id, 18) + ' ' + esc(m.name) + '</td><td>' + fmt(p) + '</td><td>' + fmt(s) + '</td>' +
-        '<td class="' + (b > 0.5 ? 'pos' : (b < -0.5 ? 'neg' : '')) + '">' + (b > 0.5 ? '+' : '') + fmt(b) + '</td></tr>';
-    });
-    if(anyRow) html += '<table class="st"><tr><th>成員</th><th>已付</th><th>應付</th><th>差額</th></tr>' + dayTbl + '</table>';
+    var anyRow = t.members.some(function(m){ return (dy.calc.paid[m.id] || 0) > 0.5 || (dy.calc.share[m.id] || 0) > 0.5; });
+    if(anyRow) html += memberStatHtml(t, dy.calc.paid, dy.calc.share, { skipZero: true });
     if(dy.calc.transfers.length){
       dy.calc.transfers.forEach(function(f, i){ html += tfRow(t, dy.calc.units, f, dy.keys[i], true); });
     } else {
@@ -1470,6 +1575,9 @@ function renderSettle(){
   html += '<button class="btn sub" id="btnExport">📋 複製結算文字（貼群組）</button>';
   html += '<button class="btn sub" id="btnReport" style="margin-top:8px">📝 複製旅程總結報告</button>';
   box.innerHTML = html;
+  box.querySelectorAll('[data-tbv]').forEach(function(el){
+    el.onclick = function(){ S.tblView = el.dataset.tbv; saveLocal(); renderSettle(); };
+  });
   bindPay(box, renderSettle);
   var gm = document.getElementById('btnGoMe');
   if(gm) gm.onclick = function(){ go('trip'); toast('到「我是誰」點自己的徽章'); };
@@ -1684,7 +1792,14 @@ function renderTrip(){
     '<span data-th=""' + (S.theme === '' ? ' class="on"' : '') + '>跟隨系統</span>' +
     '<span data-th="light"' + (S.theme === 'light' ? ' class="on"' : '') + '>淺色</span>' +
     '<span data-th="dark"' + (S.theme === 'dark' ? ' class="on"' : '') + '>深色</span>' +
-    '</div></div></div>';
+    '</div></div>' +
+    '<div class="seg" style="margin-top:8px">' +
+    '<span data-sk=""' + (S.skin === '' ? ' class="on"' : '') + '>經典</span>' +
+    '<span data-sk="white"' + (S.skin === 'white' ? ' class="on"' : '') + '>純白</span>' +
+    '<span data-sk="sky"' + (S.skin === 'sky' ? ' class="on"' : '') + '>天藍</span>' +
+    '<span data-sk="matcha"' + (S.skin === 'matcha' ? ' class="on"' : '') + '>抹茶</span>' +
+    '</div>' +
+    '<div class="hint" style="margin-top:5px">上排＝深淺色、下排＝主題配色，可自由組合，只影響這支手機。</div></div>';
   var html = themeCard;
   if(t){
     var ft = fundTotals(t);
@@ -1787,6 +1902,9 @@ function renderTrip(){
   tb.innerHTML = html;
   tb.querySelectorAll('[data-th]').forEach(function(el){
     el.onclick = function(){ S.theme = el.dataset.th; saveLocal(); applyTheme(); renderTrip(); };
+  });
+  tb.querySelectorAll('[data-sk]').forEach(function(el){
+    el.onclick = function(){ S.skin = el.dataset.sk; saveLocal(); applyTheme(); renderTrip(); };
   });
   document.getElementById('btnHelp2').onclick = function(){ go('help'); };
   var lb = document.getElementById('tripsListBox');
@@ -2193,7 +2311,10 @@ window.addEventListener('cloud-ready', function(){
   document.getElementById('btnCopy').onclick = copyAsNew;
   document.getElementById('btnTpl').onclick = saveTpl;
   document.getElementById('btnDel').onclick = delExpense;
-  document.getElementById('hHelp').onclick = function(){ go('help'); };
+  document.getElementById('hHelp').onclick = function(){
+    if(document.getElementById('v-help').classList.contains('act')) go(_helpFrom || 'ledger');
+    else go('help');
+  };
   document.getElementById('btnHelpBack').onclick = function(){ go(_helpFrom || 'ledger'); };
   document.getElementById('hName').parentElement.onclick = function(){
     if(document.getElementById('v-help').classList.contains('act')) go(_helpFrom || 'ledger');
@@ -2267,4 +2388,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0710-14 -->
+<!-- T0710-15 -->
