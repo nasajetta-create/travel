@@ -44,7 +44,7 @@
 --ctFood:#243530;--ctTrans:#243530;--ctStay:#243530;--ctShop:#243530;--ctTix:#243530;--ctDaily:#243530;--ctMisc:#243530;
 }}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:system-ui,-apple-system,"Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--tx);margin:0;font-size:15px}
+body{font-family:system-ui,-apple-system,"Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--tx);margin:0;font-size:16px}
 #wrap{max-width:520px;margin:0 auto;min-height:100vh}
 header{position:sticky;top:0;z-index:10;background:var(--hdr);color:var(--hdrTx);padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
 header .hname{font-size:17px;font-weight:600}
@@ -55,29 +55,29 @@ section.act{display:block}
 .card{background:var(--card);border:1px solid var(--cardBd);border-radius:16px;padding:12px;margin-bottom:10px;box-shadow:var(--shadow)}
 .dash{background:var(--dash);border:1px solid var(--cardBd);border-radius:16px;padding:12px 14px;margin-bottom:10px}
 .dash .drow{display:flex;gap:16px;flex-wrap:wrap}
-.dash .dl{font-size:10.5px;color:var(--dashTx2);margin:0}
-.dash .dv{font-size:17px;font-weight:700;color:var(--dashTx);margin:0}
+.dash .dl{font-size:11.5px;color:var(--dashTx2);margin:0}
+.dash .dv{font-size:18px;font-weight:700;color:var(--dashTx);margin:0}
 .dash .dv.acc{color:var(--dashAcc)}
 .dash .dv.warn{color:#FCD34D}
 .dash .dtag{font-size:10px;background:var(--dashBar);color:var(--dashTx);padding:2px 8px;border-radius:9px}
 .dbar{height:5px;background:var(--dashBar);border-radius:3px;margin-top:7px;overflow:hidden}
 .dbar>div{height:100%;background:var(--dashAcc);border-radius:3px}
 .dbar.over>div{background:#F87171}
-.dnote{font-size:9.5px;color:var(--dashTx2);margin:3px 0 0}
-.lbl{font-size:12px;color:var(--tx2);margin:2px 0 4px}
-input[type=text],input[type=number],input[type=date],select{width:100%;padding:9px 10px;border:1px solid var(--inBd);border-radius:10px;font-size:15px;background:var(--in);color:var(--tx)}
+.dnote{font-size:10.5px;color:var(--dashTx2);margin:3px 0 0}
+.lbl{font-size:13px;color:var(--tx2);margin:2px 0 4px}
+input[type=text],input[type=number],input[type=date],select{width:100%;padding:9px 10px;border:1px solid var(--inBd);border-radius:10px;font-size:16px;background:var(--in);color:var(--tx)}
 input:focus,select:focus{outline:2px solid rgba(15,118,110,.25);border-color:var(--acc)}
 input[type=color]{padding:0;width:30px;height:24px;border:1px solid var(--inBd);border-radius:6px;background:var(--in)}
 .ro{padding:9px 10px;border:1px dashed var(--inBd);border-radius:10px;background:var(--ro);font-size:15px;min-height:39px}
 .row{display:flex;gap:8px;align-items:center}
-.row>*{flex:1}
+.row>*{flex:1;min-width:0}
 .row .fix{flex:0 0 auto}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{display:inline-flex;align-items:center;gap:4px;padding:7px 13px;border-radius:18px;border:1px solid var(--inBd);background:var(--card);font-size:14px;cursor:pointer;user-select:none;color:var(--tx)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:7px 13px;border-radius:18px;border:1px solid var(--inBd);background:var(--card);font-size:15px;cursor:pointer;user-select:none;color:var(--tx)}
 .chip.on{background:var(--accBg);border-color:var(--acc);color:var(--accTx);font-weight:600}
 .chip.pay{background:var(--acc);border-color:var(--acc);color:var(--accOn);font-weight:600}
 .bdg{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;position:relative;user-select:none;flex:0 0 auto}
-.b18{width:18px;height:18px;font-size:9.5px}
+.b18{width:20px;height:20px;font-size:11px}
 .b34{width:36px;height:36px;font-size:15px;cursor:pointer}
 .bdg .gift{position:absolute;top:-6px;right:-6px;font-size:11px}
 .fnote{font-size:11px;color:var(--warnTx);margin:3px 0 0}
@@ -93,16 +93,16 @@ input[type=color]{padding:0;width:30px;height:24px;border:1px solid var(--inBd);
 .exp .ico{width:34px;height:34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto}
 .ct-food{background:var(--ctFood)}.ct-trans{background:var(--ctTrans)}.ct-stay{background:var(--ctStay)}.ct-shop{background:var(--ctShop)}.ct-tix{background:var(--ctTix)}.ct-daily{background:var(--ctDaily)}.ct-misc{background:var(--ctMisc)}
 .exp .mid{flex:1;min-width:0}
-.exp .t1{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.exp .t2{font-size:11px;color:var(--tx3);margin-top:2px;display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.exp .t1{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exp .t2{font-size:12px;color:var(--tx3);margin-top:2px;display:flex;align-items:center;gap:3px;flex-wrap:wrap}
 .exp .amt{text-align:right;flex:0 0 auto}
-.exp .a1{font-size:14px;font-weight:700;color:var(--acc)}
-.exp .a2{font-size:10.5px;color:var(--tx3)}
+.exp .a1{font-size:15px;font-weight:700;color:var(--acc)}
+.exp .a2{font-size:11.5px;color:var(--tx3)}
 .exp .rx{flex:0 0 auto;border:none;background:none;color:var(--tx3);font-size:14px;padding:2px 4px;cursor:pointer}
-.dhead{display:flex;justify-content:space-between;font-size:12px;color:var(--tx3);margin:12px 4px 5px;font-weight:600}
+.dhead{display:flex;justify-content:space-between;font-size:13px;color:var(--tx3);margin:12px 4px 5px;font-weight:600}
 .sumrow{display:flex;justify-content:space-between;padding:3px 0;font-size:14px}
-table.st{width:100%;border-collapse:collapse;font-size:13px}
-table.st th{font-weight:400;color:var(--tx2);font-size:11.5px;text-align:right;padding:4px 2px;border-bottom:1px solid var(--line)}
+table.st{width:100%;border-collapse:collapse;font-size:14px}
+table.st th{font-weight:400;color:var(--tx2);font-size:12.5px;text-align:right;padding:4px 2px;border-bottom:1px solid var(--line)}
 table.st th:first-child,table.st td:first-child{text-align:left}
 table.st td{text-align:right;padding:5px 2px;border-bottom:1px solid var(--line)}
 .pos{color:#059669;font-weight:600}
@@ -111,9 +111,9 @@ table.st td{text-align:right;padding:5px 2px;border-bottom:1px solid var(--line)
 :root[data-theme="dark"] .neg{color:#F87171}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pos{color:#34D399}:root:not([data-theme="light"]) .neg{color:#F87171}}
 .tf{display:flex;justify-content:space-between;align-items:center;background:var(--ro);border:1px solid var(--inBd);border-radius:12px;padding:8px 10px;margin-top:6px;gap:8px}
-.tf .who{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:4px}
-.tf .bank{font-size:11px;color:var(--tx2);margin-top:2px}
-.tf .amt{font-size:14.5px;font-weight:700;color:var(--acc)}
+.tf .who{font-size:14.5px;font-weight:600;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.tf .bank{font-size:12px;color:var(--tx2);margin-top:2px}
+.tf .amt{font-size:15.5px;font-weight:700;color:var(--acc)}
 .tf.done .who,.tf.done .amt{text-decoration:line-through;opacity:.5}
 .tf input[type=checkbox]{width:19px;height:19px;flex:0 0 auto}
 details.day{background:var(--card);border:1px solid var(--cardBd);border-radius:14px;margin-bottom:8px;box-shadow:var(--shadow)}
@@ -123,8 +123,8 @@ details.day>summary .arr{color:var(--tx3);margin-right:6px;font-size:11px}
 details.day[open]>summary .arr{transform:rotate(90deg);display:inline-block}
 details.day .dbody{padding:0 12px 11px}
 nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
-nav button{flex:1;border:none;background:none;padding:8px 0 7px;font-size:11px;color:var(--tx3);cursor:pointer}
-nav button .nico{display:block;font-size:19px;margin-bottom:1px}
+nav button{flex:1;border:none;background:none;padding:8px 0 7px;font-size:12px;color:var(--tx3);cursor:pointer}
+nav button .nico{display:block;font-size:21px;margin-bottom:1px}
 nav button.on{color:var(--acc);font-weight:700}
 .mgrp{border-bottom:1px dashed var(--line);padding:7px 0}
 .mrow{display:flex;gap:6px;align-items:center}
@@ -137,16 +137,16 @@ nav button.on{color:var(--acc);font-weight:700}
 .mrow2 input[type=number]{width:56px;padding:4px 6px;font-size:13px}
 .mrow2 input[type=text]{width:44px;padding:4px 6px;font-size:13px;text-align:center}
 .mrow2 select{width:auto;padding:4px 6px;font-size:13px}
-.hint{font-size:12px;color:var(--tx2);line-height:1.55}
+.hint{font-size:13px;color:var(--tx2);line-height:1.55}
 .codebox{display:flex;align-items:center;gap:8px;background:var(--accBg);border:1px dashed var(--acc);border-radius:12px;padding:9px 12px}
 .codebox b{font-size:20px;letter-spacing:3px;color:var(--accTx);font-family:ui-monospace,monospace}
 .tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:9px;background:var(--accBg);color:var(--accTx)}
 .tag.warn{background:var(--warnBg);color:var(--warnTx)}
 .hbar{height:14px;background:var(--ro);border-radius:7px;overflow:hidden;flex:1}
 .hbar>div{height:100%;border-radius:7px}
-.srow{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px}
-.srow .sl{flex:0 0 84px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.srow .sv{flex:0 0 auto;color:var(--tx2);font-size:12px;min-width:76px;text-align:right}
+.srow{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:14px}
+.srow .sl{flex:0 0 92px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow .sv{flex:0 0 auto;color:var(--tx2);font-size:13px;min-width:80px;text-align:right}
 .cols{display:flex;align-items:flex-end;gap:3px;height:110px;margin-top:8px}
 .cols .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
 .cols .cbar{width:100%;background:var(--acc);border-radius:3px 3px 0 0;min-height:2px}
@@ -165,18 +165,25 @@ nav button.on{color:var(--acc);font-weight:700}
 .banner .bt{font-size:12.5px;color:var(--warnTx)}
 .banner .bx{border:none;background:none;color:var(--warnTx);font-size:15px;cursor:pointer;padding:2px 4px}
 .heatg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:8px}
-.heatg .hc{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer}
-.heatg .hl{font-size:9.5px;color:var(--tx3);text-align:center}
+.heatg .hc{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer}
+.heatg .hl{font-size:10.5px;color:var(--tx3);text-align:center}
 .donutw{display:flex;align-items:center;gap:14px;margin-top:8px}
 .donut{width:130px;height:130px;border-radius:50%;position:relative;flex:0 0 auto}
 .donut .dc{position:absolute;inset:26px;border-radius:50%;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center}
 .cseg{display:flex;gap:2px;border:1px solid var(--inBd);border-radius:8px;overflow:hidden}
-.cseg span{padding:3px 8px;font-size:12px;cursor:pointer;background:var(--card);color:var(--tx3)}
+.cseg span{padding:3px 8px;font-size:13px;cursor:pointer;background:var(--card);color:var(--tx3)}
 .cseg span.on{background:var(--acc);color:var(--accOn)}
 .qa{border-bottom:1px solid var(--line);padding:9px 2px}
 .qa:last-child{border-bottom:none}
-.qa .q{font-size:14px;font-weight:600;margin:0}
-.qa .a{font-size:13px;color:var(--tx2);margin:4px 0 0;line-height:1.6}
+.qa .q{font-size:15px;font-weight:600;margin:0}
+.qa .a{font-size:14px;color:var(--tx2);margin:4px 0 0;line-height:1.6}
+.mcard{background:var(--card);border:1px solid var(--inBd);border-radius:12px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:9px;cursor:pointer}
+.mcard .mn1{font-size:15px;font-weight:600}
+.mcard .mn2{font-size:12px;color:var(--tx2);margin-top:1px}
+.mcard.edit{border:2px solid var(--acc);cursor:default;display:block}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:60}
+.modal.on{display:flex}
+.mbox{background:var(--card);border-radius:16px;padding:16px;width:86%;max-width:340px}
 </style>
 </head>
 <body>
@@ -221,13 +228,11 @@ nav button.on{color:var(--acc);font-weight:700}
       <div><div class="lbl">消費幣別</div><select id="eCur"></select></div>
       <div style="flex:1.5"><div class="lbl">消費金額</div><input type="number" id="eAmt" inputmode="decimal" placeholder="0"><div class="fnote" id="feeNote" style="display:none"></div></div>
     </div>
-    <div class="row" style="margin-top:8px;align-items:flex-start">
-      <div><div class="lbl">匯率（1 消費幣 = ? 主幣）</div>
-        <div class="row" style="gap:6px"><input type="number" id="eRate" inputmode="decimal" step="any"><button class="btn sub mini fix" id="btnRate">抓當日</button></div>
-      </div>
-      <div><div class="lbl">信用卡手續費</div>
-        <div class="row" style="gap:6px"><label class="fix" style="display:flex;align-items:center;gap:4px;font-size:13.5px"><input type="checkbox" id="eCard" style="width:17px;height:17px">刷卡</label><input type="number" id="eFee" inputmode="decimal" step="any" placeholder="%"></div>
-      </div>
+    <div style="margin-top:8px"><div class="lbl">匯率（1 消費幣 = ? 主幣）</div>
+      <div class="row" style="gap:6px"><input type="number" id="eRate" inputmode="decimal" step="any"><button class="btn sub mini fix" id="btnRate">抓當日</button></div>
+    </div>
+    <div style="margin-top:8px"><div class="lbl">信用卡手續費</div>
+      <div class="row" style="gap:6px"><label class="fix" style="display:flex;align-items:center;gap:5px;font-size:14.5px"><input type="checkbox" id="eCard" style="width:18px;height:18px">刷卡</label><input type="number" id="eFee" inputmode="decimal" step="any" placeholder="%" style="flex:0 0 90px"><span class="fix" style="font-size:13px;color:var(--tx2)">%</span><span style="flex:1"></span></div>
     </div>
     <div class="hint" id="rateInfo"></div>
     <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-top:6px;color:var(--tx2)"><input type="checkbox" id="eLock" style="width:16px;height:16px">🔒 鎖定幣別與匯率（連續記帳不重抓、不重選）</label>
@@ -268,7 +273,7 @@ nav button.on{color:var(--acc);font-weight:700}
 
 <section id="v-help">
   <div class="card">
-    <div class="lbl" style="font-weight:600;color:var(--tx)">❓ 使用說明</div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><span class="lbl" style="margin:0;font-weight:600;color:var(--tx)">❓ 使用說明</span><button class="btn sub mini" id="btnHelpBack">← 返回</button></div>
     <input type="text" id="helpQ" placeholder="輸入問題關鍵字，例：請客、匯率、基金、小孩…">
   </div>
   <div class="card" id="helpList"></div>
@@ -289,6 +294,11 @@ nav button.on{color:var(--acc);font-weight:700}
   <button id="nb-trip" onclick="go('trip')"><span class="nico">🧳</span>旅程</button>
 </nav>
 <div id="toast"></div>
+<div class="modal" id="acctModal"><div class="mbox">
+  <div id="amTitle" style="font-size:16px;font-weight:600;margin-bottom:10px"></div>
+  <div class="codebox" style="margin-bottom:12px"><b id="amAcct" style="font-size:17px;letter-spacing:1px;word-break:break-all;line-height:1.5"></b></div>
+  <div class="row"><button class="btn mini" id="amCopy" style="flex:1">📋 複製帳號</button><button class="btn sub mini" id="amClose" style="flex:1">關閉</button></div>
+</div></div>
 <input type="file" id="impFile" accept=".json,application/json" style="display:none">
 </div>
 <script>
@@ -317,8 +327,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 8;
-var VER = 'T0710-08';
+var CODE_VERSION = 9;
+var VER = 'T0710-09';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍜','餐飲'],['trans','🚇','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -396,7 +406,12 @@ function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
 function fmt2(n){ return (Math.round(n*100)/100).toLocaleString('en-US'); }
 function catInfo(id){ for(var i=0;i<CATS.length;i++){ if(CATS[i][0]===id) return CATS[i]; } return CATS[CATS.length-1]; }
 function member(id){ var t = trip(); if(!t) return null; for(var i=0;i<t.members.length;i++){ if(t.members[i].id===id) return t.members[i]; } return null; }
-function mname(id){ if(id === FUND) return '🏦基金'; var m = member(id); return m ? m.name : '?'; }
+function mname(id){ if(id === FUND) return '🏦基金'; var m = member(id); return m ? (m.name || '?') : '?'; }
+function roundRate(r){
+  r = Number(r) || 0;
+  if(r >= 0.01) return Math.round(r * 10000) / 10000;
+  return Number(r.toPrecision(2));
+}
 function bchar(id){ var m = member(id); if(!m) return '?'; return (m.badge || (m.name || '?').charAt(0) || '?'); }
 function bcolor(id){ var t = trip(); if(!t) return PALETTE[0]; for(var i=0;i<t.members.length;i++){ if(t.members[i].id===id) return t.members[i].color || PALETTE[i % PALETTE.length]; } return PALETTE[0]; }
 function bdg(id, size, extra){
@@ -412,6 +427,14 @@ function copyText(s, msg){
   else fbCopy(s, msg);
 }
 function fbCopy(s, msg){ var ta = document.createElement('textarea'); ta.value = s; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); toast(msg||'已複製'); }catch(e){ toast('複製失敗'); } document.body.removeChild(ta); }
+var _amBank = '';
+function showAcct(name, bank){
+  if(!bank){ toast(name + ' 尚未登記帳戶（到旅程頁成員卡補）'); return; }
+  _amBank = bank;
+  document.getElementById('amTitle').textContent = name + ' 的收款帳戶';
+  document.getElementById('amAcct').textContent = bank;
+  document.getElementById('acctModal').classList.add('on');
+}
 function dl(name, content, mime){
   var a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([content], { type: mime || 'text/plain;charset=utf-8' }));
@@ -465,7 +488,12 @@ function fundTotals(t){
 }
 
 /* ───── 導覽 ───── */
+var _helpFrom = 'ledger';
 function go(v){
+  if(v === 'help'){
+    var cur = document.querySelector('section.act');
+    if(cur && cur.id !== 'v-help') _helpFrom = cur.id.slice(2);
+  }
   ['ledger','add','settle','stats','trip','help'].forEach(function(k){
     document.getElementById('v-'+k).classList.toggle('act', k===v);
     var nb = document.getElementById('nb-'+k);
@@ -728,12 +756,12 @@ function fetchRateFor(cur, home, date, ok, fail){
   var u = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@' + d + '/v1/currencies/' + cur.toLowerCase() + '.json';
   fetch(u).then(function(r){ return r.json(); }).then(function(j){
     var v = j && j[cur.toLowerCase()] && j[cur.toLowerCase()][home.toLowerCase()];
-    if(v) ok(Math.round(v * 1000000) / 1000000); else fail();
+    if(v) ok(roundRate(v)); else fail();
   }).catch(function(){
     if(d === 'latest'){
       fetch('https://open.er-api.com/v6/latest/' + cur).then(function(r){ return r.json(); }).then(function(j){
         var v = j && j.rates && j.rates[home];
-        if(v) ok(Math.round(v * 1000000) / 1000000); else fail();
+        if(v) ok(roundRate(v)); else fail();
       }).catch(fail);
     } else fail();
   });
@@ -775,7 +803,7 @@ function dupCheck(e){
 }
 function saveExpense(){
   var t = trip(); if(!t) return;
-  var amt = Number(F.amt), rate = Number(F.rate);
+  var amt = Number(F.amt), rate = roundRate(F.rate);
   if(!(amt > 0)){ toast('請輸入消費金額'); return; }
   if(!(rate > 0)){ toast('請輸入匯率（可按「抓當日」）'); return; }
   var treated = F.treat.filter(function(id){ return F.split.indexOf(id) >= 0; });
@@ -1101,13 +1129,16 @@ function settleModel(t){
   var overall = calcOver(t, ges);
   return { totalSpend: totalSpend, settled: settled, unsettled: totalSpend - settled, days: days, finalCalc: finalCalc, ft: ft, refunds: refunds, overall: overall };
 }
+function saTag(name, bank){
+  return 'data-sa="' + encodeURIComponent(name) + '|' + encodeURIComponent(bank || '') + '" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px"';
+}
 function tfRow(t, units, f, key, showBank){
   var done = !!t.tfDone[key];
   var toU = units[f.to], fromU = units[f.from];
   var fromB = fromU.solo ? bdg(fromU.solo, 18) + ' ' : '';
   var toB = toU.solo ? bdg(toU.solo, 18) + ' ' : '';
   return '<div class="tf' + (done ? ' done' : '') + '"><input type="checkbox" data-tfk="' + key + '"' + (done ? ' checked' : '') + '>' +
-    '<div style="flex:1"><div class="who">' + fromB + esc(fromU.name) + ' → ' + toB + esc(toU.name) + '</div>' +
+    '<div style="flex:1"><div class="who">' + fromB + esc(fromU.name) + ' → <span ' + saTag(toU.name, toU.bank) + '>' + toB + esc(toU.name) + '</span></div>' +
     (showBank ? (toU.bank ? '<div class="bank">收款：' + esc(toU.bank) + ' <button class="btn sub mini" data-cpb="' + esc(toU.bank) + '|' + esc(toU.name) + '" style="padding:2px 8px;font-size:12px">複製帳號</button></div>'
                           : '<div class="bank">（' + esc(toU.name) + ' 尚未登記帳戶）</div>') : '') +
     '</div><div class="amt">' + money(t.home, f.amt) + '</div></div>';
@@ -1136,7 +1167,7 @@ function renderSettle(){
         myUnpaid += f.amt;
         var toU = dy.calc.units[f.to];
         myRows += '<div class="tf"><input type="checkbox" data-tfk="' + dy.keys[i] + '">' +
-          '<div style="flex:1"><div class="who">' + dy.date.slice(5).replace('-','/') + '　→ ' + (toU.solo ? bdg(toU.solo, 18) + ' ' : '') + esc(toU.name) + '</div>' +
+          '<div style="flex:1"><div class="who">' + dy.date.slice(5).replace('-','/') + '　→ <span ' + saTag(toU.name, toU.bank) + '>' + (toU.solo ? bdg(toU.solo, 18) + ' ' : '') + esc(toU.name) + '</span></div>' +
           (toU.bank ? '<div class="bank">收款：' + esc(toU.bank) + ' <button class="btn sub mini" data-cpb="' + esc(toU.bank) + '|' + esc(toU.name) + '" style="padding:2px 8px;font-size:12px">複製帳號</button></div>' : '') +
           '</div><div class="amt">' + money(t.home, f.amt) + '</div></div>';
       });
@@ -1189,7 +1220,7 @@ function renderSettle(){
     html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">總結算（未結清部分合併）</div>';
     M.finalCalc.transfers.forEach(function(f){
       var toU = M.finalCalc.units[f.to], fromU = M.finalCalc.units[f.from];
-      html += '<div class="tf"><div style="flex:1"><div class="who">' + (fromU.solo ? bdg(fromU.solo,18)+' ' : '') + esc(fromU.name) + ' → ' + (toU.solo ? bdg(toU.solo,18)+' ' : '') + esc(toU.name) + '</div>' +
+      html += '<div class="tf"><div style="flex:1"><div class="who">' + (fromU.solo ? bdg(fromU.solo,18)+' ' : '') + esc(fromU.name) + ' → <span ' + saTag(toU.name, toU.bank) + '>' + (toU.solo ? bdg(toU.solo,18)+' ' : '') + esc(toU.name) + '</span></div>' +
         (toU.bank ? '<div class="bank">收款：' + esc(toU.bank) + '</div>' : '') +
         '</div><div class="amt">' + money(t.home, f.amt) + '</div></div>';
     });
@@ -1218,6 +1249,13 @@ function renderSettle(){
       if(cb.checked) t.tfDone[cb.dataset.tfk] = { ts: Date.now() };
       else delete t.tfDone[cb.dataset.tfk];
       bumpMeta(); saveLocal(); pushCloud(); renderSettle();
+    };
+  });
+  box.querySelectorAll('[data-sa]').forEach(function(el){
+    el.onclick = function(ev){
+      ev.stopPropagation();
+      var p = el.dataset.sa.split('|');
+      showAcct(decodeURIComponent(p[0]), decodeURIComponent(p[1] || ''));
     };
   });
   box.querySelectorAll('[data-cpb]').forEach(function(el){
@@ -1379,10 +1417,10 @@ function renderStats(){
     } else if(cv === 'heat'){
       var hshow = days.slice(-35);
       var first = hshow[0];
-      var lead = new Date(first + 'T00:00:00').getDay();
+      var lead = (new Date(first + 'T00:00:00').getDay() + 6) % 7;
       var maxH = 1; hshow.forEach(function(d){ if(byDay[d] > maxH) maxH = byDay[d]; });
-      var dmap = {}; hshow.forEach(function(d){ dmap[d] = true; });
-      html += '<div class="heatg">' + WD.map(function(w){ return '<div class="hl">' + w + '</div>'; }).join('');
+      var HWD = ['一','二','三','四','五','六','日'];
+      html += '<div class="heatg">' + HWD.map(function(w){ return '<div class="hl">' + w + '</div>'; }).join('');
       for(var li = 0; li < lead; li++) html += '<div></div>';
       var cur2 = new Date(first + 'T00:00:00');
       var last = new Date(hshow[hshow.length - 1] + 'T00:00:00');
@@ -1424,6 +1462,7 @@ function renderStats(){
 }
 
 /* ───── 旅程 ───── */
+var _memEdit = null;
 function famCleanup(t){ t.families = t.families.filter(function(f){ return t.members.some(function(m){ return m.famId === f.id; }); }); }
 function renderTrip(){
   var t = trip();
@@ -1456,18 +1495,32 @@ function renderTrip(){
       '<div class="hint" style="margin-bottom:6px">⚠️ 成員名單要包含<b>你自己</b>（整團所有人，含小孩）。人頭數：大人 1、小孩可設 0.5（兩位小孩＝一位大人）、不分攤設 0。部分參加＝只參加部分行程，記帳時預設不勾。</div><div id="memberBox">';
     t.members.forEach(function(m, mi){
       var used = t.expenses.some(function(e){ return !e._del && (e.payer === m.id || (e.split || []).indexOf(m.id) >= 0); });
-      html += '<div class="mgrp"><div class="mrow">' + bdg(m.id, 18) +
-        '<input type="text" class="mn" data-f="name" data-m="' + m.id + '" value="' + esc(m.name) + '" placeholder="名字">' +
-        '<input type="text" class="mb" data-f="bank" data-m="' + m.id + '" value="' + esc(m.bank || '') + '" placeholder="銀行/代碼">' +
-        '<input type="text" class="ma" data-f="acct" data-m="' + m.id + '" value="' + esc(m.acct || '') + '" placeholder="帳號">' +
-        '<button class="mx" data-del="' + m.id + '"' + (used ? ' data-used="1"' : '') + '>✕</button></div>' +
-        '<div class="mrow2">代表字 <input type="text" maxlength="2" data-bg="' + m.id + '" value="' + esc(bchar(m.id)) + '">' +
-        '<input type="color" data-col="' + m.id + '" value="' + bcolor(m.id) + '" title="徽章顏色">' +
-        '人頭數 <input type="number" step="0.5" min="0" data-w="' + m.id + '" value="' + weightOf(t, m.id) + '">' +
-        '<label style="display:flex;align-items:center;gap:3px"><input type="checkbox" data-cas="' + m.id + '"' + (m.casual ? ' checked' : '') + '>部分參加</label>' +
-        '戶 <select data-fam="' + m.id + '"><option value="">個人</option>' +
-        t.families.map(function(f){ return '<option value="' + f.id + '"' + (m.famId === f.id ? ' selected' : '') + '>' + esc(f.name) + '</option>'; }).join('') +
-        '<option value="_new">＋新增家庭…</option></select></div></div>';
+      if(_memEdit === m.id){
+        html += '<div class="mcard edit"><div style="display:flex;align-items:center;gap:9px">' + bdg(m.id, 18) +
+          '<input type="text" data-f="name" data-m="' + m.id + '" value="' + esc(m.name) + '" placeholder="輸入名字" style="flex:1;font-weight:600">' +
+          '<button class="mx" data-del="' + m.id + '"' + (used ? ' data-used="1"' : '') + '>🗑️</button></div>' +
+          '<div class="lbl" style="margin-top:10px">收款帳戶（結算轉帳用）</div>' +
+          '<div class="row" style="gap:6px"><input type="text" data-f="bank" data-m="' + m.id + '" value="' + esc(m.bank || '') + '" placeholder="銀行/代碼" style="flex:0 0 36%">' +
+          '<input type="text" data-f="acct" data-m="' + m.id + '" value="' + esc(m.acct || '') + '" placeholder="帳號" inputmode="numeric"></div>' +
+          '<div class="lbl" style="margin-top:10px">徽章與分攤</div>' +
+          '<div class="mrow2" style="font-size:13.5px">代表字 <input type="text" maxlength="2" data-bg="' + m.id + '" value="' + esc(bchar(m.id)) + '" style="width:52px;text-align:center">' +
+          '<input type="color" data-col="' + m.id + '" value="' + bcolor(m.id) + '" title="徽章顏色">' +
+          '人頭數 <input type="number" step="0.5" min="0" data-w="' + m.id + '" value="' + weightOf(t, m.id) + '" style="width:64px"></div>' +
+          '<div class="mrow2" style="font-size:13.5px;margin-top:8px"><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" data-cas="' + m.id + '"' + (m.casual ? ' checked' : '') + ' style="width:17px;height:17px">部分參加</label>' +
+          '戶 <select data-fam="' + m.id + '"><option value="">個人</option>' +
+          t.families.map(function(f){ return '<option value="' + f.id + '"' + (m.famId === f.id ? ' selected' : '') + '>' + esc(f.name) + '</option>'; }).join('') +
+          '<option value="_new">＋新增家庭…</option></select></div>' +
+          '<button class="btn mini" data-mdone="1" style="width:100%;margin-top:12px">完成</button></div>';
+      } else {
+        var fn2 = m.famId && famName(t, m.famId);
+        var meta = '人頭 ' + weightOf(t, m.id) + ' · ' + (fn2 ? esc(fn2) : '個人') +
+          (m.casual ? ' · 部分參加' : '') + ' · ' +
+          ((m.bank || m.acct) ? '<span style="color:#059669">帳戶✓</span>' : '<span style="color:var(--warnTx)">未登記帳戶</span>');
+        html += '<div class="mcard" data-medit="' + m.id + '">' + bdg(m.id, 18) +
+          '<div style="flex:1;min-width:0"><div class="mn1">' + (m.name ? esc(m.name) : '<span style="color:var(--tx3)">未命名，點我編輯</span>') + '</div>' +
+          '<div class="mn2">' + meta + '</div></div>' +
+          '<span style="color:var(--tx3);font-size:14px">✏️</span></div>';
+      }
     });
     html += '</div><button class="btn sub mini" id="btnAddM" style="margin-top:6px">＋ 新增成員</button>' +
       '<div class="hint" style="margin-top:6px">帳戶只給團內結算轉帳用，會同步給同旅程的旅伴看到。同一「戶」的成員結算時合併轉帳。</div>' +
@@ -1502,7 +1555,7 @@ function renderTrip(){
     }
     html += '<div class="lbl" style="margin-top:8px">＋新增入金（這筆錢由誰出資）</div>' +
       '<div class="row"><select id="fcMid" style="flex:0 0 auto;width:auto">' +
-      t.members.map(function(m){ return '<option value="' + m.id + '">' + esc(m.name) + '</option>'; }).join('') +
+      t.members.map(function(m){ return '<option value="' + m.id + '">' + esc(m.name || '?') + '</option>'; }).join('') +
       '</select><input type="date" id="fcDate" value="' + todayISO() + '" style="flex:0 0 auto;width:auto">' +
       '<input type="number" id="fcAmt" inputmode="decimal" placeholder="金額（' + t.home + '）">' +
       '<button class="btn mini fix" id="btnFc">＋入金</button></div>' +
@@ -1579,7 +1632,18 @@ function renderTrip(){
     document.getElementById('tBudT').onchange = function(){ t.budget.total = Number(this.value) || 0; bumpMeta(); save(); };
     document.getElementById('tBudD').onchange = function(){ t.budget.daily = Number(this.value) || 0; bumpMeta(); save(); };
     document.getElementById('btnCpCode').onclick = function(){ copyText(t.code, '已複製旅程代碼'); };
-    document.getElementById('btnAddM').onclick = function(){ t.members.push({ id: uid(), name: '成員' + (t.members.length + 1), bank: '', acct: '', weight: 1, casual: false, famId: null }); bumpMeta(); save(); };
+    document.getElementById('btnAddM').onclick = function(){
+      var nid = uid();
+      t.members.push({ id: nid, name: '', bank: '', acct: '', weight: 1, casual: false, famId: null });
+      _memEdit = nid;
+      bumpMeta(); save();
+    };
+    tb.querySelectorAll('[data-medit]').forEach(function(el){
+      el.onclick = function(){ _memEdit = el.dataset.medit; renderTrip(); };
+    });
+    tb.querySelectorAll('[data-mdone]').forEach(function(el){
+      el.onclick = function(){ _memEdit = null; renderTrip(); };
+    });
     tb.querySelectorAll('[data-me]').forEach(function(el){
       el.onclick = function(){ S.me[t.code] = el.dataset.me; saveLocal(); renderTrip(); toast('這支手機＝' + mname(el.dataset.me)); };
     });
@@ -1637,6 +1701,7 @@ function renderTrip(){
         if(btn.dataset.used){ toast('這位成員已有帳務紀錄，不能刪'); return; }
         if(!confirm('刪除成員 ' + mname(btn.dataset.del) + '？')) return;
         t.members = t.members.filter(function(m){ return m.id !== btn.dataset.del; });
+        if(_memEdit === btn.dataset.del) _memEdit = null;
         famCleanup(t); bumpMeta(); save();
       };
     });
@@ -1847,6 +1912,13 @@ window.addEventListener('cloud-ready', function(){
   document.getElementById('btnTpl').onclick = saveTpl;
   document.getElementById('btnDel').onclick = delExpense;
   document.getElementById('hHelp').onclick = function(){ go('help'); };
+  document.getElementById('btnHelpBack').onclick = function(){ go(_helpFrom || 'ledger'); };
+  document.getElementById('hName').parentElement.onclick = function(){
+    if(document.getElementById('v-help').classList.contains('act')) go(_helpFrom || 'ledger');
+  };
+  document.getElementById('amClose').onclick = function(){ document.getElementById('acctModal').classList.remove('on'); };
+  document.getElementById('amCopy').onclick = function(){ copyText(_amBank, '已複製帳號'); };
+  document.getElementById('acctModal').onclick = function(ev){ if(ev.target === this) this.classList.remove('on'); };
   document.getElementById('helpQ').oninput = renderHelp;
   document.getElementById('impFile').onchange = function(){
     if(this.files && this.files[0]) importBackup(this.files[0]);
