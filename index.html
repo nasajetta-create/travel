@@ -212,10 +212,11 @@ nav button.on{color:var(--acc);font-weight:700}
     <div class="hint" id="tplHint" style="margin-top:6px;display:none">✕＝刪除常用｜虛線框＝最近記過自動出現，按 ➕ 收藏成常用</div>
   </div>
   <div class="card">
+    <div class="seg" id="kindSeg" style="margin-bottom:10px"><span data-kind="exp" class="on">🧾 消費</span><span data-kind="loan">💸 借款</span></div>
     <div><div class="lbl">日期</div><input type="date" id="eDate"></div>
     <div style="margin-top:8px"><div class="lbl">項目</div><input type="text" id="eDesc" placeholder="輸入項目名稱"></div>
-    <div class="lbl" style="margin-top:8px">類別</div>
-    <div class="chips" id="catChips"></div>
+    <div id="catBlock"><div class="lbl" style="margin-top:8px">類別</div>
+    <div class="chips" id="catChips"></div></div>
   </div>
   <div class="card">
     <div class="row">
@@ -236,15 +237,15 @@ nav button.on{color:var(--acc);font-weight:700}
     <div class="hint" id="convHint" style="margin-top:4px"></div>
   </div>
   <div class="card">
-    <label style="display:flex;align-items:center;gap:8px;font-size:14.5px;margin-bottom:10px"><input type="checkbox" id="ePriv" style="width:18px;height:18px">🔒 私人帳（只存自己手機、不同步、不進團體結算）</label>
+    <label id="privRow" style="display:flex;align-items:center;gap:8px;font-size:14.5px;margin-bottom:10px"><input type="checkbox" id="ePriv" style="width:18px;height:18px">🔒 私人帳（只存自己手機、不同步、不進團體結算）</label>
     <div id="splitWrap">
-    <div class="lbl">誰先付</div>
+    <div class="lbl" id="lblPayer">誰先付</div>
     <div class="chips" id="payerChips"></div>
-    <div class="lbl" style="margin-top:10px">分攤（點一下＝分攤 → 再點＝被請客🎁 → 再點＝不參與）</div>
+    <div class="lbl" style="margin-top:10px" id="lblSplit">分攤（點一下＝分攤 → 再點＝被請客🎁 → 再點＝不參與）</div>
     <div class="chips" id="splitChips"></div>
     <div id="treatByBox"></div>
-    <div class="hint" style="margin-top:6px">「被請客」＝這個人的份由「請客人」吸收，請客人預設是付款人、可以改。分攤照人頭數權重計算。</div>
-    <div class="row" style="margin-top:10px">
+    <div class="hint" style="margin-top:6px" id="splitHint">「被請客」＝這個人的份由「請客人」吸收，請客人預設是付款人、可以改。分攤照人頭數權重計算。</div>
+    <div class="row" style="margin-top:10px" id="modeRow">
       <div><div class="lbl">分法</div><select id="eMode"><option value="avg">均分（按人頭數）</option><option value="custom">自訂各人金額（消費幣別）</option></select></div>
     </div>
     <div id="customBox" style="margin-top:8px"></div>
@@ -328,8 +329,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 11;
-var VER = 'T0710-11';
+var CODE_VERSION = 12;
+var VER = 'T0710-12';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍜','餐飲'],['trans','🚇','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -369,7 +370,9 @@ var HELPQA = [
  {q:'常用項目怎麼管理？', a:'記一筆頂部的常用項目點一下帶入。按「編輯」：✕ 刪除常用、虛線框是最近記過的，按 ➕ 收藏成常用。也可在填完一筆時按「存成常用項目」。', k:'常用 模板 收藏 編輯'},
  {q:'怎麼快速轉帳給別人？', a:'結算或帳本的「你的待付」點收款人名字，會彈出他的銀行代碼與帳號，按複製只會複製帳號數字，直接貼到網銀。轉完打勾。', k:'轉帳 帳號 複製 網銀 待付'},
  {q:'新旅程怎麼快速建成員？', a:'成員區按「📇 從舊旅程帶入」，勾選要帶入的人，一鍵複製名字、帳戶、徽章、人頭數。', k:'帶入 舊旅程 成員 快速'},
- {q:'App 怎麼更新版本？', a:'有新版時頂部會出現「🔄 有新版本，點此更新」，點了自動重整。也可以手動重新整理頁面。', k:'更新 版本 新版 重整'}
+ {q:'App 怎麼更新版本？', a:'有新版時頂部會出現「🔄 有新版本，點此更新」，點了自動重整。也可以手動重新整理頁面。', k:'更新 版本 新版 重整'},
+ {q:'成員之間借錢怎麼記？', a:'記一筆最上面切到「💸 借款」：選誰借出、借給誰、金額即可。借款會進結算互相沖抵，但不算進總支出和統計。', k:'借款 借錢 週轉 現金'},
+ {q:'轉帳後怎麼對帳核銷？', a:'付款方轉完打勾＝🟡已轉待確認；收款人本人會看到「✅確認收到」鈕（或一鍵核銷），按了才變已核銷。勾錯可在已完成區展開取消。', k:'核銷 對帳 確認收到 已轉'}
 ];
 
 var S = loadS();
@@ -378,7 +381,7 @@ var editId = null;
 var _ct = null;
 var _convCur = null;
 
-function loadS(){ var s = null; try{ s = JSON.parse(localStorage.getItem(LSKEY)); }catch(e){} if(!s || !s.trips) s = { ver:1, cur:null, trips:{}, rateCache:{} }; if(!s.me) s.me = {}; if(!s.privExp) s.privExp = {}; if(!s.lock) s.lock = {}; if(!s.theme) s.theme = ''; if(!s.chartView) s.chartView = 'bar'; if(!s.dismiss) s.dismiss = {}; return s; }
+function loadS(){ var s = null; try{ s = JSON.parse(localStorage.getItem(LSKEY)); }catch(e){} if(!s || !s.trips) s = { ver:1, cur:null, trips:{}, rateCache:{} }; if(!s.me) s.me = {}; if(!s.privExp) s.privExp = {}; if(!s.lock) s.lock = {}; if(!s.theme) s.theme = ''; if(!s.chartView) s.chartView = 'donut'; if(!s.cv2){ s.cv2 = 1; s.chartView = 'donut'; } if(!s.pvView) s.pvView = 'date'; if(!s.pvScope) s.pvScope = 'me'; if(!s.dismiss) s.dismiss = {}; return s; }
 function safeName(s){ return String(s || '').replace(/[\\/:*?"<>|]/g, '_'); }
 function money(home, v){ return '<span class="cur">' + home + ' </span>' + fmt(v); }
 function applyTheme(){ document.documentElement.setAttribute('data-theme', S.theme || ''); }
@@ -579,7 +582,7 @@ function blankF(){
     card:false, feePct: (t && t.feePct != null) ? t.feePct : 1.5,
     payer: me() || ((t && t.members.length) ? t.members[0].id : null),
     split: t ? t.members.filter(function(m){ return !m.casual; }).map(function(m){ return m.id; }) : [],
-    treat: [], treatBy: {}, mode:'avg', custom:{}, priv:false };
+    treat: [], treatBy: {}, mode:'avg', custom:{}, priv:false, kind:'exp' };
 }
 function guessCur(t){
   if(!t) return 'JPY';
@@ -602,6 +605,21 @@ function renderAdd(){
   document.getElementById('ePriv').checked = !!F.priv;
   document.getElementById('eLock').checked = !!lk.on;
   document.getElementById('eConvCur').value = _convCur || t.home;
+  var loan = F.kind === 'loan';
+  document.getElementById('kindSeg').querySelectorAll('[data-kind]').forEach(function(el){
+    el.classList.toggle('on', el.dataset.kind === (F.kind || 'exp'));
+    el.onclick = function(){
+      F.kind = el.dataset.kind;
+      if(F.kind === 'loan'){ F.priv = false; F.treat = []; F.treatBy = {}; F.mode = 'avg'; F.cat = 'misc'; F.split = []; }
+      renderAdd();
+    };
+  });
+  document.getElementById('catBlock').style.display = loan ? 'none' : '';
+  document.getElementById('privRow').style.display = loan ? 'none' : '';
+  document.getElementById('lblPayer').textContent = loan ? '誰借出（出錢的人）' : '誰先付';
+  document.getElementById('lblSplit').textContent = loan ? '借給誰（點一人）' : '分攤（點一下＝分攤 → 再點＝被請客🎁 → 再點＝不參與）';
+  document.getElementById('splitHint').style.display = loan ? 'none' : '';
+  document.getElementById('modeRow').style.display = loan ? 'none' : '';
   document.getElementById('splitWrap').style.display = F.priv ? 'none' : '';
   var cc = document.getElementById('catChips');
   cc.innerHTML = CATS.map(function(c){ return '<span class="chip' + (F.cat===c[0] ? ' on' : '') + '" data-c="' + c[0] + '">' + c[1] + ' ' + c[2] + '</span>'; }).join('');
@@ -629,6 +647,10 @@ function renderAdd(){
   }).join('');
   sc.querySelectorAll('[data-m]').forEach(function(el){ el.onclick = function(){
     var id = el.dataset.m;
+    if(F.kind === 'loan'){
+      F.split = [id]; F.treat = []; F.treatBy = {};
+      renderAdd(); return;
+    }
     var inS = F.split.indexOf(id) >= 0, inT = F.treat.indexOf(id) >= 0;
     if(!inS){ F.split.push(id); }
     else if(!inT){ F.treat.push(id); }
@@ -846,7 +868,12 @@ function saveExpense(){
   if(!(amt > 0)){ toast('請輸入消費金額'); return; }
   if(!(rate > 0)){ toast('請輸入匯率（可按「抓當日」）'); return; }
   var treated = F.treat.filter(function(id){ return F.split.indexOf(id) >= 0; });
-  if(F.priv){
+  if(F.kind === 'loan'){
+    if(!F.payer || F.payer === FUND){ toast('請選「誰借出」（不能是基金）'); return; }
+    if(F.split.length !== 1){ toast('請點「借給誰」（一個人）'); return; }
+    if(F.split[0] === F.payer){ toast('借出和借入不能是同一人'); return; }
+    treated = [];
+  } else if(F.priv){
     if(!me()){ toast('先到「旅程」設定「我是誰」'); return; }
   } else {
     if(!F.payer){ toast('請選付款人'); return; }
@@ -868,7 +895,7 @@ function saveExpense(){
   var ci = catInfo(F.cat);
   var tb = {};
   treated.forEach(function(id){ var v = (F.treatBy && F.treatBy[id]) || null; if(v && v !== id && F.split.indexOf(v) >= 0 && treated.indexOf(v) < 0) tb[id] = v; });
-  var e = { id: editId || uid(), date: F.date || todayISO(), cat: F.cat, desc: F.desc || ci[2],
+  var e = { id: editId || uid(), date: F.date || todayISO(), kind: F.kind === 'loan' ? 'loan' : 'exp', cat: F.cat, desc: F.desc || (F.kind === 'loan' ? '借款' : ci[2]),
     cur: F.cur, amt: amt, rate: rate, card: !!F.card, feePct: Number(F.feePct) || 0,
     payer: F.payer, split: F.split.slice(), treat: treated.slice(), treatBy: tb,
     mode: F.mode, custom: {}, _mt: Date.now() };
@@ -931,7 +958,7 @@ function delExpense(){ if(!editId) return; var id = editId; F = null; delExpense
 function loadFromExpense(e){
   return { date:e.date, cat:e.cat, desc:e.desc, cur:e.cur, amt:e.amt, rate:e.rate, card:!!e.card, feePct:e.feePct,
     payer:e.payer, split:(e.split||[]).slice(), treat:(e.treat||[]).slice(), treatBy: Object.assign({}, e.treatBy||{}),
-    mode:e.mode||'avg', custom: Object.assign({}, e.custom||{}), priv: !!e.priv };
+    mode:e.mode||'avg', custom: Object.assign({}, e.custom||{}), priv: !!e.priv, kind: e.kind || 'exp' };
 }
 function editExpense(id){
   var e = findExpense(id); if(!e) return;
@@ -965,7 +992,7 @@ function renderLedger(){
   var ges = t.expenses.filter(function(e){ return !e._del; });
   var pes = privList().filter(function(e){ return !e._del; });
   var total = 0, ptotal = 0, today = 0, tday = todayISO(), minD = null;
-  ges.forEach(function(e){ var h = homeAmt(e); total += h; if(e.date === tday) today += h; if(!minD || e.date < minD) minD = e.date; });
+  ges.forEach(function(e){ if(e.kind === 'loan'){ if(!minD || e.date < minD) minD = e.date; return; } var h = homeAmt(e); total += h; if(e.date === tday) today += h; if(!minD || e.date < minD) minD = e.date; });
   pes.forEach(function(e){ var h = homeAmt(e); ptotal += h; if(e.date === tday) today += h; if(!minD || e.date < minD) minD = e.date; });
   var ft = fundTotals(t);
   var dayN = '';
@@ -1041,19 +1068,8 @@ function renderLedger(){
       '<button class="bx" id="bnX">✕</button></span></div>';
   }
   var myCard = '';
-  if(MU && myUnpaid > 0.5 && typeof Ms !== 'undefined' && Ms){
-    var mrows = '';
-    Ms.days.forEach(function(dy){
-      dy.calc.transfers.forEach(function(f, i){
-        if(f.from !== MU || t.tfDone[dy.keys[i]]) return;
-        var toU = dy.calc.units[f.to];
-        mrows += '<div class="tf"><input type="checkbox" data-tfk="' + dy.keys[i] + '">' +
-          '<div style="flex:1"><div class="who">' + dy.date.slice(5).replace('-','/') + '　→ <span ' + saTag(toU.name, toU.bankc, toU.acct) + '>' + (toU.solo ? bdg(toU.solo, 18) + ' ' : '') + esc(toU.name) + '</span></div>' +
-          (toU.bank ? '<div class="bank">收款：' + esc(toU.bank) + ' <button class="btn sub mini" data-cpa="' + encodeURIComponent(toU.acct || toU.bankc) + '" style="padding:2px 8px;font-size:12px">複製帳號</button></div>' : '') +
-          '</div><div class="amt">' + money(t.home, f.amt) + '</div></div>';
-      });
-    });
-    if(mrows) myCard = '<div class="card" style="border:2px solid var(--warnBd)"><div style="display:flex;align-items:center;gap:6px">' + bdg(me(), 18) + '<span style="font-size:14.5px;font-weight:600">你的待付（勾＝已轉帳）</span></div>' + mrows + '</div>';
+  if(typeof Ms !== 'undefined' && Ms){
+    myCard = buildPayCard(t, Ms);
   }
   var es = ges.concat(pes);
   if(!es.length){ list.innerHTML = banner + myCard + '<div class="empty">還沒有記帳<br>按下面「➕ 記一筆」開始</div>'; return; }
@@ -1070,17 +1086,21 @@ function renderLedger(){
       html += '<div class="dhead"><span>' + e.date.slice(5).replace('-','/') + wd + '</span><span>' + t.home + ' ' + fmt(dayTot[e.date]) + '</span></div><div class="card">';
     }
     var ci = catInfo(e.cat);
+    var icoCh = e.kind === 'loan' ? '💸' : ci[1];
     var sd;
     if(e.priv){ sd = '🔒 私人（只有你看得到）'; }
+    else if(e.kind === 'loan'){
+      sd = '💸 ' + bdg(e.payer, 18) + ' ' + esc(mname(e.payer)) + ' 借給 ' + bdg((e.split||[])[0], 18) + ' ' + esc(mname((e.split||[])[0]));
+    }
     else {
       var treats = (e.treat||[]).filter(function(id){ return (e.split||[]).indexOf(id) >= 0; });
       sd = bdg(e.payer, 18) + '<span style="color:var(--tx3)">付</span> ';
       var ids = (e.split||[]);
       var shown = ids.slice(0, 5);
       sd += shown.map(function(id){ return bdg(id, 18, treats.indexOf(id) >= 0 ? '<span class="gift" style="font-size:9px;top:-4px;right:-4px">🎁</span>' : ''); }).join('');
-      if(ids.length > 5) sd += '<span style="color:var(--tx3)">+' + (ids.length - 5) + '</span>';
+      if(ids.length > 5) sd += '<span style="color:var(--tx3)">+' + (ids.length - 5) + '，共' + ids.length + '位</span>';
     }
-    html += '<div class="exp" data-eid="' + e.id + '"><span class="ico ct-' + e.cat + '">' + ci[1] + '</span>' +
+    html += '<div class="exp" data-eid="' + e.id + '"><span class="ico ct-' + e.cat + '">' + icoCh + '</span>' +
       '<div class="mid"><div class="t1">' + esc(e.desc) + '</div><div class="t2">' + sd + '</div></div>' +
       '<div class="amt"><div class="a1">' + money(t.home, homeAmt(e)) + '</div><div class="a2">' + e.cur + ' ' + fmt2(e.amt) + (e.card ? ' 💳' : '') + '</div></div>' +
       '<button class="rx" data-copy-e="' + e.id + '" aria-label="複製">⧉</button>' +
@@ -1093,14 +1113,7 @@ function renderLedger(){
   if(bx2) bx2.onclick = function(){ S.dismiss[t.code + '_' + tday] = true; saveLocal(); renderLedger(); };
   var ax = document.getElementById('a2hsX');
   if(ax) ax.onclick = function(){ S.dismiss['a2hs'] = true; saveLocal(); renderLedger(); };
-  list.querySelectorAll('[data-tfk]').forEach(function(cb){
-    cb.onchange = function(){
-      if(cb.checked) t.tfDone[cb.dataset.tfk] = { ts: Date.now() };
-      else delete t.tfDone[cb.dataset.tfk];
-      bumpMeta(); saveLocal(); pushCloud(); renderLedger();
-    };
-  });
-  bindSa(list);
+  bindPay(list, renderLedger);
   list.querySelectorAll('[data-eid]').forEach(function(el){ el.onclick = function(){ editExpense(el.dataset.eid); }; });
   list.querySelectorAll('[data-del-e]').forEach(function(btn){
     btn.onclick = function(ev){ ev.stopPropagation(); delExpenseById(btn.dataset.delE); };
@@ -1166,11 +1179,11 @@ function settleModel(t){
   var ges = t.expenses.filter(function(e){ return !e._del; });
   var totalSpend = 0;
   var byDate = {};
-  ges.forEach(function(e){ totalSpend += homeAmt(e); (byDate[e.date] = byDate[e.date] || []).push(e); });
+  ges.forEach(function(e){ if(e.kind !== 'loan') totalSpend += homeAmt(e); (byDate[e.date] = byDate[e.date] || []).push(e); });
   var dates = Object.keys(byDate).sort().reverse();
   var days = dates.map(function(d){
     var es = byDate[d];
-    var dayTotal = 0; es.forEach(function(e){ dayTotal += homeAmt(e); });
+    var dayTotal = 0; es.forEach(function(e){ if(e.kind !== 'loan') dayTotal += homeAmt(e); });
     var r = calcOver(t, es);
     var keys = r.transfers.map(function(f){ return d + '|' + f.from + '>' + f.to; });
     var done = r.transfers.length === 0 || keys.every(function(k){ return !!t.tfDone[k]; });
@@ -1224,16 +1237,151 @@ function bindSa(box){
     };
   });
 }
+function myUnit(t){
+  if(!me()) return null;
+  var m = member(me());
+  return m ? unitId(t, m) : null;
+}
+function tfState(t, key){
+  var ent = t.tfDone[key];
+  if(!ent) return 0;
+  return ent.ok ? 2 : 1;
+}
+function tfStLab(st){
+  if(st === 2) return '<span style="font-size:11.5px;color:#059669">✅ 已核銷</span>';
+  if(st === 1) return '<span style="font-size:11.5px;color:var(--warnTx)">🟡 已轉待確認</span>';
+  return '';
+}
+function tfBtns(t, key, toUnit){
+  var st = tfState(t, key), mu = myUnit(t);
+  if(mu !== toUnit) return '';
+  if(st === 1) return ' <button class="btn mini" data-ok="' + key + '" style="padding:3px 10px;font-size:12px">✅ 確認收到</button>';
+  if(st === 2) return ' <button class="btn sub mini" data-unok="' + key + '" style="padding:2px 8px;font-size:11px">取消核銷</button>';
+  return '';
+}
 function tfRow(t, units, f, key, showBank){
-  var done = !!t.tfDone[key];
+  var st = tfState(t, key);
   var toU = units[f.to], fromU = units[f.from];
   var fromB = fromU.solo ? bdg(fromU.solo, 18) + ' ' : '';
   var toB = toU.solo ? bdg(toU.solo, 18) + ' ' : '';
-  return '<div class="tf' + (done ? ' done' : '') + '"><input type="checkbox" data-tfk="' + key + '"' + (done ? ' checked' : '') + '>' +
+  return '<div class="tf' + (st === 2 ? ' done' : '') + '"><input type="checkbox" data-tfk="' + key + '"' + (st ? ' checked' : '') + '>' +
     '<div style="flex:1"><div class="who">' + fromB + esc(fromU.name) + ' → <span ' + saTag(toU.name, toU.bankc, toU.acct) + '>' + toB + esc(toU.name) + '</span></div>' +
-    (showBank ? (toU.bank ? '<div class="bank">收款：' + esc(toU.bank) + ' <button class="btn sub mini" data-cpa="' + encodeURIComponent(toU.acct || toU.bankc) + '" style="padding:2px 8px;font-size:12px">複製帳號</button></div>'
+    (st ? '<div style="margin-top:2px">' + tfStLab(st) + tfBtns(t, key, f.to) + '</div>' : '') +
+    (showBank && !st ? (toU.bank ? '<div class="bank">收款：' + esc(toU.bank) + ' <button class="btn sub mini" data-cpa="' + encodeURIComponent(toU.acct || toU.bankc) + '" style="padding:2px 8px;font-size:12px">複製帳號</button></div>'
                           : '<div class="bank">（' + esc(toU.name) + ' 尚未登記帳戶）</div>') : '') +
     '</div><div class="amt">' + money(t.home, f.amt) + '</div></div>';
+}
+function payItems(t, M){
+  var arr = [];
+  M.days.forEach(function(dy){
+    dy.calc.transfers.forEach(function(f, i){
+      arr.push({ key: dy.keys[i], date: dy.date, from: f.from, to: f.to, amt: f.amt, units: dy.calc.units });
+    });
+  });
+  return arr;
+}
+function payRowHtml(t, it, showFrom){
+  var st = tfState(t, it.key);
+  var toU = it.units[it.to], fromU = it.units[it.from];
+  return '<div class="tf' + (st === 2 ? ' done' : '') + '"><input type="checkbox" data-tfk="' + it.key + '"' + (st ? ' checked' : '') + '>' +
+    '<div style="flex:1"><div class="who">' + it.date.slice(5).replace('-','/') + '　' +
+    (showFrom ? esc(fromU.name) + ' → ' : '→ ') +
+    '<span ' + saTag(toU.name, toU.bankc, toU.acct) + '>' + (toU.solo ? bdg(toU.solo, 18) + ' ' : '') + esc(toU.name) + '</span></div>' +
+    (st ? '<div style="margin-top:2px">' + tfStLab(st) + tfBtns(t, it.key, it.to) + '</div>'
+        : (toU.bank ? '<div class="bank">收款：' + esc(toU.bank) + ' <button class="btn sub mini" data-cpa="' + encodeURIComponent(toU.acct || toU.bankc) + '" style="padding:2px 8px;font-size:12px">複製帳號</button></div>' : '')) +
+    '</div><div class="amt">' + money(t.home, it.amt) + '</div></div>';
+}
+function buildPayCard(t, M){
+  var mu = myUnit(t);
+  var scope = (S.pvScope === 'all' || !mu) ? 'all' : 'me';
+  var view = S.pvView || 'date';
+  var items = payItems(t, M);
+  var shown = scope === 'me' ? items.filter(function(it){ return it.from === mu; }) : items;
+  var active = shown.filter(function(it){ return tfState(t, it.key) !== 2; });
+  var doneL = shown.filter(function(it){ return tfState(t, it.key) === 2; });
+  var toMe = mu ? items.filter(function(it){ return it.to === mu && tfState(t, it.key) === 1; }) : [];
+  if(!active.length && !toMe.length && !doneL.length) return '';
+  var pendSum = 0, waitSum = 0;
+  active.forEach(function(it){ if(tfState(t, it.key) === 0) pendSum += it.amt; else waitSum += it.amt; });
+  var html = '<div class="card" style="border:2px solid var(--warnBd)">' +
+    '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' + (mu && scope === 'me' ? bdg(me(), 18) : '👥') +
+    '<span style="font-size:14.5px;font-weight:600">' + (scope === 'me' ? '你的待付' : '全團待付') + '</span>' +
+    '<span style="margin-left:auto;display:flex;gap:6px">' +
+    (mu ? '<span class="cseg"><span data-pvs="me"' + (scope==='me' ? ' class="on"' : '') + '>我的</span><span data-pvs="all"' + (scope==='all' ? ' class="on"' : '') + '>全團</span></span>' : '') +
+    '<span class="cseg"><span data-pvv="date"' + (view==='date' ? ' class="on"' : '') + '>日期</span><span data-pvv="to"' + (view==='to' ? ' class="on"' : '') + '>收款人</span></span>' +
+    '</span></div>';
+  if(toMe.length){
+    html += '<div class="tf" style="border-color:var(--acc)"><div style="flex:1"><div class="who">📥 有 ' + toMe.length + ' 筆已轉給你，待你核銷</div></div>' +
+      '<button class="btn mini" data-okall="' + toMe.map(function(it){ return it.key; }).join(',') + '" style="padding:5px 12px;font-size:12.5px">一鍵核銷</button></div>';
+  }
+  var groups = {};
+  active.forEach(function(it){
+    var g = view === 'date' ? it.date : it.units[it.to].name;
+    (groups[g] = groups[g] || []).push(it);
+  });
+  Object.keys(groups).sort().reverse().forEach(function(g){
+    var gi = groups[g];
+    var gs = 0; gi.forEach(function(it){ gs += it.amt; });
+    var glab = view === 'date' ? g.slice(5).replace('-','/') : g;
+    html += '<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--tx2);margin:8px 2px 2px;font-weight:600"><span>' + esc(glab) + '</span><span>小計 ' + fmt(gs) + '</span></div>';
+    gi.forEach(function(it){ html += payRowHtml(t, it, scope === 'all'); });
+  });
+  if(doneL.length){
+    html += '<details style="margin-top:8px"><summary style="font-size:12.5px;color:var(--tx2);cursor:pointer">✅ 已完成 ' + doneL.length + ' 筆（點開可取消）</summary>';
+    doneL.forEach(function(it){ html += payRowHtml(t, it, scope === 'all'); });
+    html += '</details>';
+  }
+  html += '<div class="sumrow" style="margin-top:8px;border-top:1px dashed var(--line);padding-top:6px;font-size:13.5px"><span>待轉合計 <b style="color:var(--warnTx)">' + fmt(pendSum) + '</b></span><span>已轉待確認 ' + fmt(waitSum) + '</span></div></div>';
+  return html;
+}
+function bindPay(box, rerender){
+  var t = trip(); if(!t) return;
+  box.querySelectorAll('[data-tfk]').forEach(function(cb){
+    cb.onchange = function(){
+      var key = cb.dataset.tfk;
+      var ent = t.tfDone[key];
+      if(cb.checked){
+        if(!confirm('標記這筆為「已轉帳」？')){ cb.checked = false; return; }
+        t.tfDone[key] = { ts: Date.now() };
+      } else {
+        var toUnit = key.split('>').pop();
+        if(ent && ent.ok && myUnit(t) !== toUnit){ cb.checked = true; toast('這筆已核銷，需收款人先取消核銷'); return; }
+        if(!confirm(ent && ent.ok ? '取消核銷並還原這筆？' : '還原這筆「已轉帳」標記？')){ cb.checked = true; return; }
+        delete t.tfDone[key];
+      }
+      bumpMeta(); saveLocal(); pushCloud(); rerender();
+    };
+  });
+  box.querySelectorAll('[data-ok]').forEach(function(el){
+    el.onclick = function(ev){
+      ev.stopPropagation();
+      var ent = t.tfDone[el.dataset.ok];
+      if(ent){ ent.ok = Date.now(); bumpMeta(); saveLocal(); pushCloud(); rerender(); toast('已核銷 ✅'); }
+    };
+  });
+  box.querySelectorAll('[data-unok]').forEach(function(el){
+    el.onclick = function(ev){
+      ev.stopPropagation();
+      if(!confirm('取消核銷？')) return;
+      var ent = t.tfDone[el.dataset.unok];
+      if(ent){ delete ent.ok; bumpMeta(); saveLocal(); pushCloud(); rerender(); }
+    };
+  });
+  box.querySelectorAll('[data-okall]').forEach(function(el){
+    el.onclick = function(ev){
+      ev.stopPropagation();
+      if(!confirm('把所有已轉給你的款項一次核銷？')) return;
+      el.dataset.okall.split(',').forEach(function(k){ if(t.tfDone[k]) t.tfDone[k].ok = Date.now(); });
+      bumpMeta(); saveLocal(); pushCloud(); rerender(); toast('已全部核銷 ✅');
+    };
+  });
+  box.querySelectorAll('[data-pvs]').forEach(function(el){
+    el.onclick = function(){ S.pvScope = el.dataset.pvs; saveLocal(); rerender(); };
+  });
+  box.querySelectorAll('[data-pvv]').forEach(function(el){
+    el.onclick = function(){ S.pvView = el.dataset.pvv; saveLocal(); rerender(); };
+  });
+  bindSa(box);
 }
 function renderSettle(){
   var t = trip();
@@ -1248,28 +1396,8 @@ function renderSettle(){
   if(M.ft.fin > 0) cols.push('<div class="dcol"><p class="dl">🏦 基金餘額</p><p class="dv">' + money(t.home, M.ft.bal) + '</p></div>');
   var html = '<div class="dash" style="padding:12px 4px 10px"><div style="display:flex">' + cols.join('<div class="divv"></div>') + '</div>' +
     '<p class="dnote" style="margin:7px 10px 0;padding-top:6px;border-top:1px solid var(--dashBar);text-align:center">每天轉完帳打勾＝當日結清；總結算只算未結清的部分</p></div>';
-  var myU = null;
-  if(me()){ var meM = member(me()); if(meM) myU = unitId(t, meM); }
-  if(myU){
-    var myRows = '', myUnpaid = 0, myDoneN = 0;
-    M.days.forEach(function(dy){
-      dy.calc.transfers.forEach(function(f, i){
-        if(f.from !== myU) return;
-        if(t.tfDone[dy.keys[i]]){ myDoneN++; return; }
-        myUnpaid += f.amt;
-        var toU = dy.calc.units[f.to];
-        myRows += '<div class="tf"><input type="checkbox" data-tfk="' + dy.keys[i] + '">' +
-          '<div style="flex:1"><div class="who">' + dy.date.slice(5).replace('-','/') + '　→ <span ' + saTag(toU.name, toU.bankc, toU.acct) + '>' + (toU.solo ? bdg(toU.solo, 18) + ' ' : '') + esc(toU.name) + '</span></div>' +
-          (toU.bank ? '<div class="bank">收款：' + esc(toU.bank) + ' <button class="btn sub mini" data-cpa="' + encodeURIComponent(toU.acct || toU.bankc) + '" style="padding:2px 8px;font-size:12px">複製帳號</button></div>' : '') +
-          '</div><div class="amt">' + money(t.home, f.amt) + '</div></div>';
-      });
-    });
-    if(myRows || myDoneN){
-      html += '<div class="card" style="border:2px solid var(--warnBd)"><div style="display:flex;align-items:center;gap:6px">' + bdg(me(), 18) +
-        '<span style="font-size:13.5px;font-weight:600">你的待付</span>' +
-        '<span style="margin-left:auto;font-size:11.5px;color:var(--tx2)">' + (myDoneN ? '已完成 ' + myDoneN + ' 筆 ✅' : '') + '</span></div>' +
-        (myRows || '<div class="hint" style="padding:8px 0">✅ 你已結清，無待付款項 🎉</div>') + '</div>';
-    }
+  if(me()){
+    html += buildPayCard(t, M);
   } else if(t.members.length){
     html += '<div class="card" style="border:2px solid var(--warnBd)"><div class="hint">⚠️ 尚未設定「我是誰」，看不到你的個人待付與提醒。</div>' +
       '<button class="btn sub mini" id="btnGoMe" style="margin-top:6px">去旅程頁設定我是誰 →</button></div>';
@@ -1337,14 +1465,7 @@ function renderSettle(){
   html += '<button class="btn sub" id="btnExport">📋 複製結算文字（貼群組）</button>';
   html += '<button class="btn sub" id="btnReport" style="margin-top:8px">📝 複製旅程總結報告</button>';
   box.innerHTML = html;
-  box.querySelectorAll('[data-tfk]').forEach(function(cb){
-    cb.onchange = function(){
-      if(cb.checked) t.tfDone[cb.dataset.tfk] = { ts: Date.now() };
-      else delete t.tfDone[cb.dataset.tfk];
-      bumpMeta(); saveLocal(); pushCloud(); renderSettle();
-    };
-  });
-  bindSa(box);
+  bindPay(box, renderSettle);
   var gm = document.getElementById('btnGoMe');
   if(gm) gm.onclick = function(){ go('trip'); toast('到「我是誰」點自己的徽章'); };
   document.getElementById('btnExport').onclick = function(){ copyText(settleText(t, M), '已複製結算文字'); };
@@ -1359,8 +1480,9 @@ function settleText(t, M){
     L.push(dy.date + (dy.done ? ' ✅已結清' : ' ⏳未結清') + '（' + t.home + ' ' + fmt(dy.total) + '）');
     dy.calc.transfers.forEach(function(f, i){
       var toU = dy.calc.units[f.to];
-      var done = t.tfDone[dy.keys[i]] ? ' ✅' : '';
-      L.push('　' + dy.calc.units[f.from].name + ' → ' + toU.name + ' ' + fmt(f.amt) + (toU.bank ? '（' + toU.bank + '）' : '') + done);
+      var st = tfState(t, dy.keys[i]);
+      var mark = st === 2 ? ' ✅已核銷' : (st === 1 ? ' 🟡已轉待確認' : '');
+      L.push('　' + dy.calc.units[f.from].name + ' → ' + toU.name + ' ' + fmt(f.amt) + (toU.bank ? '（' + toU.bank + '）' : '') + mark);
     });
     if(!dy.calc.transfers.length) L.push('　無須轉帳');
   });
@@ -1379,7 +1501,7 @@ function settleText(t, M){
   return L.join('\n');
 }
 function reportText(t, M){
-  var es = t.expenses.filter(function(e){ return !e._del; });
+  var es = t.expenses.filter(function(e){ return !e._del && e.kind !== 'loan'; });
   var minD = null, maxD = null, byCat = {}, cash = 0, card = 0, fund = 0, top = null;
   es.forEach(function(e){
     var h = homeAmt(e);
@@ -1420,7 +1542,7 @@ function renderStats(){
   var t = trip();
   var box = document.getElementById('statsBox');
   if(!t){ box.innerHTML = '<div class="empty">還沒有旅程</div>'; return; }
-  var es = t.expenses.filter(function(e){ return !e._del; }).concat(privList().filter(function(e){ return !e._del; }));
+  var es = t.expenses.filter(function(e){ return !e._del && e.kind !== 'loan'; }).concat(privList().filter(function(e){ return !e._del; }));
   if(!es.length){ box.innerHTML = '<div class="empty">還沒有帳可以統計</div>'; return; }
   var total = 0, byCat = {}, byDay = {}, byDayCat = {}, byPayer = {}, cash = 0, card = 0, fund = 0;
   es.forEach(function(e){
@@ -1489,10 +1611,13 @@ function renderStats(){
       });
       html += '<div class="donutw"><div class="donut" style="background:conic-gradient(' + stops.join(',') + ')">' +
         '<div class="dc"><span style="font-size:10px;color:var(--tx3)">總支出</span><span style="font-size:15px;font-weight:700">' + fmt(total) + '</span><span style="font-size:9px;color:var(--tx3)">' + t.home + '</span></div></div>' +
-        '<div style="flex:1;font-size:12px">' +
+        '<div style="flex:1;font-size:14px">' +
         dcats.map(function(c){
           var ci = catInfo(c);
-          return '<div style="display:flex;justify-content:space-between;padding:2px 0"><span><span style="color:' + (CAT_COLORS[c] || '#888') + '">■</span> ' + ci[1] + ci[2] + '</span><span style="color:var(--tx2)">' + fmt(byCat[c]) + '｜' + (total > 0 ? Math.round(byCat[c] / total * 100) : 0) + '%</span></div>';
+          return '<div style="display:flex;align-items:baseline;gap:5px;padding:4px 0">' +
+            '<span style="white-space:nowrap"><span style="color:' + (CAT_COLORS[c] || '#888') + '">■</span> ' + ci[1] + ' ' + ci[2] + '</span>' +
+            '<span style="flex:1;border-bottom:2px dotted var(--inBd);transform:translateY(-4px)"></span>' +
+            '<span style="color:var(--tx2);white-space:nowrap;font-variant-numeric:tabular-nums"><span style="display:inline-block;min-width:66px;text-align:right">' + fmt(byCat[c]) + '</span><span style="display:inline-block;min-width:46px;text-align:right">' + (total > 0 ? Math.round(byCat[c] / total * 100) : 0) + '%</span></span></div>';
         }).join('') + '</div></div>';
     } else if(cv === 'heat'){
       var hshow = days.slice(-35);
@@ -1916,7 +2041,7 @@ function csvExport(t){
   var es = t.expenses.filter(function(e){ return !e._del; }).concat(privList().filter(function(e){ return !e._del; }));
   es.sort(function(a,b){ return a.date < b.date ? -1 : 1; });
   es.forEach(function(e){
-    rows.push([e.date, e.desc, catInfo(e.cat)[2], e.cur, e.amt, e.rate, e.card ? 'Y' : '', e.card ? e.feePct : '',
+    rows.push([e.date, e.desc, e.kind === 'loan' ? '借款' : catInfo(e.cat)[2], e.cur, e.amt, e.rate, e.card ? 'Y' : '', e.card ? e.feePct : '',
       t.home, Math.round(homeAmt(e)*100)/100, mname(e.payer),
       (e.split||[]).map(mname).join('、'),
       (e.treat||[]).map(function(id){ return mname(id) + (e.treatBy && e.treatBy[id] ? '(由' + mname(e.treatBy[id]) + '請)' : ''); }).join('、'),
