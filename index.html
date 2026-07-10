@@ -329,8 +329,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 12;
-var VER = 'T0710-12';
+var CODE_VERSION = 13;
+var VER = 'T0710-13';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍜','餐飲'],['trans','🚇','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -432,9 +432,14 @@ function roundRate(r){
 }
 function bchar(id){ var m = member(id); if(!m) return '?'; return (m.badge || (m.name || '?').charAt(0) || '?'); }
 function bcolor(id){ var t = trip(); if(!t) return PALETTE[0]; for(var i=0;i<t.members.length;i++){ if(t.members[i].id===id) return t.members[i].color || PALETTE[i % PALETTE.length]; } return PALETTE[0]; }
+function bshape(id){
+  var t = trip(); if(!t) return '';
+  var m = member(id);
+  return (m && m.famId && famName(t, m.famId)) ? ';border-radius:7px' : '';
+}
 function bdg(id, size, extra){
   if(id === FUND) return '<span class="tag" style="font-size:' + (size===34?'13px':'10px') + '">🏦基金</span>';
-  return '<span class="bdg b' + (size===34?'34':'18') + '" style="background:' + bcolor(id) + ';color:#fff" title="' + esc(mname(id)) + '">' + esc(bchar(id)) + (extra||'') + '</span>';
+  return '<span class="bdg b' + (size===34?'34':'18') + '" style="background:' + bcolor(id) + ';color:#fff' + bshape(id) + '" title="' + esc(mname(id)) + '">' + esc(bchar(id)) + (extra||'') + '</span>';
 }
 function weightOf(t, id){ for(var i=0;i<t.members.length;i++){ if(t.members[i].id===id){ var w = Number(t.members[i].weight); return isNaN(w) ? 1 : w; } } return 1; }
 function famName(t, fid){ for(var i=0;i<t.families.length;i++){ if(t.families[i].id===fid) return t.families[i].name; } return null; }
@@ -629,7 +634,7 @@ function renderAdd(){
     var on = F.payer === m.id;
     var st = on ? 'background:' + bcolor(m.id) + ';color:#fff;box-shadow:0 0 0 2px var(--card),0 0 0 4px ' + bcolor(m.id)
                 : 'background:var(--card);color:' + bcolor(m.id) + ';border:2px solid ' + bcolor(m.id);
-    return '<span class="bdg b34" data-m="' + m.id + '" style="' + st + '" title="' + esc(m.name) + '">' + esc(bchar(m.id)) + '</span>';
+    return '<span class="bdg b34" data-m="' + m.id + '" style="' + st + bshape(m.id) + '" title="' + esc(m.name) + '">' + esc(bchar(m.id)) + '</span>';
   }).join('');
   ph += '<span class="chip' + (F.payer===FUND ? ' pay' : '') + '" data-m="' + FUND + '" style="height:36px">🏦基金</span>';
   pc.innerHTML = ph;
@@ -643,7 +648,7 @@ function renderAdd(){
     if(inT){ st = 'background:var(--warnBg);color:var(--warnTx);border:2px solid var(--warnBd)'; gift = '<span class="gift">🎁</span>'; }
     else if(inS){ st = 'background:' + bcolor(m.id) + ';color:#fff'; }
     else { st = 'background:var(--card);color:var(--tx3);border:2px dashed var(--inBd)'; }
-    return '<span class="bdg b34" data-m="' + m.id + '" style="' + st + '" title="' + esc(m.name) + '">' + esc(bchar(m.id)) + gift + '</span>';
+    return '<span class="bdg b34" data-m="' + m.id + '" style="' + st + bshape(m.id) + '" title="' + esc(m.name) + '">' + esc(bchar(m.id)) + gift + '</span>';
   }).join('');
   sc.querySelectorAll('[data-m]').forEach(function(el){ el.onclick = function(){
     var id = el.dataset.m;
@@ -1741,7 +1746,7 @@ function renderTrip(){
             var on = me() === m.id;
             var st = on ? 'background:' + bcolor(m.id) + ';color:#fff;box-shadow:0 0 0 2px var(--card),0 0 0 4px ' + bcolor(m.id)
                         : 'background:var(--card);color:' + bcolor(m.id) + ';border:2px solid ' + bcolor(m.id);
-            return '<span class="bdg b34" data-me="' + m.id + '" style="' + st + '" title="' + esc(m.name) + '">' + esc(bchar(m.id)) + '</span>';
+            return '<span class="bdg b34" data-me="' + m.id + '" style="' + st + bshape(m.id) + '" title="' + esc(m.name) + '">' + esc(bchar(m.id)) + '</span>';
           }).join('') +
           (_meChange ? '<span class="chip" id="btnMeCxl">取消</span>' : '') +
           '</div><div class="hint" style="margin-top:6px">點自己的徽章。私人帳會歸在這個人名下，也會當預設付款人。</div>');
@@ -2262,3 +2267,4 @@ try{
 </script>
 </body>
 </html>
+<!-- T0710-13 -->
