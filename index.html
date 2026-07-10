@@ -222,6 +222,15 @@ nav button.on{color:var(--acc);font-weight:700}
 .mrow2 input[type=text]{width:44px;padding:4px 6px;font-size:13px;text-align:center}
 .mrow2 select{width:auto;padding:4px 6px;font-size:13px}
 .hint{font-size:13px;color:var(--tx2);line-height:1.55}
+details.tsec{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:0 14px;margin-bottom:10px;box-shadow:var(--shadow,none)}
+details.tsec>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:14px 1px;cursor:pointer;font-weight:700;font-size:15.5px;color:var(--tx);-webkit-tap-highlight-color:transparent}
+details.tsec>summary::-webkit-details-marker{display:none}
+details.tsec>summary .car{color:var(--tx3);font-size:11px;transition:transform .15s;flex:0 0 auto}
+details.tsec[open]>summary .car{transform:rotate(90deg)}
+details.tsec>summary .tsx{margin-left:auto;font-size:12px;font-weight:400;color:var(--tx3);text-align:right;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.tsec>.tbody{padding:2px 1px 15px}
+.wbtn{display:block;width:100%;text-align:left;padding:14px 16px;border:2px solid var(--bd);border-radius:14px;background:var(--bg);margin-top:12px;cursor:pointer;font-size:16px}
+.wbtn:active{border-color:var(--acc)}
 .codebox{display:flex;align-items:center;gap:8px;background:var(--accBg);border:1px dashed var(--acc);border-radius:12px;padding:9px 12px}
 .codebox b{font-size:20px;letter-spacing:3px;color:var(--accTx);font-family:ui-monospace,monospace}
 .tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:9px;background:var(--accBg);color:var(--accTx)}
@@ -428,8 +437,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 16;
-var VER = 'T0710-16';
+var CODE_VERSION = 17;
+var VER = 'T0710-17';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍜','餐飲'],['trans','🚇','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -445,6 +454,7 @@ var HELPQA = [
  {pin:1, q:'💳 帳單補正是什麼？怎麼用？（必讀）', a:'刷卡的匯率預設抓「近3日最高值」先多估（因為商家請款會延遲、實際匯率常比消費日高）。等代墊人收到信用卡帳單：帳本點開那筆 → 按「💳 帳單補正」→ 輸入帳單上的實際台幣金額 → 套用。該筆未結清＝直接修正；已結清＝自動新增一筆「匯率補正」差額帳（多退少補），不會動到已對完的帳。', k:'補正 帳單 匯率 差額 刷卡 請款 必讀'},
  {pin:1, q:'匯率來源怎麼選？', a:'記一筆有三段：「📈近3日最高值」（預設，刷卡保守估）、「當日均價」（現金適用）、「✍️手動」（自己輸入，改匯率數字會自動切到手動）。', k:'匯率 來源 最高 均價 手動 三日'},
  {q:'怎麼開始用？', a:'到「🧳旅程」建立旅程 → 新增全部成員（包含你自己）→ 在「我是誰」點自己 → 就可以記帳了。', k:'開始 建立 新手 成員'},
+ {q:'誤建了旅程，怎麼刪除？', a:'旅程頁 →「🧳旅程設定」最下方。空旅程可直接刪；已有帳目會分成「📤 從這支手機移除」（旅伴不受影響，可再用代碼加入）和「🗑️ 整團刪除」（連雲端一起刪、要輸入旅程名稱確認、無法復原）。', k:'刪除 移除 取消 誤按 誤建 退出'},
  {q:'成員要包含自己嗎？', a:'要。成員是整團所有人的名單，分攤、付款人、結算都從這裡選，你自己也要在裡面。', k:'自己 成員 名單'},
  {q:'A 付錢但 B 要請 C，怎麼設？', a:'記帳時把 C 點兩下變成「被請客🎁」，下方會出現「C 由誰請」，選 B 即可。C 的份就由 B 吸收。', k:'請客 被請 招待 treatby'},
  {q:'小孩怎麼算半個大人？', a:'旅程頁成員設定裡，把小孩的「人頭數」設 0.5，兩個小孩就等於一個大人的份。嬰兒不分攤可設 0。', k:'小孩 人頭 權重 半價 嬰兒'},
@@ -1888,27 +1898,65 @@ function renderStats(){
 var _memEdit = null;
 var _meChange = false;
 function famCleanup(t){ t.families = t.families.filter(function(f){ return t.members.some(function(m){ return m.famId === f.id; }); }); }
+function secBox(id, title, side, body, defOpen){
+  var open = (S.tsec && S.tsec[id] !== undefined) ? !!S.tsec[id] : !!defOpen;
+  return '<details class="tsec" data-sec="' + id + '"' + (open ? ' open' : '') + '><summary><span class="car">▶</span><span>' + title + '</span><span class="tsx">' + side + '</span></summary><div class="tbody">' + body + '</div></details>';
+}
 function renderTrip(){
   var t = trip();
+  S.tsec = S.tsec || {};
   var tb = document.getElementById('tripBox');
-  var themeCard = '<div class="card"><div class="row">' +
-    '<button class="btn sub mini fix" id="btnHelp2">❓ 使用說明</button>' +
-    '<div class="seg" style="flex:1">' +
+  document.getElementById('tripsListBox').innerHTML = '';
+  var themeBody = '<div class="seg">' +
     '<span data-th=""' + (S.theme === '' ? ' class="on"' : '') + '>跟隨系統</span>' +
     '<span data-th="light"' + (S.theme === 'light' ? ' class="on"' : '') + '>淺色</span>' +
     '<span data-th="dark"' + (S.theme === 'dark' ? ' class="on"' : '') + '>深色</span>' +
-    '</div></div>' +
+    '</div>' +
     '<div class="seg" style="margin-top:8px">' +
     '<span data-sk=""' + (S.skin === '' ? ' class="on"' : '') + '>經典</span>' +
     '<span data-sk="white"' + (S.skin === 'white' ? ' class="on"' : '') + '>純白</span>' +
     '<span data-sk="sky"' + (S.skin === 'sky' ? ' class="on"' : '') + '>天藍</span>' +
     '<span data-sk="matcha"' + (S.skin === 'matcha' ? ' class="on"' : '') + '>抹茶</span>' +
     '</div>' +
-    '<div class="hint" style="margin-top:5px">上排＝深淺色、下排＝主題配色，可自由組合，只影響這支手機。</div></div>';
-  var html = themeCard;
+    '<div class="hint" style="margin-top:5px">上排＝深淺色、下排＝主題配色，只影響這支手機。</div>';
+  if(!Object.keys(S.trips).length){
+    tb.innerHTML = '<div class="card" style="text-align:center;padding:26px 16px 20px">' +
+      '<div style="font-size:42px;line-height:1">🧳</div>' +
+      '<div style="font-size:20px;font-weight:800;margin:8px 0 2px">開始旅遊分帳</div>' +
+      '<div class="hint">和旅伴共享帳本，自動算好誰該轉多少給誰</div>' +
+      '<div class="wbtn" id="wNew"><b>🆕 建立新旅程</b><div class="hint" style="margin-top:3px">我是發起人，建好後把「旅程代碼」給旅伴</div>' +
+      '<div class="row" id="wNewForm" style="display:none;margin-top:10px"><input type="text" id="newTripName" placeholder="旅程名稱，例：東京行"><button class="btn mini fix" id="btnNewTrip">建立</button></div></div>' +
+      '<div class="wbtn" id="wJoin"><b>🔑 用代碼加入旅程</b><div class="hint" style="margin-top:3px">旅伴已建好，向他要 6 碼旅程代碼</div>' +
+      '<div class="row" id="wJoinForm" style="display:none;margin-top:10px"><input type="text" id="joinCode" placeholder="輸入 6 碼代碼" style="text-transform:uppercase"><button class="btn sub mini fix" id="btnJoin">加入</button></div></div>' +
+      '<button class="btn sub mini" id="btnHelp2" style="margin-top:16px">❓ 使用說明</button></div>';
+    function wTog(boxId, formId, otherId, inpId){
+      document.getElementById(boxId).onclick = function(ev){
+        if(ev.target.closest('#' + formId)) return;
+        var f = document.getElementById(formId);
+        var show = f.style.display === 'none';
+        f.style.display = show ? 'flex' : 'none';
+        document.getElementById(otherId).style.display = 'none';
+        if(show) document.getElementById(inpId).focus();
+      };
+    }
+    wTog('wNew', 'wNewForm', 'wJoinForm', 'newTripName');
+    wTog('wJoin', 'wJoinForm', 'wNewForm', 'joinCode');
+    document.getElementById('btnNewTrip').onclick = createTrip;
+    document.getElementById('btnJoin').onclick = joinTrip;
+    document.getElementById('btnHelp2').onclick = function(){ go('help'); };
+    document.getElementById('cloudBox').innerHTML = (window._cloud && window._cloud.ready) ? '' :
+      '<div class="card"><span class="tag warn">📴 尚未連上雲端</span><span class="hint">　離線時無法加入旅程或多人同步。</span></div>';
+    document.getElementById('verTag').textContent = VER + '（CODE_VERSION ' + CODE_VERSION + '）';
+    return;
+  }
+  var html = '<div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px"><span class="hint" style="margin:0">點區塊標題展開設定</span><button class="btn sub mini fix" id="btnHelp2">❓ 使用說明</button></div>';
+  var _base = '';
+  function cap(){ _base = html; html = ''; }
+  function pop(id, title, side, defOpen){ html = _base + secBox(id, title, side, html, defOpen); }
   if(t){
     var ft = fundTotals(t);
-    html += '<div class="card"><div class="lbl">旅程名稱</div><input type="text" id="tName" value="' + esc(t.name) + '">' +
+    cap();
+    html += '<div class="lbl">旅程名稱</div><input type="text" id="tName" value="' + esc(t.name) + '">' +
       '<div style="margin-top:8px"><div class="lbl">開始日期</div><input type="date" id="tSd" value="' + esc(t.startDate) + '"></div>' +
       '<div style="margin-top:8px"><div class="lbl">結束日期</div><input type="date" id="tEd" value="' + esc(t.endDate) + '"></div>' +
       '<label style="display:flex;align-items:center;gap:7px;font-size:14.5px;margin-top:10px"><input type="checkbox" id="tDom"' + (t.domestic ? ' checked' : '') + ' style="width:18px;height:18px">🇹🇼 本國旅遊</label>' +
@@ -1921,10 +1969,16 @@ function renderTrip(){
       '<div><div class="lbl">每日預算（' + t.home + '）</div><input type="number" id="tBudD" inputmode="decimal" value="' + (t.budget.daily || 0) + '"></div></div>' +
       '<div class="codebox" style="margin-top:10px"><span style="font-size:13px;color:var(--accTx)">旅程代碼</span><b>' + t.code + '</b>' +
       '<button class="btn sub mini" id="btnCpCode">複製</button></div>' +
-      '<div class="hint" style="margin-top:6px">旅伴在自己手機開這個網頁 → 旅程 → 輸入代碼加入（需啟用雲端同步）。</div>' +
-      '<button class="btn sub mini" id="btnArc" style="margin-top:8px">' + (t.archived ? '↩ 還原這個旅程' : '📦 封存這個旅程（旅程結束後收納）') + '</button></div>';
-    html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">成員與收款帳戶</div>' +
-      '<div class="hint" style="margin-bottom:6px">⚠️ 成員名單要包含<b>你自己</b>（整團所有人，含小孩）。人頭數：大人 1、小孩可設 0.5（兩位小孩＝一位大人）、不分攤設 0。部分參加＝只參加部分行程，記帳時預設不勾。</div><div id="memberBox">';
+      '<div class="hint" style="margin-top:6px">旅伴開同一個網頁 →「➕ 其他旅程」→ 輸入這組代碼加入。</div>' +
+      '<button class="btn sub mini" id="btnArc" style="margin-top:8px">' + (t.archived ? '↩ 還原這個旅程' : '📦 封存這個旅程（旅程結束後收納）') + '</button>';
+    var isEmptyTrip = !t.expenses.some(function(e){ return !e._del; }) && !(t.fund || []).some(function(c){ return !c._del; });
+    html += isEmptyTrip
+      ? ' <button class="btn sub mini" id="btnDelTrip" style="margin-top:8px;color:var(--danger)">🗑️ 刪除這個旅程（誤建可直接刪）</button>'
+      : '<div class="row" style="margin-top:8px"><button class="btn sub mini" id="btnRmLocal" style="flex:1">📤 從這支手機移除</button><button class="btn sub mini" id="btnDelTrip" style="flex:1;color:var(--danger)">🗑️ 整團刪除</button></div>' +
+        '<div class="hint" style="margin-top:4px">移除＝只清這支手機、旅伴不受影響，可再用代碼加入；整團刪除＝連雲端一起刪、無法復原。</div>';
+    pop('set', '🧳 旅程設定', esc(t.name) + ' · ' + t.code, !t.startDate);
+    cap();
+    html += '<div class="hint" style="margin-bottom:6px">名單要含<b>你自己</b>與整團所有人（含小孩）。人頭數：大人 1、小孩 0.5、不分攤 0。</div><div id="memberBox">';
     t.members.forEach(function(m, mi){
       var used = t.expenses.some(function(e){ return !e._del && (e.payer === m.id || (e.split || []).indexOf(m.id) >= 0); });
       if(_memEdit === m.id){
@@ -1956,7 +2010,7 @@ function renderTrip(){
     });
     html += '</div><button class="btn sub mini" id="btnAddM" style="margin-top:6px">＋ 新增成員</button> ' +
       '<button class="btn sub mini" id="btnImpM" style="margin-top:6px">📇 從舊旅程帶入</button>' +
-      '<div class="hint" style="margin-top:6px">帳戶只給團內結算轉帳用，會同步給同旅程的旅伴看到。同一「戶」的成員結算時合併轉帳。</div>' +
+      '<div class="hint" style="margin-top:6px">帳戶給結算轉帳用、旅伴看得到；同「戶」結算時合併轉帳。</div>' +
       '<div class="lbl" style="margin-top:12px;font-weight:600;color:var(--tx)">我是誰（這支手機的使用者）</div>' +
       ((me() && !_meChange)
         ? '<div class="mcard" style="cursor:default">' + bdg(me(), 18) + '<div style="flex:1"><span class="mn1">' + esc(mname(me())) + '</span> <span style="font-size:13px">🔒</span></div><button class="btn sub mini" id="btnMeChg">變更</button></div>' +
@@ -1970,8 +2024,11 @@ function renderTrip(){
           }).join('') +
           (_meChange ? '<span class="chip" id="btnMeCxl">取消</span>' : '') +
           '</div><div class="hint" style="margin-top:6px">點自己的徽章。私人帳會歸在這個人名下，也會當預設付款人。</div>');
-    html += '</div>';
-    html += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="lbl" style="margin:0;font-weight:600;color:var(--tx)">🏦 共同基金</span>' +
+    pop('mem', '👥 成員與我是誰',
+      t.members.length ? (t.members.length + ' 位' + (me() ? '' : '｜⚠️ 先選我是誰')) : '⚠️ 先新增成員',
+      !t.members.length || !me() || !!_memEdit);
+    cap();
+    html += '<div style="display:flex;justify-content:space-between;align-items:center"><span class="lbl" style="margin:0">大家先出一筆公費，吃飯門票從這裡扣</span>' +
       '<span style="font-size:12px;color:var(--tx2)">保管人 <select id="fKeep" style="width:auto;padding:3px 6px;font-size:12px"><option value="">（未指定）</option>' +
       t.members.map(function(m){ return '<option value="' + m.id + '"' + (t.fundKeeper === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('') +
       '</select></span></div>';
@@ -1997,22 +2054,15 @@ function renderTrip(){
       '</select><input type="date" id="fcDate" value="' + todayISO() + '" style="flex:0 0 auto;width:auto">' +
       '<input type="number" id="fcAmt" inputmode="decimal" placeholder="金額（' + t.home + '）">' +
       '<button class="btn mini fix" id="btnFc">＋入金</button></div>' +
-      '<div class="hint" style="margin-top:6px">記帳時付款人選「🏦基金」即從基金支出；基金獨立結算，餘額依入金比例退還。保管人僅為標示，不影響計算。</div></div>';
-    html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">備份與匯出</div>' +
-      '<div class="row"><button class="btn sub mini" id="btnBakOut" style="flex:1">⬇ 匯出備份</button>' +
+      '<div class="hint" style="margin-top:6px">記帳時付款人選「🏦基金」＝從基金支出；餘額按入金比例退還。</div>';
+    pop('fund', '🏦 共同基金', contribs.length ? ('餘額 ' + fmt(ft.bal)) : '沒用到可不理', false);
+    cap();
+    html += '<div class="row"><button class="btn sub mini" id="btnBakOut" style="flex:1">⬇ 匯出備份</button>' +
       '<button class="btn sub mini" id="btnBakIn" style="flex:1">⬆ 還原備份</button>' +
       '<button class="btn sub mini" id="btnCsv" style="flex:1">📄 匯出CSV</button></div>' +
-      '<div class="hint" style="margin-top:6px">⚠️ 私人帳只存這支手機，換手機或清瀏覽器資料前務必匯出備份（含私人帳）。CSV 可用 Excel 開。</div></div>';
+      '<div class="hint" style="margin-top:6px">⚠️ 私人帳只存這支手機，換手機前先匯出備份。CSV 可用 Excel 開。</div>';
+    pop('bak', '💾 備份與匯出', '', false);
   }
-  tb.innerHTML = html;
-  tb.querySelectorAll('[data-th]').forEach(function(el){
-    el.onclick = function(){ S.theme = el.dataset.th; saveLocal(); applyTheme(); renderTrip(); };
-  });
-  tb.querySelectorAll('[data-sk]').forEach(function(el){
-    el.onclick = function(){ S.skin = el.dataset.sk; saveLocal(); applyTheme(); renderTrip(); };
-  });
-  document.getElementById('btnHelp2').onclick = function(){ go('help'); };
-  var lb = document.getElementById('tripsListBox');
   var codes = Object.keys(S.trips).sort(function(a, b){
     var ta = S.trips[a], tb2 = S.trips[b];
     var ka = ta.startDate || '', kb = tb2.startDate || '';
@@ -2023,9 +2073,10 @@ function renderTrip(){
   });
   var act = codes.filter(function(c){ return !S.trips[c].archived; });
   var arc = codes.filter(function(c){ return S.trips[c].archived; });
-  var lh = '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">建立／加入旅程</div>' +
+  var lh = '<div class="lbl">建立新旅程</div>' +
     '<div class="row"><input type="text" id="newTripName" placeholder="旅程名稱，例：東京行"><button class="btn mini fix" id="btnNewTrip">建立</button></div>' +
-    '<div class="row" style="margin-top:8px"><input type="text" id="joinCode" placeholder="輸入旅程代碼" style="text-transform:uppercase"><button class="btn sub mini fix" id="btnJoin">加入</button></div>';
+    '<div class="lbl" style="margin-top:10px">用代碼加入旅伴的旅程</div>' +
+    '<div class="row"><input type="text" id="joinCode" placeholder="輸入 6 碼旅程代碼" style="text-transform:uppercase"><button class="btn sub mini fix" id="btnJoin">加入</button></div>';
   if(act.length > 1 || (act.length >= 1 && !t)){
     lh += '<div class="lbl" style="margin-top:10px">切換旅程（依開始日期新→舊）</div><div class="chips">' +
       act.map(function(c){ return '<span class="chip' + (S.cur === c ? ' on' : '') + '" data-sw="' + c + '">' + esc(S.trips[c].name) + (S.trips[c].startDate ? ' <span style="font-size:10px;color:var(--tx3)">' + S.trips[c].startDate.slice(5).replace('-','/') + '</span>' : '') + '</span>'; }).join('') + '</div>';
@@ -2035,8 +2086,21 @@ function renderTrip(){
       arc.map(function(c){ return '<span class="chip" style="opacity:.7" data-sw="' + c + '">' + esc(S.trips[c].name) + '</span>'; }).join('') +
       '</div><div class="hint" style="margin-top:4px">點一下開啟；要還原到進行中，開啟後在旅程頁按「還原」。</div></details>';
   }
-  lh += '</div>';
-  lb.innerHTML = lh;
+  html += secBox('oth', '➕ 其他旅程', act.length + ' 個進行中' + (arc.length ? '｜📦 ' + arc.length : ''), lh, !t);
+  html += secBox('look', '🎨 外觀主題',
+    (S.theme === 'dark' ? '深色' : S.theme === 'light' ? '淺色' : '跟隨系統') + '｜' +
+    (S.skin === 'white' ? '純白' : S.skin === 'sky' ? '天藍' : S.skin === 'matcha' ? '抹茶' : '經典'), themeBody, false);
+  tb.innerHTML = html;
+  tb.querySelectorAll('details.tsec').forEach(function(d){
+    d.ontoggle = function(){ S.tsec[d.dataset.sec] = d.open ? 1 : 0; saveLocal(); };
+  });
+  tb.querySelectorAll('[data-th]').forEach(function(el){
+    el.onclick = function(){ S.theme = el.dataset.th; saveLocal(); applyTheme(); renderTrip(); };
+  });
+  tb.querySelectorAll('[data-sk]').forEach(function(el){
+    el.onclick = function(){ S.skin = el.dataset.sk; saveLocal(); applyTheme(); renderTrip(); };
+  });
+  document.getElementById('btnHelp2').onclick = function(){ go('help'); };
   var cb = document.getElementById('cloudBox');
   if(window._cloud && window._cloud.ready){
     cb.innerHTML = '<div class="card"><span class="tag">☁️ 雲端同步已啟用</span><span class="hint">　同旅程代碼的人即時共享帳本。</span></div>';
@@ -2180,10 +2244,29 @@ function renderTrip(){
     };
     document.getElementById('btnBakIn').onclick = function(){ document.getElementById('impFile').click(); };
     document.getElementById('btnCsv').onclick = function(){ csvExport(t); };
+    var bDel = document.getElementById('btnDelTrip');
+    if(bDel) bDel.onclick = function(){
+      var empty = !t.expenses.some(function(e){ return !e._del; }) && !(t.fund || []).some(function(c){ return !c._del; });
+      if(empty){
+        if(!confirm('刪除「' + t.name + '」？（雲端紀錄一併刪除）')) return;
+      } else {
+        var nm = prompt('⚠️ 整團刪除：連雲端一起刪，所有旅伴手上的這個旅程都會消失、無法復原！\n確定要刪，請輸入旅程名稱：');
+        if(nm === null) return;
+        if(nm.trim() !== t.name){ toast('名稱不符，未刪除'); return; }
+      }
+      nukeTrip(t.code, true);
+    };
+    var bRm = document.getElementById('btnRmLocal');
+    if(bRm) bRm.onclick = function(){
+      if(!confirm('從這支手機移除「' + t.name + '」？\n雲端與旅伴不受影響，之後可用代碼 ' + t.code + ' 重新加入。\n⚠️ 這支手機的私人帳會一起清掉，需要請先匯出備份。')) return;
+      nukeTrip(t.code, false);
+    };
   }
-  document.getElementById('btnNewTrip').onclick = createTrip;
-  document.getElementById('btnJoin').onclick = joinTrip;
-  lb.querySelectorAll('[data-sw]').forEach(function(el){
+  var bNew = document.getElementById('btnNewTrip');
+  if(bNew) bNew.onclick = createTrip;
+  var bJoin = document.getElementById('btnJoin');
+  if(bJoin) bJoin.onclick = joinTrip;
+  tb.querySelectorAll('[data-sw]').forEach(function(el){
     el.onclick = function(){ S.cur = el.dataset.sw; F = null; editId = null; _convCur = null; startListen(); save(); toast('已切換'); };
   });
 }
@@ -2299,6 +2382,24 @@ function importBackup(file){
   };
   rd.readAsText(file);
 }
+function nukeTrip(code, cloudToo){
+  var nm = (S.trips[code] || {}).name || code;
+  if(window._cloud && window._cloud.ready){
+    if(cloudToo && window._cloud.del) window._cloud.del(code);
+    else if(window._cloud.stop) window._cloud.stop(code);
+  }
+  delete S.trips[code];
+  delete S.me[code];
+  if(S.privExp) delete S.privExp[code];
+  if(S.lock) delete S.lock[code];
+  if(S.cur === code){
+    var rest = Object.keys(S.trips).filter(function(c){ return !S.trips[c].archived; });
+    S.cur = rest[0] || Object.keys(S.trips)[0] || '';
+  }
+  F = null; editId = null; _convCur = null;
+  saveLocal(); renderAll();
+  toast(cloudToo ? '已刪除「' + nm + '」' : '已從這支手機移除「' + nm + '」');
+}
 function genCode(){
   var A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', s = '';
   for(var i=0;i<6;i++) s += A.charAt(Math.floor(Math.random() * A.length));
@@ -2310,6 +2411,7 @@ function createTrip(){
   while(S.trips[code]) code = genCode();
   S.trips[code] = { code: code, name: name, home: 'TWD', feePct: 1.5, members: [], expenses: [], templates: [], budget: { total:0, daily:0 }, fund: [], families: [], tfDone: {}, startDate: '', endDate: '', domestic: false, fundKeeper: '', archived: false, metaMt: Date.now(), createdAt: Date.now() };
   S.cur = code; F = null; editId = null; _convCur = null;
+  S.tsec = S.tsec || {}; S.tsec.set = 1; S.tsec.mem = 1;
   startListen(); save();
   toast('已建立「' + name + '」，先去新增成員');
 }
@@ -2453,7 +2555,7 @@ window.addEventListener('cloud-ready', function(){
     navigator.serviceWorker.register('./sw-tsplit.js').catch(function(){});
   }
   renderAll();
-  go('ledger');
+  go(Object.keys(S.trips).length ? 'ledger' : 'trip');
 })();
 </script>
 <script type="module">
@@ -2476,6 +2578,14 @@ try{
       load: async function(code){
         const s = await fsM.getDoc(fsM.doc(db, 'trips', code));
         return s.exists() ? JSON.parse(s.data().d) : null;
+      },
+      del: function(code){
+        if(_subs[code]){ _subs[code](); delete _subs[code]; }
+        return fsM.deleteDoc(fsM.doc(db, 'trips', code))
+          .catch(function(e){ console.error('[cloud] del fail', e); });
+      },
+      stop: function(code){
+        if(_subs[code]){ _subs[code](); delete _subs[code]; }
       },
       listen: function(code, cb){
         if(_subs[code]) return;
@@ -2500,4 +2610,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0710-16 -->
+<!-- T0710-17 -->
