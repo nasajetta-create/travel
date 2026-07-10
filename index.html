@@ -307,8 +307,15 @@ nav button.on{color:var(--acc);font-weight:700}
       <div style="flex:1.5"><div class="lbl">消費金額</div><input type="number" id="eAmt" inputmode="decimal" placeholder="0"></div>
     </div>
     <div class="fnote" id="feeNote" style="display:none"></div>
+    <div style="margin-top:8px"><div class="lbl">匯率來源</div>
+      <div class="seg" id="rsrcSeg" style="font-size:12px">
+        <span data-rs="hi3">📈 近3日最高值</span>
+        <span data-rs="mid">當日均價</span>
+        <span data-rs="manual">✍️ 手動</span>
+      </div>
+    </div>
     <div style="margin-top:8px"><div class="lbl">匯率（1 消費幣 = ? 主幣）</div>
-      <div class="row" style="gap:6px"><input type="number" id="eRate" inputmode="decimal" step="any"><button class="btn sub mini fix" id="btnRate">抓當日</button></div>
+      <div class="row" style="gap:6px"><input type="number" id="eRate" inputmode="decimal" step="any"><button class="btn sub mini fix" id="btnRate">重抓</button></div>
     </div>
     <div style="margin-top:8px"><div class="lbl">信用卡手續費</div>
       <div class="row" style="gap:6px"><label class="fix" style="display:flex;align-items:center;gap:5px;font-size:14.5px"><input type="checkbox" id="eCard" style="width:18px;height:18px">刷卡</label><input type="number" id="eFee" inputmode="decimal" step="any" placeholder="%" style="flex:0 0 90px"><span class="fix" style="font-size:13px;color:var(--tx2)">%</span><span style="flex:1"></span></div>
@@ -335,6 +342,7 @@ nav button.on{color:var(--acc);font-weight:700}
     </div>
   </div>
   <button class="btn" id="btnSave">儲存</button>
+  <button class="btn sub" id="btnAdj" style="display:none;margin-top:8px">💳 帳單補正（輸入帳單實際金額）</button>
   <button class="btn sub" id="btnCopy" style="display:none;margin-top:8px">⧉ 複製成新帳（日期改今天）</button>
   <button class="btn sub" id="btnTpl" style="margin-top:8px">☆ 存成常用項目（記住項目/類別/幣別）</button>
   <button class="btn danger" id="btnDel" style="display:none;margin-top:8px">刪除這筆</button>
@@ -372,6 +380,14 @@ nav button.on{color:var(--acc);font-weight:700}
 </nav>
 <button id="fabBack" style="display:none;position:fixed;top:76px;right:12px;z-index:30;border:none;border-radius:20px;padding:9px 15px;font-size:14px;font-weight:600;background:var(--card);color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.25);cursor:pointer">✕ 返回不儲存</button>
 <div id="toast"></div>
+<div class="modal" id="adjModal"><div class="mbox">
+  <div style="font-size:16px;font-weight:700;margin-bottom:6px">💳 帳單補正</div>
+  <div id="adjOrig" class="hint" style="margin-bottom:8px"></div>
+  <div class="lbl">信用卡帳單上的實際主幣金額</div>
+  <input type="number" id="adjAmt" inputmode="decimal" placeholder="例：25180">
+  <div id="adjDiff" class="hint" style="margin-top:8px;min-height:20px"></div>
+  <div class="row" style="margin-top:12px"><button class="btn mini" id="adjGo" style="flex:1">套用補正</button><button class="btn sub mini" id="adjClose" style="flex:1">取消</button></div>
+</div></div>
 <div class="modal" id="impModal"><div class="mbox">
   <div style="font-size:16px;font-weight:600;margin-bottom:8px">📇 從舊旅程帶入成員</div>
   <div id="impList" style="max-height:300px;overflow-y:auto"></div>
@@ -412,8 +428,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 15;
-var VER = 'T0710-15';
+var CODE_VERSION = 16;
+var VER = 'T0710-16';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍜','餐飲'],['trans','🚇','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -426,6 +442,8 @@ var CURS = ['JPY','TWD','USD','KRW','EUR','THB','VND','CNY','HKD','SGD','MYR','G
 var WD = ['日','一','二','三','四','五','六'];
 var PALETTE = ['#0F766E','#7F77DD','#378ADD','#D85A30','#D4537E','#BA7517','#059669','#DC2626','#8B5CF6','#0891B2','#65A30D','#C026D3'];
 var HELPQA = [
+ {pin:1, q:'💳 帳單補正是什麼？怎麼用？（必讀）', a:'刷卡的匯率預設抓「近3日最高值」先多估（因為商家請款會延遲、實際匯率常比消費日高）。等代墊人收到信用卡帳單：帳本點開那筆 → 按「💳 帳單補正」→ 輸入帳單上的實際台幣金額 → 套用。該筆未結清＝直接修正；已結清＝自動新增一筆「匯率補正」差額帳（多退少補），不會動到已對完的帳。', k:'補正 帳單 匯率 差額 刷卡 請款 必讀'},
+ {pin:1, q:'匯率來源怎麼選？', a:'記一筆有三段：「📈近3日最高值」（預設，刷卡保守估）、「當日均價」（現金適用）、「✍️手動」（自己輸入，改匯率數字會自動切到手動）。', k:'匯率 來源 最高 均價 手動 三日'},
  {q:'怎麼開始用？', a:'到「🧳旅程」建立旅程 → 新增全部成員（包含你自己）→ 在「我是誰」點自己 → 就可以記帳了。', k:'開始 建立 新手 成員'},
  {q:'成員要包含自己嗎？', a:'要。成員是整團所有人的名單，分攤、付款人、結算都從這裡選，你自己也要在裡面。', k:'自己 成員 名單'},
  {q:'A 付錢但 B 要請 C，怎麼設？', a:'記帳時把 C 點兩下變成「被請客🎁」，下方會出現「C 由誰請」，選 B 即可。C 的份就由 B 吸收。', k:'請客 被請 招待 treatby'},
@@ -662,8 +680,11 @@ function renderHelp(){
     return q.split(/\s+/).some(function(w){ return w && hay.indexOf(w) >= 0; });
   });
   document.getElementById('helpList').innerHTML = list.length
-    ? list.map(function(item){ return '<div class="qa"><p class="q">Q：' + esc(item.q) + '</p><p class="a">' + esc(item.a) + '</p></div>'; }).join('')
-    : '<div class="empty">找不到相關問答<br>換個關鍵字試試，例：請客、匯率、基金</div>';
+    ? list.map(function(item, i){
+        var pin = item.pin ? ' style="background:var(--accBg);border-radius:10px;padding:9px 11px;margin:0 -4px 4px;border-bottom:none"' : '';
+        return '<div class="qa"' + pin + '><p class="q"' + (item.pin ? ' style="color:var(--accTx)"' : '') + '>Q' + (i + 1) + '：' + esc(item.q) + '</p><p class="a">' + esc(item.a) + '</p></div>';
+      }).join('')
+    : '<div class="empty">找不到相關問答<br>換個關鍵字試試，例：補正、請客、匯率、基金</div>';
 }
 
 /* ───── 記一筆 ───── */
@@ -675,7 +696,7 @@ function blankF(){
     card:false, feePct: (t && t.feePct != null) ? t.feePct : 1.5,
     payer: me() || ((t && t.members.length) ? t.members[0].id : null),
     split: t ? t.members.filter(function(m){ return !m.casual; }).map(function(m){ return m.id; }) : [],
-    treat: [], treatBy: {}, mode:'avg', custom:{}, priv:false, kind:'exp' };
+    treat: [], treatBy: {}, mode:'avg', custom:{}, priv:false, kind:'exp', rsrc:'hi3' };
 }
 function guessCur(t){
   if(!t) return 'JPY';
@@ -755,7 +776,16 @@ function renderAdd(){
   updateConv();
   document.getElementById('btnDel').style.display = editId ? 'block' : 'none';
   document.getElementById('btnCopy').style.display = editId ? 'block' : 'none';
+  document.getElementById('btnAdj').style.display = (editId && !F.priv && F.kind !== 'loan') ? 'block' : 'none';
   document.getElementById('fabBack').style.display = editId ? 'block' : 'none';
+  document.getElementById('rsrcSeg').querySelectorAll('[data-rs]').forEach(function(el){
+    el.classList.toggle('on', el.dataset.rs === (F.rsrc || 'hi3'));
+    el.onclick = function(){
+      F.rsrc = el.dataset.rs;
+      if(F.rsrc !== 'manual'){ F.rate = ''; }
+      renderAdd(); if(F.rsrc !== 'manual') autoRate(true);
+    };
+  });
   document.getElementById('btnSave').textContent = editId ? '更新這筆' : '儲存';
   if(F.rate === '' && F.amt === ''){ autoRate(false); }
 }
@@ -904,6 +934,24 @@ function updateConv(){
     S.rateCache[key] = r; saveLocal(); updateConv();
   }, function(){ out.textContent = '抓不到 ' + cc + ' 匯率'; });
 }
+function addDays(iso, n){
+  var d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function fetchRateHi3(cur, home, date, ok, fail){
+  var today = todayISO();
+  var dates = [date, addDays(date, 1), addDays(date, 2)].map(function(d){ return d > today ? today : d; });
+  dates = dates.filter(function(d, i){ return dates.indexOf(d) === i; });
+  var best = 0, done = 0;
+  dates.forEach(function(d){
+    fetchRateFor(cur, home, d, function(r){ if(r > best) best = r; done++; fin(); }, function(){ done++; fin(); });
+  });
+  function fin(){
+    if(done < dates.length) return;
+    if(best > 0) ok(roundRate(best)); else fail();
+  }
+}
 function fetchRateFor(cur, home, date, ok, fail){
   var today = todayISO();
   var d = (date && date < today) ? date : 'latest';
@@ -926,19 +974,27 @@ function autoRate(showErr){
   var lk = lockObj();
   if(lk.on && F.rate){ info.textContent = '🔒 匯率已鎖定 ' + F.rate + '（取消鎖定才會重抓）'; updateConv(); return; }
   if(F.cur === t.home){ F.rate = 1; document.getElementById('eRate').value = 1; info.textContent = '同主幣別，匯率 1'; updateConv(); return; }
+  var src = F.rsrc || 'hi3';
+  if(src === 'manual'){ info.textContent = '✍️ 手動匯率（自行輸入或改數字）'; updateConv(); return; }
   var dk = F.date || todayISO();
-  var key = F.cur + '_' + t.home + '_' + dk;
-  var lab = (dk === todayISO()) ? '今日' : dk + ' 當日';
-  if(S.rateCache[key]){ F.rate = S.rateCache[key]; document.getElementById('eRate').value = F.rate; info.textContent = lab + ' 1 ' + F.cur + ' ≈ ' + F.rate + ' ' + t.home + '（快取，可手動改）'; updateConv(); return; }
-  info.textContent = '匯率抓取中…（' + lab + '）';
-  fetchRateFor(F.cur, t.home, dk, function(r){
+  var key = F.cur + '_' + t.home + '_' + dk + (src === 'hi3' ? '_hi3' : '');
+  var lab3 = dk.slice(5).replace('-','/') + '～' + addDays(dk, 2).slice(5).replace('-','/');
+  function infoTxt(r){
+    return src === 'hi3'
+      ? '📈 取 ' + lab3 + ' 三日內最高 ' + r + '。信用卡請款會延遲、實際匯率常較高，預設先多估，帳單來後用「💳 帳單補正」修正。'
+      : ((dk === todayISO()) ? '今日' : dk + ' 當日') + '均價 1 ' + F.cur + ' ≈ ' + r + ' ' + t.home + '（可手動改）';
+  }
+  if(S.rateCache[key]){ F.rate = S.rateCache[key]; document.getElementById('eRate').value = F.rate; info.textContent = infoTxt(F.rate); updateConv(); return; }
+  info.textContent = '匯率抓取中…';
+  var fetcher = src === 'hi3' ? fetchRateHi3 : fetchRateFor;
+  fetcher(F.cur, t.home, dk, function(r){
     S.rateCache[key] = r; saveLocal();
     F.rate = r; document.getElementById('eRate').value = r;
-    info.textContent = lab + ' 1 ' + F.cur + ' ≈ ' + r + ' ' + t.home + '（可手動改成刷卡匯率）';
+    info.textContent = infoTxt(r);
     updateConv();
   }, function(){
     if(showErr) toast('抓不到匯率，請手動輸入');
-    info.textContent = '抓不到 ' + lab + ' ' + F.cur + '→' + t.home + '，請手動輸入';
+    info.textContent = '抓不到 ' + F.cur + '→' + t.home + '，請手動輸入';
   });
 }
 function dupCheck(e){
@@ -991,7 +1047,7 @@ function saveExpense(){
   var e = { id: editId || uid(), date: F.date || todayISO(), kind: F.kind === 'loan' ? 'loan' : 'exp', cat: F.cat, desc: F.desc || (F.kind === 'loan' ? '借款' : ci[2]),
     cur: F.cur, amt: amt, rate: rate, card: !!F.card, feePct: Number(F.feePct) || 0,
     payer: F.payer, split: F.split.slice(), treat: treated.slice(), treatBy: tb,
-    mode: F.mode, custom: {}, _mt: Date.now() };
+    mode: F.mode, custom: {}, rsrc: F.rsrc || 'hi3', _mt: Date.now() };
   if(F.mode === 'custom' && !F.priv){ F.split.forEach(function(id){ e.custom[id] = Number(F.custom[id]) || 0; }); }
   if(F.priv){ e.priv = true; e.payer = me(); e.split = [me()]; e.treat = []; e.treatBy = {}; e.mode = 'avg'; e.custom = {}; }
   if(!editId && !dupCheck(e)) return;
@@ -1051,7 +1107,7 @@ function delExpense(){ if(!editId) return; var id = editId; F = null; delExpense
 function loadFromExpense(e){
   return { date:e.date, cat:e.cat, desc:e.desc, cur:e.cur, amt:e.amt, rate:e.rate, card:!!e.card, feePct:e.feePct,
     payer:e.payer, split:(e.split||[]).slice(), treat:(e.treat||[]).slice(), treatBy: Object.assign({}, e.treatBy||{}),
-    mode:e.mode||'avg', custom: Object.assign({}, e.custom||{}), priv: !!e.priv, kind: e.kind || 'exp' };
+    mode:e.mode||'avg', custom: Object.assign({}, e.custom||{}), priv: !!e.priv, kind: e.kind || 'exp', rsrc: e.rsrc || 'manual' };
 }
 function editExpense(id){
   var e = findExpense(id); if(!e) return;
@@ -1068,6 +1124,55 @@ function copyFromExpense(id){
   if(lk.on && lk.cur){ F.cur = lk.cur; F.rate = lk.rate || F.rate; }
   go('add');
   toast('已帶入「' + e.desc + '」，改金額後儲存');
+}
+function openAdj(){
+  var e = editId && findExpense(editId);
+  if(!e || e.priv || e.kind === 'loan') return;
+  var t = trip();
+  var cur = homeAmt(e);
+  document.getElementById('adjOrig').textContent = '原記帳：' + e.cur + ' ' + fmt2(e.amt) + ' × ' + e.rate + (e.card ? '（＋' + e.feePct + '%）' : '') + ' ＝ ' + t.home + ' ' + fmt2(cur);
+  document.getElementById('adjAmt').value = '';
+  document.getElementById('adjDiff').textContent = '';
+  document.getElementById('adjModal').classList.add('on');
+}
+function adjPreview(){
+  var e = editId && findExpense(editId); if(!e) return null;
+  var t = trip();
+  var actual = Number(document.getElementById('adjAmt').value);
+  var el = document.getElementById('adjDiff');
+  if(!(actual > 0)){ el.textContent = ''; return null; }
+  var curH = homeAmt(e);
+  var diff = actual - curH;
+  var fac = e.card ? (1 + (Number(e.feePct) || 0) / 100) : 1;
+  var nrFull = actual / ((Number(e.amt) || 1) * fac);
+  var nr = Math.round(nrFull * 1e8) / 1e8;
+  el.innerHTML = '實際匯率 ≈ <b>' + roundRate(nrFull) + '</b>｜差額 <b style="color:' + (diff <= 0 ? '#059669' : 'var(--danger)') + '">' + (diff > 0 ? '+' : '') + fmt2(diff) + '</b>' + (diff <= 0 ? '（多估退回）' : '（少估補收）');
+  return { e: e, actual: actual, diff: diff, nr: nr };
+}
+function adjApply(){
+  var p = adjPreview();
+  if(!p){ toast('請輸入帳單金額'); return; }
+  var t = trip();
+  if(Math.abs(p.diff) < 1){ toast('差額不到 1 元，不需補正'); document.getElementById('adjModal').classList.remove('on'); return; }
+  var settled = dayKeysOf(t, p.e.date).length > 0;
+  if(settled){
+    var e2 = { id: uid(), date: todayISO(), kind: 'exp', cat: p.e.cat, desc: p.e.desc + ' 匯率補正', adj: true,
+      cur: t.home, amt: p.diff, rate: 1, card: false, feePct: 0, rsrc: 'manual',
+      payer: p.e.payer, split: (p.e.split || []).slice(), treat: (p.e.treat || []).slice(), treatBy: Object.assign({}, p.e.treatBy || {}),
+      mode: p.e.mode || 'avg', custom: Object.assign({}, p.e.custom || {}), _mt: Date.now() };
+    if(e2.mode === 'custom'){
+      var ratio = p.diff / (homeAmt(p.e) || 1);
+      Object.keys(e2.custom).forEach(function(k){ e2.custom[k] = Math.round(e2.custom[k] * ratio * 100) / 100; });
+    }
+    t.expenses.push(e2);
+    toast('該日已結清，已新增補正帳 ' + (p.diff > 0 ? '+' : '') + fmt(p.diff));
+  } else {
+    p.e.rate = p.nr; p.e.rsrc = 'manual'; p.e._mt = Date.now();
+    toast('已補正，該筆改為帳單實際金額');
+  }
+  document.getElementById('adjModal').classList.remove('on');
+  F = null; editId = null;
+  save(); go('ledger');
 }
 function copyAsNew(){
   if(!editId) return;
@@ -2276,9 +2381,11 @@ window.addEventListener('cloud-ready', function(){
   document.getElementById('eConvCur').onchange = function(){ _convCur = this.value; updateConv(); };
   document.getElementById('eRate').oninput = function(){
     F.rate = this.value;
+    F.rsrc = 'manual';
+    document.getElementById('rsrcSeg').querySelectorAll('[data-rs]').forEach(function(el){ el.classList.toggle('on', el.dataset.rs === 'manual'); });
     var lk = lockObj();
     if(lk.on){ lk.rate = F.rate; saveLocal(); }
-    document.getElementById('rateInfo').textContent = '手動匯率';
+    document.getElementById('rateInfo').textContent = '✍️ 手動匯率';
     updateConv();
   };
   document.getElementById('btnRate').onclick = function(){
@@ -2309,6 +2416,11 @@ window.addEventListener('cloud-ready', function(){
   window.addEventListener('online', renderSync);
   window.addEventListener('offline', renderSync);
   document.getElementById('btnCopy').onclick = copyAsNew;
+  document.getElementById('btnAdj').onclick = openAdj;
+  document.getElementById('adjAmt').oninput = adjPreview;
+  document.getElementById('adjGo').onclick = adjApply;
+  document.getElementById('adjClose').onclick = function(){ document.getElementById('adjModal').classList.remove('on'); };
+  document.getElementById('adjModal').onclick = function(ev){ if(ev.target === this) this.classList.remove('on'); };
   document.getElementById('btnTpl').onclick = saveTpl;
   document.getElementById('btnDel').onclick = delExpense;
   document.getElementById('hHelp').onclick = function(){
@@ -2388,4 +2500,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0710-15 -->
+<!-- T0710-16 -->
