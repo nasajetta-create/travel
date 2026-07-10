@@ -437,8 +437,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 17;
-var VER = 'T0710-17';
+var CODE_VERSION = 18;
+var VER = 'T0710-18';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍜','餐飲'],['trans','🚇','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -508,6 +508,7 @@ function saveLocal(){ try{ localStorage.setItem(LSKEY, JSON.stringify(S)); }catc
 function save(){ saveLocal(); pushCloud(); renderAll(); }
 function pushCloud(){
   var t = trip(); if(!t || !window._cloud || !window._cloud.ready) return;
+  if(S.nuked && S.nuked[t.code]) return;
   clearTimeout(_ct);
   _pendSync = true; renderSync();
   _ct = setTimeout(function(){
@@ -2338,12 +2339,29 @@ function impMembersGo(){
   document.getElementById('impModal').classList.remove('on');
   if(n){ bumpMeta(); save(); toast('已帶入 ' + n + ' 位成員'); }
 }
+function forceReload(){
+  var done = function(){ location.reload(); };
+  if('serviceWorker' in navigator && navigator.serviceWorker.getRegistration){
+    navigator.serviceWorker.getRegistration().then(function(reg){
+      if(reg) return reg.update();
+    }).then(done, done);
+  } else done();
+}
 function checkUpdate(){
   if(location.protocol.indexOf('http') !== 0) return;
   fetch('sw-tsplit.js?cb=' + Date.now(), { cache: 'no-store' }).then(function(r){ return r.text(); }).then(function(txt){
     var m = txt.match(/tsplit-v(\d+)/);
     if(m && Number(m[1]) > CODE_VERSION){
-      document.getElementById('updBar').style.display = 'block';
+      var editing = document.getElementById('v-add').classList.contains('act');
+      var last = 0;
+      try{ last = Number(sessionStorage.getItem('tsplit_fr') || 0); }catch(e){}
+      if(!editing && Date.now() - last > 120000){
+        try{ sessionStorage.setItem('tsplit_fr', String(Date.now())); }catch(e){}
+        toast('🔄 發現新版本，自動更新中…');
+        setTimeout(forceReload, 700);
+      } else {
+        document.getElementById('updBar').style.display = 'block';
+      }
     }
   }).catch(function(){});
 }
@@ -2382,12 +2400,13 @@ function importBackup(file){
   };
   rd.readAsText(file);
 }
-function nukeTrip(code, cloudToo){
+function nukeTrip(code, cloudToo, byRemote){
   var nm = (S.trips[code] || {}).name || code;
   if(window._cloud && window._cloud.ready){
     if(cloudToo && window._cloud.del) window._cloud.del(code);
     else if(window._cloud.stop) window._cloud.stop(code);
   }
+  if(cloudToo || byRemote){ S.nuked = S.nuked || {}; S.nuked[code] = 1; }
   delete S.trips[code];
   delete S.me[code];
   if(S.privExp) delete S.privExp[code];
@@ -2398,7 +2417,7 @@ function nukeTrip(code, cloudToo){
   }
   F = null; editId = null; _convCur = null;
   saveLocal(); renderAll();
-  toast(cloudToo ? '已刪除「' + nm + '」' : '已從這支手機移除「' + nm + '」');
+  toast(byRemote ? '「' + nm + '」已被發起人整團刪除' : (cloudToo ? '已刪除「' + nm + '」' : '已從這支手機移除「' + nm + '」'));
 }
 function genCode(){
   var A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', s = '';
@@ -2436,6 +2455,12 @@ function startListen(){
 }
 function applyRemote(code, remote){
   if(!remote) return;
+  if(remote.__del){
+    if(S.trips[code]) nukeTrip(code, false, true);
+    else { S.nuked = S.nuked || {}; S.nuked[code] = 1; saveLocal(); }
+    return;
+  }
+  if(S.nuked && S.nuked[code]) return;
   var local = S.trips[code];
   if(!local){ S.trips[code] = remote; }
   else {
@@ -2460,6 +2485,8 @@ function applyRemote(code, remote){
 window.addEventListener('cloud-ready', function(){
   renderSync(); startListen();
   var t = trip(); if(t) pushCloud();
+  var vt = document.getElementById('v-trip');
+  if(vt && vt.classList.contains('act')) renderTrip();
 });
 
 /* ───── 初始化 ───── */
@@ -2577,11 +2604,14 @@ try{
       },
       load: async function(code){
         const s = await fsM.getDoc(fsM.doc(db, 'trips', code));
-        return s.exists() ? JSON.parse(s.data().d) : null;
+        if(!s.exists()) return null;
+        const dd = s.data();
+        if(dd.del) return null;
+        return JSON.parse(dd.d);
       },
       del: function(code){
         if(_subs[code]){ _subs[code](); delete _subs[code]; }
-        return fsM.deleteDoc(fsM.doc(db, 'trips', code))
+        return fsM.setDoc(fsM.doc(db, 'trips', code), { del: 1, _ts: Date.now() })
           .catch(function(e){ console.error('[cloud] del fail', e); });
       },
       stop: function(code){
@@ -2592,7 +2622,9 @@ try{
         _subs[code] = fsM.onSnapshot(fsM.doc(db, 'trips', code), function(s){
           if(s.metadata.hasPendingWrites) return;
           if(s.exists()){
-            try{ cb(code, JSON.parse(s.data().d)); }catch(e){ console.error('[cloud] parse fail', e); }
+            var dd = s.data();
+            if(dd.del){ cb(code, { __del: 1 }); return; }
+            try{ cb(code, JSON.parse(dd.d)); }catch(e){ console.error('[cloud] parse fail', e); }
           }
         }, function(e){ console.error('[cloud] listen fail', e); });
       }
@@ -2610,4 +2642,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0710-17 -->
+<!-- T0710-18 -->
