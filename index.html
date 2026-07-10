@@ -329,8 +329,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 13;
-var VER = 'T0710-13';
+var CODE_VERSION = 14;
+var VER = 'T0710-14';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍜','餐飲'],['trans','🚇','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -1103,7 +1103,7 @@ function renderLedger(){
       var ids = (e.split||[]);
       var shown = ids.slice(0, 5);
       sd += shown.map(function(id){ return bdg(id, 18, treats.indexOf(id) >= 0 ? '<span class="gift" style="font-size:9px;top:-4px;right:-4px">🎁</span>' : ''); }).join('');
-      if(ids.length > 5) sd += '<span style="color:var(--tx3)">+' + (ids.length - 5) + '，共' + ids.length + '位</span>';
+      sd += '<span style="color:var(--tx3)">' + (ids.length > 5 ? '+' + (ids.length - 5) + '，' : '') + '共' + ids.length + '位</span>';
     }
     html += '<div class="exp" data-eid="' + e.id + '"><span class="ico ct-' + e.cat + '">' + icoCh + '</span>' +
       '<div class="mid"><div class="t1">' + esc(e.desc) + '</div><div class="t2">' + sd + '</div></div>' +
@@ -2267,4 +2267,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0710-13 -->
+<!-- T0710-14 -->
