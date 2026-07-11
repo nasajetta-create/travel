@@ -1,4 +1,4 @@
-var C = 'tsplit-v32'; /* T0711-13 */
+var C = 'tsplit-v33'; /* T0711-14 */
 self.addEventListener('install', function(e){ self.skipWaiting(); });
 self.addEventListener('activate', function(e){
   e.waitUntil(caches.keys().then(function(ks){

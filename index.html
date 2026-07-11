@@ -497,8 +497,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 32;
-var VER = 'T0711-13';
+var CODE_VERSION = 33;
+var VER = 'T0711-14';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -1529,22 +1529,37 @@ function renderLedger(){
       '<div class="ldate"><div class="m">' + Number(e.date.slice(5,7)) + '月</div><div class="d">' + e.date.slice(8,10) + '</div></div>' +
       ico +
       '<div class="lmid"><div class="t1">' + esc(e.desc) + '</div><div class="t2">' + sd + '</div></div>' +
-      '<div class="lamt">' + amtH + '</div>' +
-      '<button class="rx" data-copy-e="' + e.id + '" aria-label="複製">⧉</button>' +
-      '<button class="rx" data-del-e="' + e.id + '" aria-label="刪除">✕</button></div>';
+      '<div class="lamt">' + amtH + '</div></div>';
   });
   var html = rows ? '<div class="card" style="padding:2px 12px">' + rows + '</div>' : '';
-  list.innerHTML = banner + myCard + '<div class="hint" style="margin:2px 4px 6px">點整列＝編輯｜⧉ 複製成新帳｜✕ 刪除</div>' + html;
+  list.innerHTML = banner + myCard + '<div class="hint" style="margin:2px 4px 6px">點整列＝編輯｜👉 往右滑刪除</div>' + html;
   var ax = document.getElementById('a2hsX');
   if(ax) ax.onclick = function(){ S.dismiss['a2hs'] = true; saveLocal(); renderLedger(); };
   bindPay(list, renderLedger);
-  list.querySelectorAll('[data-eid]').forEach(function(el){ el.onclick = function(){ editExpense(el.dataset.eid); }; });
-  list.querySelectorAll('[data-del-e]').forEach(function(btn){
-    btn.onclick = function(ev){ ev.stopPropagation(); delExpenseById(btn.dataset.delE); };
+  list.querySelectorAll('.lrow[data-eid]').forEach(function(el){ bindSwipeRow(el); });
+}
+function bindSwipeRow(el){
+  var sx = 0, sy = 0, moved = false, active = false;
+  el.addEventListener('pointerdown', function(e){ sx = e.clientX; sy = e.clientY; moved = false; active = true; el.style.transition = ''; });
+  el.addEventListener('pointermove', function(e){
+    if(!active) return;
+    var dx = e.clientX - sx, dy = e.clientY - sy;
+    if(Math.abs(dx) > 6 || Math.abs(dy) > 6) moved = true;
+    if(dx > 0 && Math.abs(dy) < 40){ var d = Math.min(dx, 130); el.style.transform = 'translateX(' + d + 'px)'; el.style.opacity = 1 - d / 300; }
   });
-  list.querySelectorAll('[data-copy-e]').forEach(function(btn){
-    btn.onclick = function(ev){ ev.stopPropagation(); copyFromExpense(btn.dataset.copyE); };
+  el.addEventListener('pointerup', function(e){
+    if(!active) return; active = false;
+    var dx = e.clientX - sx, dy = Math.abs(e.clientY - sy);
+    el.style.transition = 'transform .18s, opacity .18s';
+    if(dx > 95 && dy < 45){
+      el.style.transform = ''; el.style.opacity = '';
+      delExpenseById(el.dataset.eid);
+    } else {
+      el.style.transform = ''; el.style.opacity = '';
+      if(!moved) editExpense(el.dataset.eid);
+    }
   });
+  el.addEventListener('pointercancel', function(){ active = false; el.style.transition = 'transform .18s, opacity .18s'; el.style.transform = ''; el.style.opacity = ''; });
 }
 
 /* ───── 結算（按日）───── */
@@ -3369,4 +3384,4 @@ try{
 </body>
 </html>
 
-<!-- T0711-13 deploy -->
+<!-- T0711-14 deploy -->
