@@ -160,6 +160,20 @@ input[type=date]{-webkit-appearance:none;appearance:none;height:47px;display:fle
 .chip{display:inline-flex;align-items:center;gap:4px;padding:7px 13px;border-radius:18px;border:1px solid var(--inBd);background:var(--card);font-size:15px;cursor:pointer;user-select:none;color:var(--tx)}
 .chip.on{background:var(--accBg);border-color:var(--acc);color:var(--accTx);font-weight:600}
 .chip.sq{border-radius:8px}
+.fld3{display:flex;align-items:stretch;border:1px solid var(--inBd);border-radius:10px;overflow:hidden;background:var(--card)}
+.fld3>select,.fld3>input{border:none!important;background:transparent;padding:10px 10px;font-size:15px;outline:none;color:var(--tx);border-radius:0}
+.fld3-cur{flex:0 0 auto;width:auto;border-right:1px solid var(--inBd)!important}
+.fld3-amt{flex:1;min-width:0}
+.fld3-card{display:flex;align-items:center;gap:5px;padding:0 13px;font-size:14px;border-left:1px solid var(--inBd);color:var(--tx2);cursor:pointer;user-select:none;white-space:nowrap}
+.fld3-card input{width:16px;height:16px}
+.fld3-card.on{background:var(--accBg);color:var(--accTx)}
+.fld3-icon{flex:0 0 auto;width:46px;border:none;border-left:1px solid var(--inBd);background:transparent;font-size:17px;cursor:pointer;color:var(--tx2)}
+.tpldrop{position:absolute;left:0;right:0;top:100%;z-index:30;background:var(--card);border:1px solid var(--inBd);border-radius:10px;margin-top:3px;box-shadow:0 6px 18px rgba(0,0,0,.16);max-height:250px;overflow-y:auto}
+.tpldrop .tdhdr{font-size:11px;color:var(--tx3);padding:7px 11px 2px}
+.tpldrop .tdrow{display:flex;align-items:center;gap:8px;padding:9px 11px;font-size:14px;cursor:pointer;border-top:1px solid var(--line)}
+.tpldrop .tdrow.dashed{color:var(--tx2)}
+.tpldrop .tdstar{margin-left:auto;font-size:16px;padding:2px 6px;cursor:pointer}
+.tpldrop .tdfoot{padding:9px 11px;font-size:13px;color:var(--acc);cursor:pointer;border-top:1px solid var(--line)}
 .advsec>summary{list-style:none;cursor:pointer;font-size:13px;color:var(--acc);padding:4px 0;user-select:none}
 .advsec>summary::-webkit-details-marker{display:none}
 .advsec>summary::before{content:'▸ ';font-size:11px}
@@ -304,29 +318,19 @@ details.tsec>.tbody{padding:2px 1px 15px}
 </section>
 
 <section id="v-add">
-  <div class="card" id="tplCard" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="lbl" style="margin:0">常用項目（點一下帶入）</span><span style="display:flex;gap:6px"><span class="chip" id="tplPresetBtn" style="padding:3px 10px;font-size:13px">＋ 範本</span><span class="chip" id="tplEditBtn" style="padding:3px 10px;font-size:13px">編輯</span></span></div>
-    <div class="chips" id="tplChips" style="margin-top:6px"></div>
-    <div class="hint" id="tplHint" style="margin-top:6px;display:none">實線＝已收藏，✕ 可刪除｜虛線＝最近記過的，按 ➕ 收藏成常用</div>
-  </div>
   <div class="card">
-    <div id="kindSeg" style="display:flex;align-items:center;margin-bottom:10px"></div>
+    <div id="kindSeg" style="display:flex;align-items:center;gap:8px;margin-bottom:10px"></div>
     <div><div class="lbl">日期</div><input type="date" id="eDate"></div>
-    <div style="margin-top:8px"><div class="lbl">項目</div><input type="text" id="eDesc" placeholder="輸入項目名稱"></div>
+    <div style="margin-top:8px;position:relative"><div class="lbl">項目</div><input type="text" id="eDesc" placeholder="輸入項目名稱，或點選常用" autocomplete="off"><div id="tplDrop" class="tpldrop" style="display:none"></div></div>
     <div id="catBlock"><div class="lbl" style="margin-top:8px">類別</div>
     <div class="chips" id="catChips"></div></div>
   </div>
   <div class="card">
-    <div class="row">
-      <div><div class="lbl">消費幣別</div><select id="eCur"></select></div>
-      <div style="flex:1.5"><div class="lbl">消費金額</div><input type="number" id="eAmt" inputmode="decimal" placeholder="0"></div>
-    </div>
+    <div class="lbl">消費幣別／金額</div>
+    <div class="fld3"><select id="eCur" class="fld3-cur"></select><input type="number" id="eAmt" inputmode="decimal" placeholder="金額" class="fld3-amt"><label class="fld3-card" id="eCardWrap"><input type="checkbox" id="eCard">刷卡</label></div>
     <div class="fnote" id="feeNote" style="display:none"></div>
-    <div style="margin-top:8px"><div class="lbl">匯率（1 消費幣 = ? 主幣）</div>
-      <div class="row" style="gap:6px"><input type="number" id="eRate" inputmode="decimal" step="any"><button class="btn sub mini fix" id="btnRate">重抓</button></div>
-    </div>
-    <div style="margin-top:8px"><div class="lbl">信用卡手續費</div>
-      <div class="row" style="gap:6px"><label class="fix" style="display:flex;align-items:center;gap:5px;font-size:14.5px"><input type="checkbox" id="eCard" style="width:18px;height:18px">刷卡</label><input type="number" id="eFee" inputmode="decimal" step="any" placeholder="%" style="flex:0 0 90px"><span class="fix" style="font-size:13px;color:var(--tx2)">%</span><span style="flex:1"></span></div>
+    <div id="rateWrap" style="margin-top:10px"><div class="lbl">匯率 <span style="color:var(--tx3);font-weight:400">（預設為 3 日內高值）</span></div>
+      <div class="fld3"><input type="number" id="eRate" inputmode="decimal" step="any" class="fld3-amt"><button class="fld3-icon" id="btnRate" aria-label="重新抓匯率">🔄</button></div>
     </div>
     <div class="hint" id="rateInfo"></div>
     <details class="advsec" id="rateAdv" style="margin-top:8px"><summary>⚙️ 進階：匯率來源／鎖定／換算參考</summary>
@@ -457,8 +461,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 25;
-var VER = 'T0711-06';
+var CODE_VERSION = 26;
+var VER = 'T0711-07';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -774,7 +778,6 @@ function renderAdd(){
   document.getElementById('eAmt').value = F.amt;
   document.getElementById('eRate').value = F.rate;
   document.getElementById('eCard').checked = !!F.card;
-  document.getElementById('eFee').value = F.feePct;
   document.getElementById('eCur').value = F.cur;
   document.getElementById('eMode').value = F.mode;
   document.getElementById('ePriv').checked = !!F.priv;
@@ -783,11 +786,17 @@ function renderAdd(){
   var loan = F.kind === 'loan';
   var ks = document.getElementById('kindSeg');
   ks.innerHTML = '<span style="font-size:15px;font-weight:600">' + (loan ? '💸 記一筆借款' : '🧾 記一筆消費') + '</span>' +
+    '<button id="kindDel" title="刪除／放棄這筆" style="margin-left:6px;border:none;background:transparent;font-size:17px;cursor:pointer;padding:2px 4px">🗑️</button>' +
     '<span id="kindSwap" style="margin-left:auto;font-size:12.5px;color:var(--acc);cursor:pointer">' + (loan ? '改記消費 ›' : '改記借款 ›') + '</span>';
   document.getElementById('kindSwap').onclick = function(){
     F.kind = loan ? 'exp' : 'loan';
     if(F.kind === 'loan'){ F.priv = false; F.treat = []; F.treatBy = {}; F.mode = 'avg'; F.cat = 'misc'; F.split = []; }
     renderAdd();
+  };
+  document.getElementById('kindDel').onclick = function(){
+    if(editId){ delExpense(); return; }
+    if(F && (F.desc || F.amt)){ if(!confirm('放棄這筆未儲存的記帳？')) return; }
+    F = null; editId = null; go('ledger'); toast('已放棄');
   };
   document.getElementById('catBlock').style.display = loan ? 'none' : '';
   document.getElementById('privRow').style.display = loan ? 'none' : '';
@@ -828,7 +837,13 @@ function renderAdd(){
     renderAdd(); }; });
   renderTreatBy();
   renderCustom();
-  renderTpl();
+  var sameCur = (F.cur === t.home);
+  if(sameCur && Number(F.rate) !== 1) F.rate = 1;
+  document.getElementById('eRate').value = F.rate;
+  document.getElementById('rateWrap').style.display = sameCur ? 'none' : '';
+  document.getElementById('rateAdv').style.display = sameCur ? 'none' : '';
+  F.feePct = F.card ? (t.feePct || 0) : 0;
+  document.getElementById('eCardWrap').classList.toggle('on', !!F.card);
   updateConv();
   document.getElementById('btnDel').style.display = editId ? 'block' : 'none';
   document.getElementById('btnCopy').style.display = editId ? 'block' : 'none';
@@ -865,74 +880,70 @@ function renderTreatBy(){
     F.treatBy[sel.dataset.tb] = sel.value;
   });
 }
-var _tplEdit = false;
 function recentList(){
   var t = trip(); if(!t) return [];
   var es = t.expenses.filter(function(e){ return !e._del; }).concat(privList().filter(function(e){ return !e._del; }));
   es.sort(function(a,b){ return (b._mt||0) - (a._mt||0); });
-  return es.slice(0, 4);
+  return es.slice(0, 8);
 }
-function renderTpl(){
-  var t = trip(); if(!t) return;
-  var card = document.getElementById('tplCard');
-  var tpls = t.templates || [];
-  var tplNames = {};
+function tplData(t){
+  var tpls = t.templates || [], tplNames = {};
   tpls.forEach(function(p){ tplNames[p.name] = true; if(p.desc) tplNames[p.desc] = true; });
   var recs = [], seen = {};
   recentList().forEach(function(e){
-    if(recs.length >= 4) return;
     if(!e.desc || tplNames[e.desc] || seen[e.desc]) return;
-    seen[e.desc] = true;
-    recs.push(e);
+    seen[e.desc] = true; recs.push(e);
   });
-  card.style.display = '';
-  var box = document.getElementById('tplChips');
-  var html = tpls.map(function(p, i){
-    return '<span class="chip" data-tpl="' + i + '">' + esc(p.name) + (_tplEdit ? ' <b style="color:var(--danger)">✕</b>' : '') + '</span>';
-  }).join('');
-  html += recs.map(function(e){
-    return '<span class="chip" data-rec="' + e.id + '" style="border-style:dashed;color:var(--tx2)">' + esc(e.desc) + (_tplEdit ? ' <b style="color:var(--acc)">➕</b>' : '') + '</span>';
-  }).join('');
-  if(!tpls.length && !recs.length) html = '<div class="hint" style="margin:2px 0">還沒有常用項目。按「＋ 範本」從清單挑選，或先記幾筆再用「編輯」收藏。</div>';
-  box.innerHTML = html;
-  document.getElementById('tplHint').style.display = (_tplEdit && (tpls.length || recs.length)) ? '' : 'none';
-  box.querySelectorAll('[data-tpl]').forEach(function(el){
-    el.onclick = function(){
-      var i = Number(el.dataset.tpl), p = t.templates[i];
-      if(!p) return;
-      if(_tplEdit){
-        if(confirm('刪除常用項目「' + p.name + '」？')){ t.templates.splice(i,1); bumpMeta('templates'); saveLocal(); pushCloud(); renderTpl(); }
-        return;
-      }
-      F.cat = p.cat; F.desc = p.desc || p.name; F.card = !!p.card;
-      var lk = lockObj();
-      if(!lk.on){ F.cur = p.cur; F.rate = ''; }
-      renderAdd(); autoRate(true); toast('已帶入「' + p.name + '」，輸入金額即可');
-    };
-  });
-  box.querySelectorAll('[data-rec]').forEach(function(el){
-    el.onclick = function(){
-      var e = findExpense(el.dataset.rec);
-      if(!e) return;
-      if(_tplEdit){
-        var nm = (e.desc || catInfo(e.cat)[2]).slice(0, 12);
-        if(t.templates.some(function(p){ return p.name === nm; })){ toast('已有同名常用項目'); return; }
-        t.templates.push({ id: uid(), name: nm, cat: e.cat, desc: e.desc, cur: e.cur, card: !!e.card });
-        bumpMeta('templates'); saveLocal(); pushCloud(); renderTpl();
-        toast('已收藏「' + nm + '」');
-        return;
-      }
-      F.cat = e.cat; F.desc = e.desc; F.card = !!e.card;
-      var lk = lockObj();
-      if(!lk.on){ F.cur = e.cur; F.rate = ''; }
-      renderAdd(); autoRate(true); toast('已帶入「' + e.desc + '」，輸入金額即可');
-    };
-  });
-  var eb = document.getElementById('tplEditBtn');
-  eb.textContent = _tplEdit ? '完成' : '編輯';
-  eb.onclick = function(){ _tplEdit = !_tplEdit; renderTpl(); };
-  document.getElementById('tplPresetBtn').onclick = openPresets;
+  return { tpls: tpls, recs: recs };
 }
+function dropRow(it){
+  var payload = encodeURIComponent(JSON.stringify(it));
+  return '<div class="tdrow' + (it.fav ? '' : ' dashed') + '" data-pick="' + payload + '">' + esc(it.name) +
+    '<span style="font-size:11px;color:var(--tx3)">' + catInfo(it.cat)[2] + '</span>' +
+    '<span class="tdstar" data-fav="' + payload + '">' + (it.fav ? '⭐' : '☆') + '</span></div>';
+}
+function fillTplDrop(){
+  var t = trip(); if(!t) return;
+  var drop = document.getElementById('tplDrop'); if(!drop) return;
+  var q = (document.getElementById('eDesc').value || '').trim().toLowerCase();
+  var d = tplData(t), html = '';
+  if(q){
+    var hits = [];
+    d.tpls.forEach(function(p){ if((p.name||'').toLowerCase().indexOf(q) >= 0 || (p.desc||'').toLowerCase().indexOf(q) >= 0) hits.push({ fav:true, name:p.name, cat:p.cat, desc:p.desc, cur:p.cur, card:p.card }); });
+    d.recs.forEach(function(e){ if((e.desc||'').toLowerCase().indexOf(q) >= 0) hits.push({ fav:false, name:e.desc, cat:e.cat, desc:e.desc, cur:e.cur, card:e.card }); });
+    html += hits.slice(0, 3).map(dropRow).join('');
+  } else {
+    var favs = d.tpls.slice(0, 3), recs = d.recs.slice(0, 3);
+    if(favs.length) html += '<div class="tdhdr">⭐ 常用</div>' + favs.map(function(p){ return dropRow({ fav:true, name:p.name, cat:p.cat, desc:p.desc, cur:p.cur, card:p.card }); }).join('');
+    if(recs.length) html += '<div class="tdhdr">🕐 最近記過</div>' + recs.map(function(e){ return dropRow({ fav:false, name:e.desc, cat:e.cat, desc:e.desc, cur:e.cur, card:e.card }); }).join('');
+  }
+  html += '<div class="tdfoot" data-tpreset="1">＋ 從範本挑選…</div>';
+  drop.innerHTML = html;
+  drop.querySelectorAll('[data-pick]').forEach(function(el){
+    el.onclick = function(){
+      var it = JSON.parse(decodeURIComponent(el.dataset.pick));
+      F.cat = it.cat; F.desc = it.desc || it.name; F.card = !!it.card;
+      var lk = lockObj();
+      if(!lk.on){ if(it.cur) F.cur = it.cur; F.rate = ''; }
+      hideTplDrop(); renderAdd(); autoRate(true); toast('已帶入「' + it.name + '」，輸入金額即可');
+    };
+  });
+  drop.querySelectorAll('[data-fav]').forEach(function(el){
+    el.onclick = function(ev){ ev.stopPropagation(); toggleFav(JSON.parse(decodeURIComponent(el.dataset.fav))); };
+  });
+  var pf = drop.querySelector('[data-tpreset]');
+  if(pf) pf.onclick = function(){ hideTplDrop(); openPresets(); };
+}
+function toggleFav(it){
+  var t = trip(); if(!t) return;
+  var idx = -1;
+  (t.templates||[]).forEach(function(p, i){ if(p.name === it.name) idx = i; });
+  if(idx >= 0){ t.templates.splice(idx, 1); toast('已取消常用「' + it.name + '」'); }
+  else { t.templates.push({ id: uid(), name: it.name, cat: it.cat, desc: it.desc || it.name, cur: it.cur, card: !!it.card }); toast('已加入常用「' + it.name + '」'); }
+  bumpMeta('templates'); saveLocal(); pushCloud(); fillTplDrop();
+}
+function showTplDrop(){ fillTplDrop(); var d = document.getElementById('tplDrop'); if(d) d.style.display = ''; }
+function hideTplDrop(){ var d = document.getElementById('tplDrop'); if(d) d.style.display = 'none'; }
 var PRESETS = [
   ['food', ['早餐','午餐','晚餐','宵夜','咖啡/飲料','超市']],
   ['trans', ['機票','交通卡','計程車','地鐵/公車','租車/加油']],
@@ -973,16 +984,7 @@ function presetsGo(){
     n++;
   });
   document.getElementById('presetModal').classList.remove('on');
-  if(n){ bumpMeta('templates'); saveLocal(); pushCloud(); renderTpl(); toast('已加入 ' + n + ' 項常用'); }
-}
-function saveTpl(){
-  var t = trip(); if(!t) return;
-  var ci = catInfo(F.cat);
-  var name = (F.desc || ci[2]).slice(0, 12);
-  if(t.templates.some(function(p){ return p.name === name && p.cat === F.cat; })){ toast('已有同名常用項目'); return; }
-  t.templates.push({ id: uid(), name: name, cat: F.cat, desc: F.desc, cur: F.cur, card: !!F.card });
-  bumpMeta('templates'); saveLocal(); pushCloud(); renderTpl();
-  toast('已存成常用項目「' + name + '」');
+  if(n){ bumpMeta('templates'); saveLocal(); pushCloud(); fillTplDrop(); toast('已加入 ' + n + ' 項常用'); }
 }
 function renderCustom(){
   var box = document.getElementById('customBox');
@@ -3030,7 +3032,9 @@ function closestActiveTripCode(){
     var lk = lockObj();
     if(!lk.on){ F.rate = ''; autoRate(false); }
   };
-  document.getElementById('eDesc').oninput = function(){ F.desc = this.value; };
+  document.getElementById('eDesc').oninput = function(){ F.desc = this.value; if(F.kind !== 'loan') showTplDrop(); };
+  document.getElementById('eDesc').onfocus = function(){ if(F && F.kind !== 'loan') showTplDrop(); };
+  document.getElementById('eDesc').onblur = function(){ setTimeout(hideTplDrop, 180); };
   document.getElementById('eAmt').oninput = function(){ F.amt = this.value; updateConv(); csHint(); };
   document.getElementById('eCur').onchange = function(){
     F.cur = this.value; F.rate = '';
@@ -3064,8 +3068,7 @@ function closestActiveTripCode(){
     else toast('已解除鎖定');
     saveLocal(); renderAdd();
   };
-  document.getElementById('eCard').onchange = function(){ F.card = this.checked; updateConv(); };
-  document.getElementById('eFee').oninput = function(){ F.feePct = this.value; updateConv(); };
+  document.getElementById('eCard').onchange = function(){ F.card = this.checked; renderAdd(); };
   document.getElementById('eMode').onchange = function(){ F.mode = this.value; renderCustom(); };
   document.getElementById('ePriv').onchange = function(){
     if(this.checked && !me()){ this.checked = false; toast('先到「旅程」設定「我是誰」'); return; }
@@ -3186,4 +3189,4 @@ try{
 </body>
 </html>
 
-<!-- T0711-06 deploy -->
+<!-- T0711-07 deploy -->
