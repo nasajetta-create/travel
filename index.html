@@ -174,6 +174,8 @@ input[type=date]{-webkit-appearance:none;appearance:none;height:47px;display:fle
 .tpldrop .tdrow.dashed{color:var(--tx2)}
 .tpldrop .tdstar{margin-left:auto;font-size:16px;padding:2px 6px;cursor:pointer}
 .tpldrop .tdfoot{padding:9px 11px;font-size:13px;color:var(--acc);cursor:pointer;border-top:1px solid var(--line)}
+.tsw-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:1px solid var(--inBd);margin-bottom:6px;cursor:pointer}
+.tsw-row.on{border:2px solid var(--acc);background:var(--accBg)}
 .advsec>summary{list-style:none;cursor:pointer;font-size:13px;color:var(--acc);padding:4px 0;user-select:none}
 .advsec>summary::-webkit-details-marker{display:none}
 .advsec>summary::before{content:'▸ ';font-size:11px}
@@ -393,8 +395,8 @@ details.tsec>.tbody{padding:2px 1px 15px}
 </section>
 
 <nav>
-  <button id="nb-ledger" class="on" onclick="go('ledger')"><span class="nico">📒</span>帳本</button>
   <button id="nb-add" onclick="goAdd()"><span class="nico">➕</span>記一筆</button>
+  <button id="nb-ledger" class="on" onclick="go('ledger')"><span class="nico">📒</span>帳本</button>
   <button id="nb-settle" onclick="go('settle')"><span class="nico">⚖️</span>結算</button>
   <button id="nb-stats" onclick="go('stats')"><span class="nico">📊</span>統計</button>
   <button id="nb-trip" onclick="go('trip')"><span class="nico">🧳</span>旅程</button>
@@ -419,6 +421,12 @@ details.tsec>.tbody{padding:2px 1px 15px}
   <div class="hint" style="margin-bottom:8px">好朋友清單存在這支手機，換手機不會跟著走。</div>
   <div id="friList" style="max-height:300px;overflow-y:auto"></div>
   <div class="row" style="margin-top:12px"><button class="btn mini" id="friGo" style="flex:1">帶入勾選的好朋友</button><button class="btn sub mini" id="friClose" style="flex:1">取消</button></div>
+</div></div>
+<div class="modal" id="tripModal"><div class="mbox">
+  <div style="font-size:16px;font-weight:600;margin-bottom:2px">切換旅程</div>
+  <div class="hint" style="margin-bottom:10px">依開始日期新→舊</div>
+  <div id="tswList" style="max-height:340px;overflow-y:auto"></div>
+  <div class="row" style="margin-top:12px"><button class="btn sub mini" id="tswClose" style="flex:1">關閉</button></div>
 </div></div>
 <div class="modal" id="presetModal"><div class="mbox">
   <div style="font-size:16px;font-weight:600;margin-bottom:4px">＋ 從範本加入常用</div>
@@ -461,8 +469,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 26;
-var VER = 'T0711-07';
+var CODE_VERSION = 27;
+var VER = 'T0711-08';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -2300,10 +2308,11 @@ function renderTrip(){
     document.getElementById('verTag').textContent = VER + '（CODE_VERSION ' + CODE_VERSION + '）';
     return;
   }
-  var html = '<div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px"><span class="hint" style="margin:0">點區塊標題展開設定</span><button class="btn sub mini fix" id="btnHelp2">❓ 使用說明</button></div>';
+  var html = '';
+  var SEC = {};
   var _base = '';
   function cap(){ _base = html; html = ''; }
-  function pop(id, title, side, defOpen){ html = _base + secBox(id, title, side, html, defOpen); }
+  function pop(id, title, side, defOpen){ SEC[id] = secBox(id, title, side, html, defOpen); html = _base; }
   if(t){
     var ft = fundTotals(t);
     cap();
@@ -2318,8 +2327,7 @@ function renderTrip(){
       '<div class="hint" style="margin-top:5px">代碼給旅伴（旅程計畫→用代碼加入）。' + (isEmptyTrip ? '刪除＝誤建可直接刪。' : '移除＝只清這支手機、可再加入；整團刪除＝連雲端刪、無法復原。') + '</div>' +
       '<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px"></div>' +
       '<div class="lbl">旅程名稱</div><input type="text" id="tName" value="' + esc(t.name) + '">' +
-      '<div style="margin-top:8px"><div class="lbl">開始日期</div><input type="date" id="tSd" value="' + esc(t.startDate) + '"></div>' +
-      '<div style="margin-top:8px"><div class="lbl">結束日期</div><input type="date" id="tEd" value="' + esc(t.endDate) + '"' + (t.startDate ? ' min="' + esc(t.startDate) + '"' : '') + '></div>' +
+      '<div style="margin-top:8px"><div class="lbl">日期（起 → 訖）</div><div class="fld3"><input type="date" id="tSd" value="' + esc(t.startDate) + '" class="fld3-amt"><span style="display:flex;align-items:center;padding:0 8px;color:var(--tx3);border-left:1px solid var(--inBd);border-right:1px solid var(--inBd)">→</span><input type="date" id="tEd" value="' + esc(t.endDate) + '"' + (t.startDate ? ' min="' + esc(t.startDate) + '"' : '') + ' class="fld3-amt"></div></div>' +
       '<div style="margin-top:8px"><div class="lbl">主幣別（結算用）</div><select id="tHome">' +
       CURS.map(function(c){ return '<option' + (t.home === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') +
       '</select></div>' +
@@ -2350,8 +2358,8 @@ function renderTrip(){
           '人頭數 <input type="number" step="0.5" min="0" data-w="' + m.id + '" value="' + weightOf(t, m.id) + '" style="width:64px"></div>' +
           '<details class="advsec" id="memAdvSec" style="margin-top:8px"' + (_memAdv ? ' open' : '') + '><summary>收款帳戶／部分參加／結算歸戶</summary>' +
           '<div class="lbl" style="margin-top:10px">收款帳戶（結算轉帳用）</div>' +
-          '<div class="row" style="gap:6px"><input type="text" data-f="bank" data-m="' + m.id + '" value="' + esc(m.bank || '') + '" placeholder="銀行/代碼" style="flex:0 0 36%">' +
-          '<input type="text" data-f="acct" data-m="' + m.id + '" value="' + esc(m.acct || '') + '" placeholder="帳號" inputmode="numeric"></div>' +
+          '<div class="fld3"><input type="text" data-f="bank" data-m="' + m.id + '" value="' + esc(m.bank || '') + '" placeholder="銀行/代碼" class="fld3-cur" style="flex:0 0 36%;width:36%">' +
+          '<input type="text" data-f="acct" data-m="' + m.id + '" value="' + esc(m.acct || '') + '" placeholder="帳號" inputmode="numeric" class="fld3-amt"></div>' +
           '<div style="font-size:13.5px;margin-top:10px"><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" data-cas="' + m.id + '"' + (m.casual ? ' checked' : '') + ' style="width:17px;height:17px">部分參加</label></div>' +
           '<div class="hint" style="margin-top:3px">只參與部分帳目時勾選；記帳時再逐筆勾他有沒有分攤。</div>' +
           '<div class="lbl" style="margin-top:10px">結算歸戶</div>' +
@@ -2399,7 +2407,7 @@ function renderTrip(){
           }).join('') +
           (_meChange ? '<span class="chip" id="btnMeCxl">取消</span>' : '') +
           '</div><div class="hint" style="margin-top:6px">點自己的徽章。私人帳會歸在這個人名下，也會當預設付款人。</div>');
-    pop('mem', '👥 成員與我是誰',
+    pop('mem', '👥 成員設定',
       t.members.length ? (t.members.length + ' 位' + (me() ? '' : '｜⚠️ 先選我是誰')) : '⚠️ 先新增成員',
       !t.members.length || !me() || !!_memEdit);
     cap();
@@ -2424,13 +2432,13 @@ function renderTrip(){
       if(ft.bal < -0.5) html += '<div class="hint" style="color:var(--danger)">⚠️ 基金透支：超支部分實際由保管人或代墊者吸收，請補入金或調整帳目。</div>';
     }
     html += '<div class="lbl" style="margin-top:8px">＋新增入金（這筆錢由誰出資）</div>' +
-      '<div class="row"><select id="fcMid" style="flex:0 0 auto;width:auto">' +
+      '<div class="fld3"><select id="fcMid" class="fld3-cur" style="flex:0 0 auto;width:auto">' +
       t.members.map(function(m){ return '<option value="' + m.id + '">' + esc(m.name || '?') + '</option>'; }).join('') +
-      '</select><input type="date" id="fcDate" value="' + todayISO() + '" style="flex:0 0 auto;width:auto">' +
-      '<input type="number" id="fcAmt" inputmode="decimal" placeholder="金額（' + t.home + '）">' +
-      '<button class="btn mini fix" id="btnFc">＋入金</button></div>' +
+      '</select><input type="date" id="fcDate" value="' + todayISO() + '" class="fld3-cur" style="flex:0 0 auto;width:auto">' +
+      '<input type="number" id="fcAmt" inputmode="decimal" placeholder="金額（' + t.home + '）" class="fld3-amt">' +
+      '<button class="fld3-icon" id="btnFc" style="width:auto;padding:0 13px;font-size:13px;color:var(--accTx);white-space:nowrap">＋入金</button></div>' +
       '<div class="hint" style="margin-top:6px">記帳時付款人選「🏦基金」＝從基金支出；餘額按入金比例退還。</div>';
-    pop('fund', '🏦 共同基金', contribs.length ? ('餘額 ' + fmt(ft.bal)) : '沒用到可不理', false);
+    pop('fund', '🏦 基金(公費)', contribs.length ? ('餘額 ' + fmt(ft.bal)) : '沒用到可不理', false);
     cap();
     html += '<div class="row"><button class="btn sub mini" id="btnBakOut" style="flex:1">⬇ 匯出備份</button>' +
       '<button class="btn sub mini" id="btnBakIn" style="flex:1">⬆ 還原備份</button>' +
@@ -2462,18 +2470,20 @@ function renderTrip(){
       '</div><div class="hint" style="margin-top:4px">點一下開啟；要還原到進行中，開啟後在旅程頁按「還原」。</div></details>';
   }
   var othChip = '<span style="font-size:11.5px;padding:3px 10px;border-radius:12px;border:1px solid var(--acc);color:var(--acc)">' + act.length + ' 個進行中' + (arc.length ? ' · 📦' + arc.length : '') + ' ›</span>';
-  html += secBox('oth', '➕ 旅程計畫', othChip, lh, !t);
+  SEC.oth = secBox('oth', '➕ 旅程計畫', othChip, lh, !t);
+  SEC.look = secBox('look', '🎨 外觀主題',
+    (S.theme === 'dark' ? '深色' : S.theme === 'light' ? '淺色' : '跟隨系統') + '｜' +
+    (S.skin === 'white' ? '純白' : S.skin === 'sky' ? '天藍' : S.skin === 'matcha' ? '抹茶' : '經典'), themeBody, false);
+  var tripBar = '';
   if(t){
-    html = '<div class="card" style="display:flex;align-items:center;gap:8px;padding:10px 12px">' +
+    tripBar = '<div class="card" style="display:flex;align-items:center;gap:8px;padding:10px 12px">' +
       '<span style="font-size:18px">🧳</span>' +
       '<div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(t.name) + '</div>' +
       '<div class="hint" style="margin:0">進行中 ' + act.length + (arc.length ? ' · 已結束 ' + arc.length : '') + '</div></div>' +
       '<button class="btn sub mini" id="btnSwTrip">⇄ 切換</button>' +
-      '<button class="btn sub mini" id="btnNewTrip2">＋ 新增</button></div>' + html;
+      '<button class="btn sub mini" id="btnNewTrip2">＋ 新增</button></div>';
   }
-  html += secBox('look', '🎨 外觀主題',
-    (S.theme === 'dark' ? '深色' : S.theme === 'light' ? '淺色' : '跟隨系統') + '｜' +
-    (S.skin === 'white' ? '純白' : S.skin === 'sky' ? '天藍' : S.skin === 'matcha' ? '抹茶' : '經典'), themeBody, false);
+  html = tripBar + (SEC.oth||'') + (SEC.set||'') + (SEC.mem||'') + (SEC.fund||'') + (SEC.look||'') + (SEC.bak||'');
   tb.innerHTML = html;
   tb.querySelectorAll('details.tsec').forEach(function(d){
     d.ontoggle = function(){ S.tsec[d.dataset.sec] = d.open ? 1 : 0; saveLocal(); };
@@ -2484,9 +2494,10 @@ function renderTrip(){
   tb.querySelectorAll('[data-sk]').forEach(function(el){
     el.onclick = function(){ S.skin = el.dataset.sk; saveLocal(); applyTheme(); renderTrip(); };
   });
-  document.getElementById('btnHelp2').onclick = function(){ go('help'); };
+  var bH2 = document.getElementById('btnHelp2');
+  if(bH2) bH2.onclick = function(){ go('help'); };
   var bSw = document.getElementById('btnSwTrip');
-  if(bSw) bSw.onclick = function(){ S.tsec = S.tsec || {}; S.tsec.oth = 1; saveLocal(); renderTrip(); var el = document.querySelector('[data-sec="oth"]'); if(el) el.scrollIntoView({ behavior:'smooth', block:'start' }); };
+  if(bSw) bSw.onclick = openTripSwitch;
   var bNw2 = document.getElementById('btnNewTrip2');
   if(bNw2) bNw2.onclick = function(){ S.tsec = S.tsec || {}; S.tsec.oth = 1; saveLocal(); renderTrip(); var inp = document.getElementById('newTripName'); if(inp){ inp.scrollIntoView({ behavior:'smooth', block:'center' }); inp.focus(); } };
   var cb = document.getElementById('cloudBox');
@@ -2791,6 +2802,34 @@ function renderFriList(){
       S.friends.splice(i, 1); saveLocal(); renderFriList();
     };
   });
+}
+function openTripSwitch(){
+  var codes = Object.keys(S.trips);
+  function srt(a, b){ var ka = S.trips[a].startDate || '', kb = S.trips[b].startDate || ''; if(ka && kb && ka !== kb) return ka < kb ? 1 : -1; return (S.trips[b].createdAt || 0) - (S.trips[a].createdAt || 0); }
+  var act = codes.filter(function(c){ return !S.trips[c].archived; }).sort(srt);
+  var arc = codes.filter(function(c){ return S.trips[c].archived; }).sort(srt);
+  function row(c){
+    var tp = S.trips[c], cur = (c === S.cur);
+    var dt = tp.startDate ? (tp.startDate.slice(5).replace('-','/') + (tp.endDate ? '–' + tp.endDate.slice(5).replace('-','/') : '')) : '無日期';
+    return '<div class="tsw-row' + (cur ? ' on' : '') + '" data-tsw="' + c + '"><span style="font-size:18px">🧳</span>' +
+      '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:' + (cur ? '600' : '400') + '">' + esc(tp.name) + '</div>' +
+      '<div style="font-size:11px;color:var(--tx3)">' + dt + (cur ? ' · 目前' : '') + '</div></div>' +
+      (cur ? '<span style="color:var(--acc)">✓</span>' : '') + '</div>';
+  }
+  var html = '';
+  if(act.length) html += '<div class="tdhdr">進行中</div>' + act.map(row).join('');
+  if(arc.length) html += '<details style="margin-top:8px"><summary style="font-size:12.5px;color:var(--tx2);cursor:pointer;padding:4px 0">📦 已結束旅程（' + arc.length + '）</summary>' + arc.map(row).join('') + '</details>';
+  var box = document.getElementById('tswList');
+  box.innerHTML = html;
+  box.querySelectorAll('[data-tsw]').forEach(function(el){
+    el.onclick = function(){
+      var c = el.dataset.tsw;
+      document.getElementById('tripModal').classList.remove('on');
+      if(c === S.cur) return;
+      S.cur = c; F = null; editId = null; _convCur = null; startListen(); save(); toast('已切換到 ' + S.trips[c].name);
+    };
+  });
+  document.getElementById('tripModal').classList.add('on');
 }
 function openFriends(){
   var t = trip(); if(!t) return;
@@ -3108,6 +3147,8 @@ function closestActiveTripCode(){
   document.getElementById('friClose').onclick = function(){ document.getElementById('friModal').classList.remove('on'); };
   document.getElementById('friGo').onclick = friendsGo;
   document.getElementById('friModal').onclick = function(ev){ if(ev.target === this) this.classList.remove('on'); };
+  document.getElementById('tswClose').onclick = function(){ document.getElementById('tripModal').classList.remove('on'); };
+  document.getElementById('tripModal').onclick = function(ev){ if(ev.target === this) this.classList.remove('on'); };
   document.getElementById('presetClose').onclick = function(){ document.getElementById('presetModal').classList.remove('on'); };
   document.getElementById('presetGo').onclick = presetsGo;
   document.getElementById('presetModal').onclick = function(ev){ if(ev.target === this) this.classList.remove('on'); };
@@ -3126,7 +3167,9 @@ function closestActiveTripCode(){
     navigator.serviceWorker.register('./sw-tsplit.js').catch(function(){});
   }
   var _cc = closestActiveTripCode();
-  if(_cc){ S.cur = _cc; saveLocal(); }
+  if(_cc){ S.cur = _cc; }
+  S.tsec = {}; S.pvOpen = false; S.pvAdv = false;
+  saveLocal();
   renderAll();
   go(Object.keys(S.trips).length ? 'ledger' : 'trip');
 })();
@@ -3189,4 +3232,4 @@ try{
 </body>
 </html>
 
-<!-- T0711-07 deploy -->
+<!-- T0711-08 deploy -->
