@@ -304,11 +304,15 @@ details.tsec>.tbody{padding:2px 1px 15px}
 <body>
 <div id="wrap">
 <header>
+  <div id="hBoard" style="display:none;text-align:center;flex:0 0 auto;padding-right:12px;margin-right:12px;border-right:1px solid rgba(255,255,255,.32)">
+    <div id="hBoardNum" style="font-size:34px;font-weight:700;line-height:.95;color:#fff"></div>
+    <div id="hBoardCap" style="font-size:10px;letter-spacing:2px;color:#cfe0fb">DAYS</div>
+  </div>
   <div style="min-width:0;flex:1">
+    <div id="hBoardTag" style="font-size:10px;letter-spacing:1px;color:#cfe0fb;display:none">BOARDING · 距出發</div>
     <div class="hname" id="hName" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">旅遊分帳</div>
     <div id="hDates" style="font-size:10.5px;opacity:.85"></div>
   </div>
-  <div id="hCd" style="display:none;flex:0 0 auto;margin-right:6px"></div>
   <div style="display:flex;align-items:center;flex:0 0 auto">
     <div class="hsync" id="hSync">本機</div>
     <div class="hq" id="hHelp" title="使用說明">❓</div>
@@ -478,8 +482,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 29;
-var VER = 'T0711-10';
+var CODE_VERSION = 30;
+var VER = 'T0711-11';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -765,17 +769,20 @@ function renderAll(){
   if(t && t.domestic) hd += (hd ? '・' : '') + '🇹🇼 本國';
   document.getElementById('hDates').textContent = hd;
   document.getElementById('hDates').style.display = hd ? '' : 'none';
-  var hcdEl = document.getElementById('hCd');
+  var hb = document.getElementById('hBoard'), tag = document.getElementById('hBoardTag');
   var cd = tripCD(t);
   if(cd && (cd.state === 'before' || cd.state === 'during')){
-    var num, cap, bg, fg;
+    var num, cap, tg, col;
     if(cd.state === 'before'){
-      if(cd.days === 0){ num = '🎉'; cap = '出發'; bg = '#f6b41e'; fg = '#3d2a00'; }
-      else { num = cd.days; cap = '倒數天'; if(cd.days <= 7){ bg = '#f6b41e'; fg = '#3d2a00'; } else { bg = 'rgba(255,255,255,.18)'; fg = '#fff'; } }
-    } else { num = cd.dayN; cap = '/' + (cd.total || '?') + '天'; bg = '#2fbf88'; fg = '#053d2b'; }
-    hcdEl.innerHTML = '<div style="text-align:center;background:' + bg + ';border-radius:9px;padding:4px 10px;min-width:44px"><div style="font-size:20px;font-weight:700;color:' + fg + ';line-height:1">' + num + '</div><div style="font-size:9px;color:' + fg + ';opacity:.9;margin-top:1px">' + cap + '</div></div>';
-    hcdEl.style.display = '';
-  } else { hcdEl.style.display = 'none'; }
+      if(cd.days === 0){ num = '🎉'; cap = '出發'; col = '#ffc53d'; tg = 'BOARDING · 今天出發'; }
+      else { num = cd.days; cap = 'DAYS'; col = cd.days <= 7 ? '#ffc53d' : '#fff'; tg = 'BOARDING · 距出發'; }
+    } else { num = cd.dayN; cap = '/ ' + (cd.total || '?'); col = '#6ee7b7'; tg = 'TRAVELING · 旅程中'; }
+    document.getElementById('hBoardNum').textContent = num;
+    document.getElementById('hBoardNum').style.color = col;
+    document.getElementById('hBoardCap').textContent = cap;
+    tag.textContent = tg; tag.style.display = '';
+    hb.style.display = '';
+  } else { hb.style.display = 'none'; tag.style.display = 'none'; }
   renderSync();
   var act = document.querySelector('section.act');
   if(act){ var v = act.id.slice(2);
@@ -1382,13 +1389,21 @@ function renderLedger(){
     if(meM){
       MU = unitId(t, meM);
       var Ms = settleModel(t);
-      Ms.days.forEach(function(dy){
-        dy.calc.transfers.forEach(function(f, i){
+      if(!S.netOff){
+        (Ms.finalCalc.transfers || []).forEach(function(f){
           if(f.from !== MU) return;
           myAll++;
-          if(!t.tfDone[dy.keys[i]]) myUnpaid += f.amt;
+          if(!t.tfDone['NET|' + f.from + '>' + f.to]) myUnpaid += f.amt;
         });
-      });
+      } else {
+        Ms.days.forEach(function(dy){
+          dy.calc.transfers.forEach(function(f, i){
+            if(f.from !== MU) return;
+            myAll++;
+            if(!t.tfDone[dy.keys[i]]) myUnpaid += f.amt;
+          });
+        });
+      }
     }
   }
   var lcols = [
@@ -1404,9 +1419,7 @@ function renderLedger(){
   } else if(!MU && t.members.length){
     lcols.push('<div class="dcol" id="dashSetMe" style="cursor:pointer"><p class="dl">💸 我還要付</p><p class="dv" style="font-size:12px;color:var(--dashTx2)">未設定我是誰<br>點此設定 →</p></div>');
   }
-  var h1 = '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">' +
-    '<div style="display:flex;flex:1;min-width:0">' + lcols.join('<div class="divv"></div>') + '</div>' +
-    (dayN ? '<span class="dtag" style="flex:0 0 auto">' + dayN + '</span>' : '') + '</div>';
+  var h1 = '<div style="display:flex;flex:1;min-width:0">' + lcols.join('<div class="divv"></div>') + '</div>';
   var bud = t.budget || {};
   if(Number(bud.total) > 0){
     var used = total + ptotal, bt = Number(bud.total);
@@ -3326,4 +3339,4 @@ try{
 </body>
 </html>
 
-<!-- T0711-10 deploy -->
+<!-- T0711-11 deploy -->
