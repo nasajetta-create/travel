@@ -206,7 +206,8 @@ input[type=date]{-webkit-appearance:none;appearance:none;height:47px;display:fle
 .exp .a2{font-size:11.5px;color:var(--tx3)}
 .exp .rx{flex:0 0 auto;border:1px solid var(--inBd);border-radius:8px;background:var(--ro);color:var(--tx2);font-size:15px;padding:5px 8px;cursor:pointer;margin-left:2px}
 .dhead{display:flex;justify-content:space-between;font-size:13px;color:var(--tx3);margin:12px 4px 5px;font-weight:600}
-.lrow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:.5px solid var(--line);cursor:pointer}
+.lrow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:.5px solid var(--line);cursor:pointer;touch-action:pan-y;position:relative}
+.lrow .delhint{position:absolute;right:12px;top:0;bottom:0;display:flex;align-items:center;color:var(--danger);font-size:14px;font-weight:600;opacity:0;pointer-events:none}
 .lrow:last-child{border-bottom:none}
 .ldate{flex:0 0 auto;width:34px;text-align:center;line-height:1.15}
 .ldate .m{font-size:11px;color:var(--tx3)}
@@ -497,8 +498,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 33;
-var VER = 'T0711-14';
+var CODE_VERSION = 34;
+var VER = 'T0711-15';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -1532,34 +1533,43 @@ function renderLedger(){
       '<div class="lamt">' + amtH + '</div></div>';
   });
   var html = rows ? '<div class="card" style="padding:2px 12px">' + rows + '</div>' : '';
-  list.innerHTML = banner + myCard + '<div class="hint" style="margin:2px 4px 6px">點整列＝編輯｜👉 往右滑刪除</div>' + html;
+  list.innerHTML = banner + myCard + '<div class="hint" style="margin:2px 4px 6px">點整列＝編輯｜👈 往左滑刪除</div>' + html;
   var ax = document.getElementById('a2hsX');
   if(ax) ax.onclick = function(){ S.dismiss['a2hs'] = true; saveLocal(); renderLedger(); };
   bindPay(list, renderLedger);
   list.querySelectorAll('.lrow[data-eid]').forEach(function(el){ bindSwipeRow(el); });
 }
 function bindSwipeRow(el){
-  var sx = 0, sy = 0, moved = false, active = false;
-  el.addEventListener('pointerdown', function(e){ sx = e.clientX; sy = e.clientY; moved = false; active = true; el.style.transition = ''; });
+  var sx = 0, sy = 0, moved = false, active = false, horiz = false;
+  var hint = document.createElement('span'); hint.className = 'delhint'; hint.textContent = '🗑 放開刪除'; el.appendChild(hint);
+  el.addEventListener('pointerdown', function(e){ sx = e.clientX; sy = e.clientY; moved = false; horiz = false; active = true; el.style.transition = ''; try{ el.setPointerCapture(e.pointerId); }catch(x){} });
   el.addEventListener('pointermove', function(e){
     if(!active) return;
     var dx = e.clientX - sx, dy = e.clientY - sy;
     if(Math.abs(dx) > 6 || Math.abs(dy) > 6) moved = true;
-    if(dx > 0 && Math.abs(dy) < 40){ var d = Math.min(dx, 130); el.style.transform = 'translateX(' + d + 'px)'; el.style.opacity = 1 - d / 300; }
+    if(!horiz && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) horiz = true;
+    if(horiz && dx < 0){
+      e.preventDefault();
+      var d = Math.min(-dx, 140);
+      el.style.transform = 'translateX(' + (-d) + 'px)';
+      el.style.opacity = 1 - d / 320;
+      hint.style.opacity = Math.min(1, d / 90);
+    }
   });
-  el.addEventListener('pointerup', function(e){
+  function endSwipe(e){
     if(!active) return; active = false;
     var dx = e.clientX - sx, dy = Math.abs(e.clientY - sy);
-    el.style.transition = 'transform .18s, opacity .18s';
-    if(dx > 95 && dy < 45){
+    el.style.transition = 'transform .18s, opacity .18s'; hint.style.opacity = 0;
+    if(dx < -90 && dy < 50){
       el.style.transform = ''; el.style.opacity = '';
       delExpenseById(el.dataset.eid);
     } else {
       el.style.transform = ''; el.style.opacity = '';
       if(!moved) editExpense(el.dataset.eid);
     }
-  });
-  el.addEventListener('pointercancel', function(){ active = false; el.style.transition = 'transform .18s, opacity .18s'; el.style.transform = ''; el.style.opacity = ''; });
+  }
+  el.addEventListener('pointerup', endSwipe);
+  el.addEventListener('pointercancel', function(){ active = false; el.style.transition = 'transform .18s, opacity .18s'; el.style.transform = ''; el.style.opacity = ''; hint.style.opacity = 0; });
 }
 
 /* ───── 結算（按日）───── */
@@ -3384,4 +3394,4 @@ try{
 </body>
 </html>
 
-<!-- T0711-14 deploy -->
+<!-- T0711-15 deploy -->
