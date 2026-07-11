@@ -160,6 +160,10 @@ input[type=date]{-webkit-appearance:none;appearance:none;height:47px;display:fle
 .chip{display:inline-flex;align-items:center;gap:4px;padding:7px 13px;border-radius:18px;border:1px solid var(--inBd);background:var(--card);font-size:15px;cursor:pointer;user-select:none;color:var(--tx)}
 .chip.on{background:var(--accBg);border-color:var(--acc);color:var(--accTx);font-weight:600}
 .chip.sq{border-radius:8px}
+.advsec>summary{list-style:none;cursor:pointer;font-size:13px;color:var(--acc);padding:4px 0;user-select:none}
+.advsec>summary::-webkit-details-marker{display:none}
+.advsec>summary::before{content:'▸ ';font-size:11px}
+.advsec[open]>summary::before{content:'▾ '}
 .pbmark{position:absolute;right:-3px;bottom:-3px;width:19px;height:19px;border-radius:50%;background:#0f6e56;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid var(--card);font-weight:700}
 .chip.pay{background:var(--acc);border-color:var(--acc);color:var(--accOn);font-weight:600}
 .bdg{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;position:relative;user-select:none;flex:0 0 auto}
@@ -306,7 +310,7 @@ details.tsec>.tbody{padding:2px 1px 15px}
     <div class="hint" id="tplHint" style="margin-top:6px;display:none">實線＝已收藏，✕ 可刪除｜虛線＝最近記過的，按 ➕ 收藏成常用</div>
   </div>
   <div class="card">
-    <div class="seg" id="kindSeg" style="margin-bottom:10px"><span data-kind="exp" class="on">🧾 消費</span><span data-kind="loan">💸 借款</span></div>
+    <div id="kindSeg" style="display:flex;align-items:center;margin-bottom:10px"></div>
     <div><div class="lbl">日期</div><input type="date" id="eDate"></div>
     <div style="margin-top:8px"><div class="lbl">項目</div><input type="text" id="eDesc" placeholder="輸入項目名稱"></div>
     <div id="catBlock"><div class="lbl" style="margin-top:8px">類別</div>
@@ -318,13 +322,6 @@ details.tsec>.tbody{padding:2px 1px 15px}
       <div style="flex:1.5"><div class="lbl">消費金額</div><input type="number" id="eAmt" inputmode="decimal" placeholder="0"></div>
     </div>
     <div class="fnote" id="feeNote" style="display:none"></div>
-    <div style="margin-top:8px"><div class="lbl">匯率來源</div>
-      <div class="seg" id="rsrcSeg" style="font-size:12px">
-        <span data-rs="hi3">📈 近3日最高值</span>
-        <span data-rs="mid">當日均價</span>
-        <span data-rs="manual">✍️ 手動</span>
-      </div>
-    </div>
     <div style="margin-top:8px"><div class="lbl">匯率（1 消費幣 = ? 主幣）</div>
       <div class="row" style="gap:6px"><input type="number" id="eRate" inputmode="decimal" step="any"><button class="btn sub mini fix" id="btnRate">重抓</button></div>
     </div>
@@ -332,10 +329,19 @@ details.tsec>.tbody{padding:2px 1px 15px}
       <div class="row" style="gap:6px"><label class="fix" style="display:flex;align-items:center;gap:5px;font-size:14.5px"><input type="checkbox" id="eCard" style="width:18px;height:18px">刷卡</label><input type="number" id="eFee" inputmode="decimal" step="any" placeholder="%" style="flex:0 0 90px"><span class="fix" style="font-size:13px;color:var(--tx2)">%</span><span style="flex:1"></span></div>
     </div>
     <div class="hint" id="rateInfo"></div>
-    <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-top:6px;color:var(--tx2)"><input type="checkbox" id="eLock" style="width:16px;height:16px">🔒 鎖定幣別與匯率（連續記帳不重抓、不重選）</label>
+    <details class="advsec" id="rateAdv" style="margin-top:8px"><summary>⚙️ 進階：匯率來源／鎖定／換算參考</summary>
+    <div style="margin-top:8px"><div class="lbl">匯率來源</div>
+      <div class="seg" id="rsrcSeg" style="font-size:12px">
+        <span data-rs="hi3">📈 近3日最高值</span>
+        <span data-rs="mid">當日均價</span>
+        <span data-rs="manual">✍️ 手動</span>
+      </div>
+    </div>
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-top:8px;color:var(--tx2)"><input type="checkbox" id="eLock" style="width:16px;height:16px">🔒 鎖定幣別與匯率（連續記帳不重抓、不重選）</label>
     <div style="margin-top:8px"><div class="lbl">轉換幣別（參考顯示）</div><select id="eConvCur"></select></div>
     <div style="margin-top:8px"><div class="lbl">轉換後的消費金額</div><div class="ro" style="font-weight:700;color:var(--acc)" id="convOut">—</div></div>
     <div class="hint" id="convHint" style="margin-top:4px"></div>
+    </details>
   </div>
   <div class="card">
     <label id="privRow" style="display:flex;align-items:center;gap:8px;font-size:14.5px;margin-bottom:10px"><input type="checkbox" id="ePriv" style="width:18px;height:18px">🔒 私人帳（只存自己手機、不同步、不進團體結算）</label>
@@ -345,7 +351,7 @@ details.tsec>.tbody{padding:2px 1px 15px}
     <div class="lbl" style="margin-top:10px" id="lblSplit">分攤（點一下＝分攤 → 再點＝被請客🎁 → 再點＝不參與）</div>
     <div class="chips" id="splitChips"></div>
     <div id="treatByBox"></div>
-    <div class="hint" style="margin-top:6px" id="splitHint">「被請客」＝這個人的份由「請客人」吸收，請客人預設是付款人、可以改。分攤照人頭數權重計算。</div>
+    <div class="hint" style="margin-top:6px" id="splitHint">被請客＝份給請客人吸收（可改請客人）· 分攤按人頭數</div>
     <div class="row" style="margin-top:10px" id="modeRow">
       <div><div class="lbl">分法</div><select id="eMode"><option value="avg">均分（按人頭數）</option><option value="custom">自訂各人金額（消費幣別）</option></select></div>
     </div>
@@ -451,8 +457,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 23;
-var VER = 'T0711-04';
+var CODE_VERSION = 24;
+var VER = 'T0711-05';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -775,14 +781,14 @@ function renderAdd(){
   document.getElementById('eLock').checked = !!lk.on;
   document.getElementById('eConvCur').value = _convCur || t.home;
   var loan = F.kind === 'loan';
-  document.getElementById('kindSeg').querySelectorAll('[data-kind]').forEach(function(el){
-    el.classList.toggle('on', el.dataset.kind === (F.kind || 'exp'));
-    el.onclick = function(){
-      F.kind = el.dataset.kind;
-      if(F.kind === 'loan'){ F.priv = false; F.treat = []; F.treatBy = {}; F.mode = 'avg'; F.cat = 'misc'; F.split = []; }
-      renderAdd();
-    };
-  });
+  var ks = document.getElementById('kindSeg');
+  ks.innerHTML = '<span style="font-size:15px;font-weight:600">' + (loan ? '💸 記一筆借款' : '🧾 記一筆消費') + '</span>' +
+    '<span id="kindSwap" style="margin-left:auto;font-size:12.5px;color:var(--acc);cursor:pointer">' + (loan ? '改記消費 ›' : '改記借款 ›') + '</span>';
+  document.getElementById('kindSwap').onclick = function(){
+    F.kind = loan ? 'exp' : 'loan';
+    if(F.kind === 'loan'){ F.priv = false; F.treat = []; F.treatBy = {}; F.mode = 'avg'; F.cat = 'misc'; F.split = []; }
+    renderAdd();
+  };
   document.getElementById('catBlock').style.display = loan ? 'none' : '';
   document.getElementById('privRow').style.display = loan ? 'none' : '';
   document.getElementById('lblPayer').textContent = loan ? '誰借出（出錢的人）' : '誰先付';
@@ -1614,9 +1620,12 @@ function buildPayCard(t, M){
     html += '<div class="hint" style="margin-top:5px">點上方展開待付明細</div></div>';
     return html;
   }
-  html += '<div style="display:flex;justify-content:flex-end;gap:6px;margin-top:8px">' +
-    (mu ? '<span class="cseg"><span data-pvs="me"' + (scope==='me' ? ' class="on"' : '') + '>我的</span><span data-pvs="all"' + (scope==='all' ? ' class="on"' : '') + '>全團</span></span>' : '') +
-    '<span class="cseg"><span data-pvv="date"' + (view==='date' ? ' class="on"' : '') + '>日期</span><span data-pvv="to"' + (view==='to' ? ' class="on"' : '') + '>收款人</span></span>' +
+  html += '<div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-top:8px">' +
+    (S.pvAdv ? (
+      (mu ? '<span class="cseg"><span data-pvs="me"' + (scope==='me' ? ' class="on"' : '') + '>我的</span><span data-pvs="all"' + (scope==='all' ? ' class="on"' : '') + '>全團</span></span>' : '') +
+      '<span class="cseg"><span data-pvv="date"' + (view==='date' ? ' class="on"' : '') + '>日期</span><span data-pvv="to"' + (view==='to' ? ' class="on"' : '') + '>收款人</span></span>'
+    ) : '') +
+    '<span data-pvadv="1" style="cursor:pointer;color:var(--tx3);font-size:15px;padding:2px 5px" title="顯示範圍／分組">⚙</span>' +
     '</div>';
   if(toMe.length){
     html += '<div class="tf" style="border-color:var(--acc)"><div style="flex:1"><div class="who">📥 有 ' + toMe.length + ' 筆已轉給你，待你核銷</div></div>' +
@@ -1686,6 +1695,9 @@ function bindPay(box, rerender){
   });
   box.querySelectorAll('[data-pvtog]').forEach(function(el){
     el.onclick = function(){ S.pvOpen = !S.pvOpen; saveLocal(); rerender(); };
+  });
+  box.querySelectorAll('[data-pvadv]').forEach(function(el){
+    el.onclick = function(ev){ ev.stopPropagation(); S.pvAdv = !S.pvAdv; saveLocal(); rerender(); };
   });
   box.querySelectorAll('[data-pvs]').forEach(function(el){
     el.onclick = function(){ S.pvScope = el.dataset.pvs; saveLocal(); rerender(); };
@@ -1791,17 +1803,18 @@ function renderSettle(){
     html += '</div>';
   }
   var fmtNow = S.setFmt || 'text';
-  html += '<div class="card"><div class="lbl" style="margin:0 0 6px;font-weight:600;color:var(--tx)">結算輸出（貼群組）</div>' +
+  html += '<div class="card"><div class="lbl" style="margin:0 0 8px;font-weight:600;color:var(--tx)">📤 匯出／分享</div>' +
+    '<div style="font-size:12.5px;color:var(--tx2);margin-bottom:4px">結算（誰付誰、應轉帳）</div>' +
     '<div class="seg" id="fmtSeg"><span data-fmt="text"' + (fmtNow === 'text' ? ' class="on"' : '') + '>文字</span>' +
     '<span data-fmt="table"' + (fmtNow === 'table' ? ' class="on"' : '') + '>表格對齊</span>' +
     '<span data-fmt="brief"' + (fmtNow === 'brief' ? ' class="on"' : '') + '>精簡</span></div>' +
     '<div class="row" style="margin-top:8px"><button class="btn sub mini" id="btnExport" style="flex:1">📋 複製文字</button>' +
     '<button class="btn mini fix" id="btnImg">🖼 存成圖片</button></div>' +
     '<label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-top:8px;color:var(--tx2)"><input type="checkbox" id="imgAcct"' + (S.imgAcct !== false ? ' checked' : '') + ' style="width:16px;height:16px">圖片含收款帳號</label>' +
-    '<div class="hint" style="margin-top:4px">圖片字大、欄位對齊，最適合貼群組；文字版方便再編輯。</div></div>';
-  html += '<div class="card" style="margin-top:8px"><div class="lbl" style="margin:0 0 6px;font-weight:600;color:var(--tx)">旅程總結報告</div>' +
+    '<div style="border-top:1px solid var(--line);margin:12px 0 8px"></div>' +
+    '<div style="font-size:12.5px;color:var(--tx2);margin-bottom:4px">旅程總結（花費統計）</div>' +
     '<div class="row"><button class="btn sub mini" id="btnReport" style="flex:1">📋 複製報告</button><button class="btn mini fix" id="btnRepImg">🖼 存成圖片</button></div>' +
-    '<div class="hint" style="margin-top:4px">去除多餘符號、色塊呈現花費分布，適合貼群組。</div></div>';
+    '<div class="hint" style="margin-top:8px">CSV 明細在「旅程 → 備份與匯出」。</div></div>';
   box.innerHTML = html;
   box.querySelectorAll('[data-tbv]').forEach(function(el){
     el.onclick = function(){ S.tblView = el.dataset.tbv; saveLocal(); renderSettle(); };
@@ -2220,6 +2233,7 @@ function renderStats(){
 var _memEdit = null;
 var _meChange = false;
 var _hhShow = false;
+var _budMode = 'total';
 function famCleanup(t){ t.families = t.families.filter(function(f){ return t.members.some(function(m){ return m.famId === f.id; }); }); }
 function secBox(id, title, side, body, defOpen){
   var open = (S.tsec && S.tsec[id] !== undefined) ? !!S.tsec[id] : !!defOpen;
@@ -2298,8 +2312,11 @@ function renderTrip(){
       CURS.map(function(c){ return '<option' + (t.home === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') +
       '</select></div><div><div class="lbl">預設手續費 %</div><input type="number" id="tFee" inputmode="decimal" step="any" value="' + t.feePct + '"></div></div>' +
       '<div class="hint" style="margin-top:4px">手續費＝國際組織 1%＋發卡行 0.5%（各卡不同，可改；每筆記帳也能單獨調）</div>' +
-      '<div class="row" style="margin-top:8px"><div><div class="lbl">總預算（' + t.home + '，0=不設）</div><input type="number" id="tBudT" inputmode="decimal" value="' + (t.budget.total || 0) + '"></div>' +
-      '<div><div class="lbl">每日預算（' + t.home + '）</div><input type="number" id="tBudD" inputmode="decimal" value="' + (t.budget.daily || 0) + '"></div></div>';
+      '<div style="margin-top:8px"><div class="lbl">預算（' + t.home + '，0=不設）</div>' +
+      '<div class="row" style="gap:6px"><div class="seg" style="flex:0 0 auto;width:auto"><span data-bud="total"' + (_budMode !== 'daily' ? ' class="on"' : '') + ' style="padding:6px 14px">總額</span><span data-bud="daily"' + (_budMode === 'daily' ? ' class="on"' : '') + ' style="padding:6px 14px">每日</span></div>' +
+      '<input type="number" id="tBud" inputmode="decimal" value="' + ((_budMode === 'daily' ? t.budget.daily : t.budget.total) || 0) + '"></div>' +
+      (( _budMode === 'daily' ? t.budget.total : t.budget.daily) ? '<div class="hint" style="margin-top:3px">' + (_budMode === 'daily' ? '總額' : '每日') + '預算：' + fmt(_budMode === 'daily' ? t.budget.total : t.budget.daily) + '（切換上方可改）</div>' : '') +
+      '</div>';
     pop('set', '🧳 旅程設定', esc(t.name) + ' · ' + t.code, !t.startDate);
     cap();
     html += '<div class="hint" style="margin-bottom:6px">名單要含<b>你自己</b>與整團所有人（含小孩）。人頭數：大人 1、小孩 0.5、不分攤 0。</div><div id="memberBox">';
@@ -2493,8 +2510,14 @@ function renderTrip(){
       recalcRates(t, es);
     };
     document.getElementById('tFee').onchange = function(){ t.feePct = Number(this.value) || 0; bumpMeta('info'); save(); };
-    document.getElementById('tBudT').onchange = function(){ t.budget.total = Number(this.value) || 0; bumpMeta('info'); save(); };
-    document.getElementById('tBudD').onchange = function(){ t.budget.daily = Number(this.value) || 0; bumpMeta('info'); save(); };
+    document.getElementById('tBud').onchange = function(){
+      var v = Number(this.value) || 0;
+      if(_budMode === 'daily') t.budget.daily = v; else t.budget.total = v;
+      bumpMeta('info'); save();
+    };
+    tb.querySelectorAll('[data-bud]').forEach(function(el){
+      el.onclick = function(){ _budMode = el.dataset.bud; renderTrip(); };
+    });
     document.getElementById('btnCpCode').onclick = function(){ copyText(t.code, '已複製旅程代碼'); };
     document.getElementById('btnAddM').onclick = function(){
       var nid = uid();
@@ -3128,4 +3151,4 @@ try{
 </body>
 </html>
 
-<!-- T0711-04 deploy -->
+<!-- T0711-05 deploy -->
