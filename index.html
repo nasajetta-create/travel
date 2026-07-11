@@ -176,6 +176,14 @@ input[type=date]{-webkit-appearance:none;appearance:none;height:47px;display:fle
 .tpldrop .tdfoot{padding:9px 11px;font-size:13px;color:var(--acc);cursor:pointer;border-top:1px solid var(--line)}
 .tsw-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:1px solid var(--inBd);margin-bottom:6px;cursor:pointer}
 .tsw-row.on{border:2px solid var(--acc);background:var(--accBg)}
+.catrow{display:flex;gap:13px;overflow-x:auto;padding:2px 0 4px}
+.catitem{flex:0 0 auto;text-align:center;cursor:pointer;user-select:none}
+.catcirc{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto}
+.catcirc svg{width:22px;height:22px}
+.catlab{display:block;font-size:11px;color:var(--tx3);margin-top:3px}
+.catlab.on{color:var(--tx);font-weight:600}
+.splitsum{display:flex;align-items:center;justify-content:space-between;background:var(--ro);border-radius:9px;padding:10px 12px;margin-top:6px;cursor:pointer;font-size:13.5px}
+.splitsum .adj{font-size:12px;color:var(--acc)}
 .advsec>summary{list-style:none;cursor:pointer;font-size:13px;color:var(--acc);padding:4px 0;user-select:none}
 .advsec>summary::-webkit-details-marker{display:none}
 .advsec>summary::before{content:'▸ ';font-size:11px}
@@ -343,10 +351,8 @@ details.tsec>.tbody{padding:2px 1px 15px}
 <section id="v-add">
   <div class="card">
     <div id="kindSeg" style="display:flex;align-items:center;gap:8px;margin-bottom:10px"></div>
-    <div><div class="lbl">日期</div><input type="date" id="eDate"></div>
-    <div style="margin-top:8px;position:relative"><div class="lbl">項目</div><input type="text" id="eDesc" placeholder="輸入項目名稱，或點選常用" autocomplete="off"><div id="tplDrop" class="tpldrop" style="display:none"></div></div>
-    <div id="catBlock"><div class="lbl" style="margin-top:8px">類別</div>
-    <div class="chips" id="catChips"></div></div>
+    <div class="fld3" style="position:relative"><input type="date" id="eDate" class="fld3-cur" style="width:auto;flex:0 0 auto"><input type="text" id="eDesc" class="fld3-amt" placeholder="項目名稱，或點選常用" autocomplete="off"><div id="tplDrop" class="tpldrop" style="display:none"></div></div>
+    <div id="catBlock" style="margin-top:10px"><div class="catrow" id="catChips"></div></div>
   </div>
   <div class="card">
     <div class="lbl">消費幣別／金額</div>
@@ -374,7 +380,9 @@ details.tsec>.tbody{padding:2px 1px 15px}
     <div id="splitWrap">
     <div class="lbl" id="lblPayer">誰先付</div>
     <div class="chips" id="payerChips"></div>
-    <div class="lbl" style="margin-top:10px" id="lblSplit">分攤（點一下＝分攤 → 再點＝被請客🎁 → 再點＝不參與）</div>
+    <div class="splitsum" id="splitSummary"><span id="splitSumTxt"></span><span class="adj">調整 ▾</span></div>
+    <div id="splitDetail" style="display:none">
+    <div class="lbl" style="margin-top:10px" id="lblSplit">分攤 <span id="splitHelpQ" style="display:inline-flex;width:15px;height:15px;border-radius:50%;border:1px solid var(--inBd);align-items:center;justify-content:center;font-size:9px;color:var(--tx3);cursor:pointer;vertical-align:1px">?</span></div>
     <div class="chips" id="splitChips"></div>
     <div id="treatByBox"></div>
     <div class="hint" style="margin-top:6px" id="splitHint">被請客＝份給請客人吸收（可改請客人）· 分攤按人頭數</div>
@@ -382,11 +390,14 @@ details.tsec>.tbody{padding:2px 1px 15px}
       <div><div class="lbl">分法</div><select id="eMode"><option value="avg">均分（按人頭數）</option><option value="custom">自訂各人金額（消費幣別）</option></select></div>
     </div>
     <div id="customBox" style="margin-top:8px"></div>
+    <div id="splitCollapse" style="font-size:12px;color:var(--acc);margin-top:10px;cursor:pointer">▲ 收起分攤</div>
     </div>
-    <label id="privRow" style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--tx2);margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><input type="checkbox" id="ePriv" style="width:16px;height:16px">🔒 設為私人帳（只存這支手機、不同步、不進團體結算）</label>
+    </div>
+    <details class="advsec" id="privAdv" style="margin-top:10px"><summary>私人帳</summary>
+    <label id="privRow" style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--tx2);margin-top:8px"><input type="checkbox" id="ePriv" style="width:16px;height:16px">🔒 設為私人帳（只存這支手機、不同步、不進團體結算）</label>
+    </details>
   </div>
-  <button class="btn" id="btnSave">儲存</button>
-  <button class="btn sub" id="btnCancelAdd" style="margin-top:8px">取消（不儲存，回帳本）</button>
+  <div class="row" style="gap:8px;margin-top:2px"><button class="btn sub" id="btnCancelAdd" style="flex:0 0 34%">取消</button><button class="btn" id="btnSave" style="flex:1">儲存</button></div>
   <button class="btn sub" id="btnAdj" style="display:none;margin-top:8px">💳 帳單補正（輸入帳單實際金額）</button>
   <button class="btn sub" id="btnCopy" style="display:none;margin-top:8px">⧉ 複製成新帳（日期改今天）</button>
   <button class="btn danger" id="btnDel" style="display:none;margin-top:8px">刪除這筆</button>
@@ -498,8 +509,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 34;
-var VER = 'T0711-15';
+var CODE_VERSION = 35;
+var VER = 'T0711-16';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -551,6 +562,7 @@ var HELPQA = [
 
 var S = loadS();
 var F = null;
+var _splitOpen = false;
 var editId = null;
 var _ct = null;
 var _convCur = null;
@@ -722,6 +734,7 @@ function goAdd(){
   if(!t){ toast('請先在「旅程」建立旅程'); go('trip'); return; }
   if(!t.members.length){ toast('請先在「旅程」新增成員'); go('trip'); return; }
   if(!F){ F = blankF(); }
+  _splitOpen = false;
   go('add');
 }
 function tripCD(t){
@@ -896,15 +909,20 @@ function renderAdd(){
     F = null; editId = null; go('ledger'); toast('已放棄');
   };
   document.getElementById('catBlock').style.display = loan ? 'none' : '';
-  document.getElementById('privRow').style.display = loan ? 'none' : '';
+  document.getElementById('privAdv').style.display = loan ? 'none' : '';
   document.getElementById('lblPayer').textContent = loan ? '誰借出（出錢的人）' : '誰先付';
-  document.getElementById('lblSplit').textContent = loan ? '借給誰（點一人）' : '分攤（點一下＝分攤 → 再點＝被請客🎁 → 再點＝不參與）';
+  if(loan) document.getElementById('lblSplit').textContent = '借給誰（點一人）';
+  else document.getElementById('lblSplit').innerHTML = '分攤 <span id="splitHelpQ" style="display:inline-flex;width:15px;height:15px;border-radius:50%;border:1px solid var(--inBd);align-items:center;justify-content:center;font-size:9px;color:var(--tx3);cursor:pointer;vertical-align:1px">?</span>';
   document.getElementById('splitHint').style.display = loan ? 'none' : '';
   document.getElementById('modeRow').style.display = loan ? 'none' : '';
   document.getElementById('splitWrap').style.display = F.priv ? 'none' : '';
   var cc = document.getElementById('catChips');
-  cc.innerHTML = CATS.map(function(c){ return '<span class="chip sq' + (F.cat===c[0] ? ' on' : '') + '" data-c="' + c[0] + '">' + c[1] + ' ' + c[2] + '</span>'; }).join('');
-  cc.querySelectorAll('.chip').forEach(function(el){ el.onclick = function(){ F.cat = el.dataset.c; renderAdd(); }; });
+  cc.innerHTML = CATS.map(function(c){
+    var on = F.cat === c[0], tint = CAT_TINT[c[0]] || CAT_TINT.misc;
+    var bg = on ? tint[1] : tint[0], col = on ? '#fff' : tint[1];
+    return '<div class="catitem" data-c="' + c[0] + '"><span class="catcirc" style="background:' + bg + '"><svg viewBox="0 0 24 24" fill="none" stroke="' + col + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (CAT_SVG[c[0]] || CAT_SVG.misc) + '</svg></span><span class="catlab' + (on ? ' on' : '') + '">' + c[2] + '</span></div>';
+  }).join('');
+  cc.querySelectorAll('.catitem').forEach(function(el){ el.onclick = function(){ F.cat = el.dataset.c; renderAdd(); }; });
   var pc = document.getElementById('payerChips');
   var ph = t.members.map(function(m){ return payerBadge(m); }).join('');
   ph += fundPayerBadge();
@@ -934,6 +952,21 @@ function renderAdd(){
     renderAdd(); }; });
   renderTreatBy();
   renderCustom();
+  var _so = _splitOpen || loan;
+  var sids = F.split || [];
+  var sumTxt;
+  if(F.mode === 'custom'){ sumTxt = '自訂各人金額（' + sids.length + ' 人）'; }
+  else if(t.members.length && sids.length === t.members.length && (F.treat||[]).length === 0){ sumTxt = '全員均分（' + sids.length + ' 人）'; }
+  else if(!sids.length){ sumTxt = '尚未選分攤的人'; }
+  else { sumTxt = sids.length + ' 人分攤' + ((F.treat||[]).length ? '（含請客）' : ''); }
+  document.getElementById('splitSummary').style.display = _so ? 'none' : 'flex';
+  document.getElementById('splitDetail').style.display = _so ? '' : 'none';
+  document.getElementById('splitSumTxt').textContent = '分攤：' + sumTxt;
+  document.getElementById('splitSummary').onclick = function(){ _splitOpen = true; renderAdd(); };
+  document.getElementById('splitCollapse').onclick = function(){ _splitOpen = false; renderAdd(); };
+  var _shq = document.getElementById('splitHelpQ');
+  if(_shq) _shq.onclick = function(ev){ ev.stopPropagation(); toast('分攤：點一下＝分攤 → 再點＝被請客🎁（份給請客人吸收）→ 再點＝不參與。'); };
+  document.getElementById('privAdv').open = !!F.priv;
   var sameCur = (F.cur === t.home);
   if(sameCur && Number(F.rate) !== 1) F.rate = 1;
   document.getElementById('eRate').value = F.rate;
@@ -1309,6 +1342,7 @@ function editExpense(id){
   var e = findExpense(id); if(!e) return;
   F = loadFromExpense(e);
   editId = id;
+  _splitOpen = (e.mode === 'custom') || ((e.treat||[]).length > 0);
   go('add');
 }
 function copyFromExpense(id){
@@ -3394,4 +3428,4 @@ try{
 </body>
 </html>
 
-<!-- T0711-15 deploy -->
+<!-- T0711-16 deploy -->
