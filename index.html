@@ -351,7 +351,7 @@ details.tsec>.tbody{padding:2px 1px 15px}
 <section id="v-add">
   <div class="card">
     <div id="kindSeg" style="display:flex;align-items:center;gap:8px;margin-bottom:10px"></div>
-    <div class="fld3" style="position:relative"><input type="date" id="eDate" class="fld3-cur" style="width:auto;flex:0 0 auto"><input type="text" id="eDesc" class="fld3-amt" placeholder="項目名稱，或點選常用" autocomplete="off"><div id="tplDrop" class="tpldrop" style="display:none"></div></div>
+    <div class="fld3" style="position:relative"><span class="fld3-cur" id="eDateCell" style="position:relative;flex:0 0 auto;display:flex;align-items:center;padding:0 12px;font-size:14px;cursor:pointer"><span id="eDateDisp"></span><input type="date" id="eDate" style="position:absolute;inset:0;opacity:0;border:none;width:100%;height:100%;padding:0;cursor:pointer"></span><input type="text" id="eDesc" class="fld3-amt" placeholder="項目名稱，或點選常用" autocomplete="off"><div id="tplDrop" class="tpldrop" style="display:none"></div></div>
     <div id="catBlock" style="margin-top:10px"><div class="catrow" id="catChips"></div></div>
   </div>
   <div class="card">
@@ -509,8 +509,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 35;
-var VER = 'T0711-16';
+var CODE_VERSION = 37;
+var VER = 'T0711-18';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -884,6 +884,7 @@ function renderAdd(){
   if(!F) F = blankF();
   var lk = lockObj();
   document.getElementById('eDate').value = F.date;
+  document.getElementById('eDateDisp').textContent = (F.date || '').replace(/-/g, '/');
   document.getElementById('eDesc').value = F.desc;
   document.getElementById('eAmt').value = F.amt;
   document.getElementById('eRate').value = F.rate;
@@ -1435,6 +1436,16 @@ function myPersonal(t, e){
   if(e.payer === me()){ var lent = homeAmt(e) - myS; return lent > 0.5 ? { type:'lent', amt:lent } : null; }
   return myS > 0.5 ? { type:'owe', amt:myS } : null;
 }
+var SEC_TINT = { set:['#e6f1fb','#185fa5'], mem:['#eae8fa','#5a52b0'], fund:['#e1f5ee','#0f6e56'], bak:['#f1efe8','#5f5e5a'], oth:['#faece7','#993c1d'], look:['#fbeaf0','#993556'] };
+var SEC_SVG = {
+  set:'<rect x="6" y="7" width="12" height="13" rx="2"/><path d="M9 7V4h6v3"/><path d="M10 11v5M14 11v5"/>',
+  mem:'<circle cx="9" cy="8" r="3"/><path d="M4 20a5 5 0 0 1 10 0"/><path d="M16 6a3 3 0 0 1 0 6"/><path d="M20 20a5 5 0 0 0-4-4.9"/>',
+  fund:'<path d="M5 10l7-5 7 5"/><path d="M6 10v8M10 10v8M14 10v8M18 10v8"/><path d="M4 20h16"/>',
+  bak:'<path d="M6 4h11l3 3v13H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M9 4v5h7"/><rect x="9" y="13" width="6" height="5"/>',
+  oth:'<path d="M9 5l-5 2v12l5-2 6 2 5-2V5l-5 2-6-2z"/><path d="M9 5v12M15 7v12"/>',
+  look:'<path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.8 1.5-1.5 0-.4-.2-.8-.5-1-.3-.3-.5-.6-.5-1 0-.8.7-1.5 1.5-1.5H16a5 5 0 0 0 5-5c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10.5" r="1"/>'
+};
+function secIcon(key){ var t = SEC_TINT[key] || SEC_TINT.set; return '<span style="display:inline-flex;width:26px;height:26px;border-radius:7px;background:' + t[0] + ';align-items:center;justify-content:center;vertical-align:-8px;margin-right:7px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="' + t[1] + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (SEC_SVG[key] || '') + '</svg></span>'; }
 function renderLedger(){
   var t = trip();
   var sum = document.getElementById('ledgerSum'), list = document.getElementById('ledgerList');
@@ -2312,7 +2323,7 @@ function roundRect(g, x, y, w, h, r){
 }
 
 /* ───── 統計 ───── */
-var CAT_COLORS = { food:'#D85A30', trans:'#378ADD', stay:'#7F77DD', shop:'#D4537E', tix:'#BA7517', daily:'#0891B2', misc:'#888780' };
+var CAT_COLORS = { food:'#0f6e56', trans:'#185fa5', stay:'#5a52b0', shop:'#993556', tix:'#854f0b', daily:'#993c1d', misc:'#5f5e5a' };
 function renderStats(){
   var t = trip();
   var box = document.getElementById('statsBox');
@@ -2336,7 +2347,7 @@ function renderStats(){
   cats.forEach(function(c){
     var ci = catInfo(c);
     var pct = total > 0 ? Math.round(byCat[c] / total * 100) : 0;
-    html += '<div class="srow"><span class="sl">' + ci[1] + ' ' + ci[2] + '</span>' +
+    html += '<div class="srow"><span class="sl"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:' + (CAT_COLORS[c] || '#888780') + ';margin-right:7px"></span>' + ci[2] + '</span>' +
       '<div class="hbar"><div style="width:' + Math.max(3, Math.round(byCat[c] / maxC * 100)) + '%;background:' + (CAT_COLORS[c] || '#888780') + '"></div></div>' +
       '<span class="sv">' + fmt(byCat[c]) + '｜' + pct + '%</span></div>';
   });
@@ -2535,7 +2546,7 @@ function renderTrip(){
       '<input type="number" id="tBud" inputmode="decimal" value="' + ((_budMode === 'daily' ? t.budget.daily : t.budget.total) || 0) + '"></div>' +
       (( _budMode === 'daily' ? t.budget.total : t.budget.daily) ? '<div class="hint" style="margin-top:3px">' + (_budMode === 'daily' ? '總額' : '每日') + '預算：' + fmt(_budMode === 'daily' ? t.budget.total : t.budget.daily) + '（切換上方可改）</div>' : '') +
       '</div>';
-    pop('set', '🧳 旅程設定', esc(t.name) + ' · ' + t.code, !t.startDate);
+    pop('set', secIcon('set') + '旅程設定', esc(t.name) + ' · ' + t.code, !t.startDate);
     cap();
     html += '<div class="hint" style="margin-bottom:6px">名單要含<b>你自己</b>與整團所有人（含小孩）。人頭數：大人 1、小孩 0.5、不分攤 0。</div><div id="memberBox">';
     t.members.forEach(function(m, mi){
@@ -2600,7 +2611,7 @@ function renderTrip(){
           }).join('') +
           (_meChange ? '<span class="chip" id="btnMeCxl">取消</span>' : '') +
           '</div><div class="hint" style="margin-top:6px">點自己的徽章。私人帳會歸在這個人名下，也會當預設付款人。</div>');
-    pop('mem', '👥 成員設定',
+    pop('mem', secIcon('mem') + '成員設定',
       t.members.length ? (t.members.length + ' 位' + (me() ? '' : '｜⚠️ 先選我是誰')) : '⚠️ 先新增成員',
       !t.members.length || !me() || !!_memEdit);
     cap();
@@ -2631,13 +2642,13 @@ function renderTrip(){
       '<input type="number" id="fcAmt" inputmode="decimal" placeholder="金額（' + t.home + '）" class="fld3-amt">' +
       '<button class="fld3-icon" id="btnFc" style="width:auto;padding:0 13px;font-size:13px;color:var(--accTx);white-space:nowrap">＋入金</button></div>' +
       '<div class="hint" style="margin-top:6px">記帳時付款人選「🏦基金」＝從基金支出；餘額按入金比例退還。</div>';
-    pop('fund', '🏦 基金(公費)', contribs.length ? ('餘額 ' + fmt(ft.bal)) : '沒用到可不理', false);
+    pop('fund', secIcon('fund') + '基金(公費)', contribs.length ? ('餘額 ' + fmt(ft.bal)) : '沒用到可不理', false);
     cap();
     html += '<div class="row"><button class="btn sub mini" id="btnBakOut" style="flex:1">⬇ 匯出備份</button>' +
       '<button class="btn sub mini" id="btnBakIn" style="flex:1">⬆ 還原備份</button>' +
       '<button class="btn sub mini" id="btnCsv" style="flex:1">📄 匯出CSV</button></div>' +
       '<div class="hint" style="margin-top:6px">⚠️ 私人帳只存這支手機，換手機前先匯出備份。CSV 可用 Excel 開。</div>';
-    pop('bak', '💾 備份與匯出', '', false);
+    pop('bak', secIcon('bak') + '備份與匯出', '', false);
   }
   var codes = Object.keys(S.trips).sort(function(a, b){
     var ta = S.trips[a], tb2 = S.trips[b];
@@ -2663,8 +2674,8 @@ function renderTrip(){
       '</div><div class="hint" style="margin-top:4px">點一下開啟；要還原到進行中，開啟後在旅程頁按「還原」。</div></details>';
   }
   var othChip = '<span style="font-size:11.5px;padding:3px 10px;border-radius:12px;border:1px solid var(--acc);color:var(--acc)">' + act.length + ' 個進行中' + (arc.length ? ' · 📦' + arc.length : '') + ' ›</span>';
-  SEC.oth = secBox('oth', '➕ 旅程計畫', othChip, lh, !t);
-  SEC.look = secBox('look', '🎨 外觀主題',
+  SEC.oth = secBox('oth', secIcon('oth') + '旅程計畫', othChip, lh, !t);
+  SEC.look = secBox('look', secIcon('look') + '外觀主題',
     (S.theme === 'dark' ? '深色' : S.theme === 'light' ? '淺色' : '跟隨系統') + '｜' +
     (S.skin === 'white' ? '純白' : S.skin === 'sky' ? '天藍' : S.skin === 'matcha' ? '抹茶' : '經典'), themeBody, false);
   var tripBar = '';
@@ -3263,6 +3274,7 @@ function closestActiveTripCode(){
   document.getElementById('eConvCur').innerHTML = CURS.map(function(c){ return '<option>' + c + '</option>'; }).join('');
   document.getElementById('eDate').onchange = function(){
     F.date = this.value;
+    document.getElementById('eDateDisp').textContent = (F.date || '').replace(/-/g, '/');
     var lk = lockObj();
     if(!lk.on){ F.rate = ''; autoRate(false); }
   };
@@ -3428,4 +3440,4 @@ try{
 </body>
 </html>
 
-<!-- T0711-16 deploy -->
+<!-- T0711-18 deploy -->
