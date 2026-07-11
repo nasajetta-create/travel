@@ -159,6 +159,8 @@ input[type=date]{-webkit-appearance:none;appearance:none;height:47px;display:fle
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{display:inline-flex;align-items:center;gap:4px;padding:7px 13px;border-radius:18px;border:1px solid var(--inBd);background:var(--card);font-size:15px;cursor:pointer;user-select:none;color:var(--tx)}
 .chip.on{background:var(--accBg);border-color:var(--acc);color:var(--accTx);font-weight:600}
+.chip.sq{border-radius:8px}
+.pbmark{position:absolute;right:-3px;bottom:-3px;width:19px;height:19px;border-radius:50%;background:#0f6e56;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid var(--card);font-weight:700}
 .chip.pay{background:var(--acc);border-color:var(--acc);color:var(--accOn);font-weight:600}
 .bdg{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;position:relative;user-select:none;flex:0 0 auto}
 .b18{width:20px;height:20px;font-size:11px}
@@ -299,9 +301,9 @@ details.tsec>.tbody{padding:2px 1px 15px}
 
 <section id="v-add">
   <div class="card" id="tplCard" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center"><span class="lbl" style="margin:0">常用項目（點一下帶入）</span><span class="chip" id="tplEditBtn" style="padding:3px 10px;font-size:13px">編輯</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="lbl" style="margin:0">常用項目（點一下帶入）</span><span style="display:flex;gap:6px"><span class="chip" id="tplPresetBtn" style="padding:3px 10px;font-size:13px">＋ 範本</span><span class="chip" id="tplEditBtn" style="padding:3px 10px;font-size:13px">編輯</span></span></div>
     <div class="chips" id="tplChips" style="margin-top:6px"></div>
-    <div class="hint" id="tplHint" style="margin-top:6px;display:none">✕＝刪除常用｜虛線框＝最近記過自動出現，按 ➕ 收藏成常用</div>
+    <div class="hint" id="tplHint" style="margin-top:6px;display:none">實線＝已收藏，✕ 可刪除｜虛線＝最近記過的，按 ➕ 收藏成常用</div>
   </div>
   <div class="card">
     <div class="seg" id="kindSeg" style="margin-bottom:10px"><span data-kind="exp" class="on">🧾 消費</span><span data-kind="loan">💸 借款</span></div>
@@ -351,9 +353,9 @@ details.tsec>.tbody{padding:2px 1px 15px}
     </div>
   </div>
   <button class="btn" id="btnSave">儲存</button>
+  <button class="btn sub" id="btnCancelAdd" style="margin-top:8px">取消（不儲存，回帳本）</button>
   <button class="btn sub" id="btnAdj" style="display:none;margin-top:8px">💳 帳單補正（輸入帳單實際金額）</button>
   <button class="btn sub" id="btnCopy" style="display:none;margin-top:8px">⧉ 複製成新帳（日期改今天）</button>
-  <button class="btn sub" id="btnTpl" style="margin-top:8px">☆ 存成常用項目（記住項目/類別/幣別）</button>
   <button class="btn danger" id="btnDel" style="display:none;margin-top:8px">刪除這筆</button>
 </section>
 
@@ -408,6 +410,12 @@ details.tsec>.tbody{padding:2px 1px 15px}
   <div id="friList" style="max-height:300px;overflow-y:auto"></div>
   <div class="row" style="margin-top:12px"><button class="btn mini" id="friGo" style="flex:1">帶入勾選的好朋友</button><button class="btn sub mini" id="friClose" style="flex:1">取消</button></div>
 </div></div>
+<div class="modal" id="presetModal"><div class="mbox">
+  <div style="font-size:16px;font-weight:600;margin-bottom:4px">＋ 從範本加入常用</div>
+  <div class="hint" style="margin-bottom:8px">點一下選取（可多選），已加入的顯示 ✓。</div>
+  <div id="presetList" style="max-height:340px;overflow-y:auto"></div>
+  <div class="row" style="margin-top:12px"><button class="btn mini" id="presetGo" style="flex:1">加入勾選的項目</button><button class="btn sub mini" id="presetClose" style="flex:1">取消</button></div>
+</div></div>
 <div id="updBar" style="display:none;position:fixed;bottom:64px;left:50%;transform:translateX(-50%);z-index:40;background:var(--acc);color:var(--accOn);border-radius:20px;padding:9px 18px;font-size:14px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.3);cursor:pointer">🔄 有新版本，點此更新</div>
 <div class="modal" id="acctModal"><div class="mbox">
   <div id="amTitle" style="font-size:16px;font-weight:600;margin-bottom:6px"></div>
@@ -443,11 +451,11 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 22;
-var VER = 'T0711-03';
+var CODE_VERSION = 23;
+var VER = 'T0711-04';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
-var CATS = [['food','🍜','餐飲'],['trans','🚇','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
+var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
 var LANDMARKS = [['東京','🗼'],['大阪','🏯'],['京都','⛩️'],['奈良','🦌'],['北海道','⛄'],['沖繩','🏖️'],['九州','♨️'],['福岡','🍜'],['名古屋','🏯'],['日本','🗻'],['首爾','🇰🇷'],['釜山','🌉'],['韓國','🇰🇷'],['曼谷','🛕'],['泰國','🐘'],['新加坡','🦁'],['越南','🍜'],['香港','🎡'],['澳門','🎰'],['上海','🏙️'],['北京','🏯'],['巴黎','🗼'],['倫敦','🎡'],['紐約','🗽'],['夏威夷','🌺'],['峇里','🏝️'],['關島','🌴'],['澎湖','🐚'],['金門','🏮'],['綠島','🐠'],['蘭嶼','🛶'],['台南','🏮'],['台東','🌾'],['花蓮','⛰️'],['墾丁','🏄'],['宜蘭','🦆'],['阿里山','🌲'],['日月潭','🚤'],['台北','🏙️'],['台中','🎡'],['高雄','🚢']];
 function landmark(name){
   for(var i=0;i<LANDMARKS.length;i++){ if(String(name||'').indexOf(LANDMARKS[i][0]) >= 0) return LANDMARKS[i][1]; }
@@ -737,6 +745,20 @@ function guessCur(t){
   if(es.length) return es[es.length-1].cur;
   return t.home === 'JPY' ? 'USD' : 'JPY';
 }
+function _hx(hex){ hex = String(hex || '#888888').replace('#',''); if(hex.length === 3) hex = hex.split('').map(function(c){ return c + c; }).join(''); return [parseInt(hex.slice(0,2),16) || 0, parseInt(hex.slice(2,4),16) || 0, parseInt(hex.slice(4,6),16) || 0]; }
+function lighten(hex, p){ var c = _hx(hex); return 'rgb(' + Math.round(c[0]+(255-c[0])*p) + ',' + Math.round(c[1]+(255-c[1])*p) + ',' + Math.round(c[2]+(255-c[2])*p) + ')'; }
+function darken(hex, p){ var c = _hx(hex); return 'rgb(' + Math.round(c[0]*(1-p)) + ',' + Math.round(c[1]*(1-p)) + ',' + Math.round(c[2]*(1-p)) + ')'; }
+function glossStyle(col){ return 'position:relative;background:linear-gradient(160deg,' + lighten(col,.4) + ',' + col + ' 58%,' + darken(col,.12) + ');color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.22),inset 0 2px 3px rgba(255,255,255,.55),inset 0 -3px 5px rgba(0,0,0,.15)'; }
+function payerBadge(m){
+  var on = F.payer === m.id, col = bcolor(m.id);
+  var st = on ? glossStyle(col) : 'background:transparent;color:var(--tx3);border:2px dashed var(--inBd)';
+  return '<span class="bdg b34" data-m="' + m.id + '" style="' + st + bshape(m.id) + '" title="' + esc(m.name) + '">' + esc(bchar(m.id)) + (on ? '<span class="pbmark">✓</span>' : '') + '</span>';
+}
+function fundPayerBadge(){
+  var on = F.payer === FUND;
+  var st = (on ? glossStyle('#0f6e56') : 'background:transparent;color:var(--tx3);border:2px dashed var(--inBd)') + ';border-radius:13px';
+  return '<span class="bdg b34" data-m="' + FUND + '" style="' + st + '" title="基金">🏦' + (on ? '<span class="pbmark">✓</span>' : '') + '</span>';
+}
 function renderAdd(){
   var t = trip(); if(!t) return;
   if(!F) F = blankF();
@@ -769,16 +791,11 @@ function renderAdd(){
   document.getElementById('modeRow').style.display = loan ? 'none' : '';
   document.getElementById('splitWrap').style.display = F.priv ? 'none' : '';
   var cc = document.getElementById('catChips');
-  cc.innerHTML = CATS.map(function(c){ return '<span class="chip' + (F.cat===c[0] ? ' on' : '') + '" data-c="' + c[0] + '">' + c[1] + ' ' + c[2] + '</span>'; }).join('');
+  cc.innerHTML = CATS.map(function(c){ return '<span class="chip sq' + (F.cat===c[0] ? ' on' : '') + '" data-c="' + c[0] + '">' + c[1] + ' ' + c[2] + '</span>'; }).join('');
   cc.querySelectorAll('.chip').forEach(function(el){ el.onclick = function(){ F.cat = el.dataset.c; renderAdd(); }; });
   var pc = document.getElementById('payerChips');
-  var ph = t.members.map(function(m){
-    var on = F.payer === m.id;
-    var st = on ? 'background:' + bcolor(m.id) + ';color:#fff;box-shadow:0 0 0 2px var(--card),0 0 0 4px ' + bcolor(m.id)
-                : 'background:var(--card);color:' + bcolor(m.id) + ';border:2px solid ' + bcolor(m.id);
-    return '<span class="bdg b34" data-m="' + m.id + '" style="' + st + bshape(m.id) + '" title="' + esc(m.name) + '">' + esc(bchar(m.id)) + '</span>';
-  }).join('');
-  ph += '<span class="chip' + (F.payer===FUND ? ' pay' : '') + '" data-m="' + FUND + '" style="height:36px">🏦基金</span>';
+  var ph = t.members.map(function(m){ return payerBadge(m); }).join('');
+  ph += fundPayerBadge();
   pc.innerHTML = ph;
   pc.querySelectorAll('[data-m]').forEach(function(el){ el.onclick = function(){
     F.payer = el.dataset.m;
@@ -862,19 +879,17 @@ function renderTpl(){
     seen[e.desc] = true;
     recs.push(e);
   });
-  card.style.display = (tpls.length || recs.length) ? '' : 'none';
-  if(!tpls.length && !recs.length){ _tplEdit = false; return; }
+  card.style.display = '';
   var box = document.getElementById('tplChips');
   var html = tpls.map(function(p, i){
-    var ci = catInfo(p.cat);
-    return '<span class="chip" data-tpl="' + i + '">' + ci[1] + ' ' + esc(p.name) + (_tplEdit ? ' <b style="color:var(--danger)">✕</b>' : '') + '</span>';
+    return '<span class="chip" data-tpl="' + i + '">' + esc(p.name) + (_tplEdit ? ' <b style="color:var(--danger)">✕</b>' : '') + '</span>';
   }).join('');
   html += recs.map(function(e){
-    var ci = catInfo(e.cat);
-    return '<span class="chip" data-rec="' + e.id + '" style="border-style:dashed;color:var(--tx2)">' + ci[1] + ' ' + esc(e.desc) + (_tplEdit ? ' <b style="color:var(--acc)">➕</b>' : '') + '</span>';
+    return '<span class="chip" data-rec="' + e.id + '" style="border-style:dashed;color:var(--tx2)">' + esc(e.desc) + (_tplEdit ? ' <b style="color:var(--acc)">➕</b>' : '') + '</span>';
   }).join('');
+  if(!tpls.length && !recs.length) html = '<div class="hint" style="margin:2px 0">還沒有常用項目。按「＋ 範本」從清單挑選，或先記幾筆再用「編輯」收藏。</div>';
   box.innerHTML = html;
-  document.getElementById('tplHint').style.display = _tplEdit ? '' : 'none';
+  document.getElementById('tplHint').style.display = (_tplEdit && (tpls.length || recs.length)) ? '' : 'none';
   box.querySelectorAll('[data-tpl]').forEach(function(el){
     el.onclick = function(){
       var i = Number(el.dataset.tpl), p = t.templates[i];
@@ -910,6 +925,49 @@ function renderTpl(){
   var eb = document.getElementById('tplEditBtn');
   eb.textContent = _tplEdit ? '完成' : '編輯';
   eb.onclick = function(){ _tplEdit = !_tplEdit; renderTpl(); };
+  document.getElementById('tplPresetBtn').onclick = openPresets;
+}
+var PRESETS = [
+  ['food', ['早餐','午餐','晚餐','宵夜','咖啡/飲料','超市']],
+  ['trans', ['機票','交通卡','計程車','地鐵/公車','租車/加油']],
+  ['tix', ['美術館','博物館','樂園','展覽/表演']],
+  ['stay', ['飯店','民宿']],
+  ['shop', ['伴手禮','紀念品']],
+  ['daily', ['藥妝']],
+  ['misc', ['小費','網路/SIM']]
+];
+function renderPresetList(){
+  var t = trip(); if(!t) return;
+  var have = {}; (t.templates || []).forEach(function(p){ have[p.name] = true; });
+  document.getElementById('presetList').innerHTML = PRESETS.map(function(g){
+    var ci = catInfo(g[0]);
+    return '<div style="margin-bottom:10px"><div style="font-size:13px;font-weight:600;margin-bottom:6px">' + ci[1] + ' ' + ci[2] + '</div><div class="chips">' +
+      g[1].map(function(nm){
+        var dup = have[nm];
+        return '<span class="chip preset-chip' + (dup ? ' dup' : '') + '" data-pcat="' + g[0] + '" data-pnm="' + esc(nm) + '"' + (dup ? '' : ' data-sel="1"') + ' style="font-size:13px;' + (dup ? 'opacity:.4' : '') + '">' + esc(nm) + (dup ? ' ✓' : '') + '</span>';
+      }).join('') + '</div></div>';
+  }).join('');
+  document.getElementById('presetList').querySelectorAll('.preset-chip').forEach(function(el){
+    if(el.classList.contains('dup')) return;
+    el.classList.toggle('on', el.dataset.sel === '1');
+    el.onclick = function(){ el.dataset.sel = el.dataset.sel === '1' ? '' : '1'; el.classList.toggle('on', el.dataset.sel === '1'); };
+  });
+}
+function openPresets(){
+  var t = trip(); if(!t) return;
+  renderPresetList();
+  document.getElementById('presetModal').classList.add('on');
+}
+function presetsGo(){
+  var t = trip(); if(!t) return; var n = 0;
+  document.getElementById('presetList').querySelectorAll('.preset-chip[data-sel="1"]').forEach(function(el){
+    var nm = el.dataset.pnm, cat = el.dataset.pcat;
+    if((t.templates || []).some(function(p){ return p.name === nm; })) return;
+    t.templates.push({ id: uid(), name: nm, cat: cat, desc: nm, cur: t.home, card: false });
+    n++;
+  });
+  document.getElementById('presetModal').classList.remove('on');
+  if(n){ bumpMeta('templates'); saveLocal(); pushCloud(); renderTpl(); toast('已加入 ' + n + ' 項常用'); }
 }
 function saveTpl(){
   var t = trip(); if(!t) return;
@@ -1325,11 +1383,21 @@ function renderLedger(){
     }
     else {
       var treats = (e.treat||[]).filter(function(id){ return (e.split||[]).indexOf(id) >= 0; });
-      sd = bdg(e.payer, 18) + '<span style="color:var(--tx3)">付</span> ';
       var ids = (e.split||[]);
-      var shown = ids.slice(0, 5);
-      sd += shown.map(function(id){ return bdg(id, 18, treats.indexOf(id) >= 0 ? '<span class="gift" style="font-size:9px;top:-4px;right:-4px">🎁</span>' : ''); }).join('');
-      sd += '<span style="color:var(--tx3)">' + (ids.length > 5 ? '+' + (ids.length - 5) + '，' : '') + '共' + ids.length + '位</span>';
+      var payerIn = ids.indexOf(e.payer) >= 0;
+      var ordered = [];
+      if(e.payer) ordered.push(e.payer);
+      ids.forEach(function(id){ if(id !== e.payer) ordered.push(id); });
+      var segs = ordered.map(function(id){
+        var isPayer = (id === e.payer);
+        var ch = id === FUND ? '🏦' : esc(bchar(id));
+        var gift = treats.indexOf(id) >= 0 ? '🎁' : '';
+        var stl = isPayer ? ('color:' + (id === FUND ? '#0f6e56' : bcolor(id)) + ';font-weight:600') : 'color:var(--tx3)';
+        return '<span style="' + stl + '">' + ch + gift + '</span>';
+      });
+      var divider = '<span style="width:1px;height:11px;background:var(--inBd);display:inline-block"></span>';
+      sd = '<span style="display:inline-flex;align-items:center;flex-wrap:wrap;gap:7px">' + segs.join(divider) +
+        '<span style="font-size:11px;color:var(--tx2);background:var(--card);border:1px solid var(--inBd);border-radius:999px;padding:1px 8px">分攤 ' + ids.length + '</span></span>';
     }
     html += '<div class="exp" data-eid="' + e.id + '"><span class="ico ct-' + e.cat + '">' + icoCh + '</span>' +
       '<div class="mid"><div class="t1">' + esc(e.desc) + '</div><div class="t2">' + sd + '</div></div>' +
@@ -2481,7 +2549,19 @@ function renderTrip(){
     tb.querySelectorAll('input[data-bg]').forEach(function(inp){
       inp.onchange = function(){
         var m = member(inp.dataset.bg);
-        if(m){ m.badge = (inp.value || '').trim().slice(0, 2) || (m.name || '?').charAt(0); bumpMeta('members'); saveLocal(); pushCloud(); renderTrip(); }
+        if(!m) return;
+        var val = (inp.value || '').trim().slice(0, 2) || (m.name || '?').charAt(0);
+        var dup = t.members.some(function(x){ return x.id !== m.id && bchar(x.id) === val; });
+        if(dup){
+          var alt = (m.name || '?').charAt(0);
+          var altDup = t.members.some(function(x){ return x.id !== m.id && bchar(x.id) === alt; });
+          if(!altDup && alt !== val && confirm('代表字「' + val + '」和其他成員重複，會分不清。\n改用名字第一個字「' + alt + '」嗎？（取消＝自己換一個）')){
+            val = alt;
+          } else {
+            toast('代表字「' + val + '」重複，請換一個'); renderTrip(); return;
+          }
+        }
+        m.badge = val; bumpMeta('members'); saveLocal(); pushCloud(); renderTrip();
       };
     });
     tb.querySelectorAll('input[data-col]').forEach(function(inp){
@@ -2936,6 +3016,11 @@ window.addEventListener('cloud-ready', function(){
     F.priv = this.checked; renderAdd();
   };
   document.getElementById('btnSave').onclick = saveExpense;
+  document.getElementById('btnCancelAdd').onclick = function(){
+    var wasEdit = !!editId;
+    if(!wasEdit && F && (F.desc || F.amt)){ if(!confirm('放棄這筆未儲存的記帳？')) return; }
+    F = null; editId = null; go('ledger'); toast(wasEdit ? '已返回，未儲存修改' : '已取消');
+  };
   document.getElementById('fabBack').onclick = function(){ F = null; editId = null; go('ledger'); toast('已返回，未儲存修改'); };
   window.addEventListener('online', renderSync);
   window.addEventListener('offline', renderSync);
@@ -2945,7 +3030,6 @@ window.addEventListener('cloud-ready', function(){
   document.getElementById('adjGo').onclick = adjApply;
   document.getElementById('adjClose').onclick = function(){ document.getElementById('adjModal').classList.remove('on'); };
   document.getElementById('adjModal').onclick = function(ev){ if(ev.target === this) this.classList.remove('on'); };
-  document.getElementById('btnTpl').onclick = saveTpl;
   document.getElementById('btnDel').onclick = delExpense;
   document.getElementById('hHelp').onclick = function(){
     if(document.getElementById('v-help').classList.contains('act')) go(_helpFrom || 'ledger');
@@ -2965,6 +3049,9 @@ window.addEventListener('cloud-ready', function(){
   document.getElementById('friClose').onclick = function(){ document.getElementById('friModal').classList.remove('on'); };
   document.getElementById('friGo').onclick = friendsGo;
   document.getElementById('friModal').onclick = function(ev){ if(ev.target === this) this.classList.remove('on'); };
+  document.getElementById('presetClose').onclick = function(){ document.getElementById('presetModal').classList.remove('on'); };
+  document.getElementById('presetGo').onclick = presetsGo;
+  document.getElementById('presetModal').onclick = function(ev){ if(ev.target === this) this.classList.remove('on'); };
   document.getElementById('updBar').onclick = function(){
     if('serviceWorker' in navigator && navigator.serviceWorker.getRegistration){
       navigator.serviceWorker.getRegistration().then(function(reg){ if(reg) reg.update(); location.reload(); });
@@ -3041,4 +3128,4 @@ try{
 </body>
 </html>
 
-<!-- T0711-03 deploy -->
+<!-- T0711-04 deploy -->
