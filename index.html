@@ -220,7 +220,7 @@ input[type=date]{-webkit-appearance:none;appearance:none;height:47px;display:fle
 .lamt .a1{font-size:15px;font-weight:600;color:var(--tx)}
 .lamt .a2{font-size:11px;color:var(--tx3)}
 .lamt .ap{font-size:10.5px;font-weight:500}
-.lrow .rx{flex:0 0 auto}
+.lrow .rx{flex:0 0 auto;border:1px solid var(--inBd);border-radius:9px;background:var(--ro);color:var(--tx2);font-size:16px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:4px}
 .sumrow{display:flex;justify-content:space-between;padding:3px 0;font-size:14px}
 table.st{width:100%;border-collapse:collapse;font-size:14px}
 table.st th{font-weight:400;color:var(--tx2);font-size:12.5px;text-align:right;padding:4px 2px;border-bottom:1px solid var(--line)}
@@ -497,8 +497,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 31;
-var VER = 'T0711-12';
+var CODE_VERSION = 32;
+var VER = 'T0711-13';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -1524,7 +1524,7 @@ function renderLedger(){
     var per = myPersonal(t, e);
     var amtH = '<div class="a1">' + money(t.home, homeAmt(e)) + (e.card ? ' 💳' : '') + '</div>' +
       (e.cur !== t.home ? '<div class="a2">' + e.cur + ' ' + fmt2(e.amt) + '</div>' : '') +
-      (per ? '<div class="ap" style="color:' + (per.type === 'owe' ? '#c02626' : '#0f6e56') + '">' + (per.type === 'owe' ? '你要付 ' : '你先墊 ') + fmt(per.amt) + '</div>' : '');
+      (per && per.type === 'owe' ? '<div class="ap" style="color:#c02626">你要付 ' + fmt(per.amt) + '</div>' : '');
     rows += '<div class="lrow" data-eid="' + e.id + '">' +
       '<div class="ldate"><div class="m">' + Number(e.date.slice(5,7)) + '月</div><div class="d">' + e.date.slice(8,10) + '</div></div>' +
       ico +
@@ -3369,4 +3369,4 @@ try{
 </body>
 </html>
 
-<!-- T0711-12 deploy -->
+<!-- T0711-13 deploy -->
