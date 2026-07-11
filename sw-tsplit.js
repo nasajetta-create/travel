@@ -1,4 +1,4 @@
-var C = 'tsplit-v20'; /* T0711-01 */
+var C = 'tsplit-v21'; /* T0711-02 */
 self.addEventListener('install', function(e){ self.skipWaiting(); });
 self.addEventListener('activate', function(e){
   e.waitUntil(caches.keys().then(function(ks){
@@ -17,6 +17,4 @@ self.addEventListener('fetch', function(e){
       return m || fetch(req).then(function(r){
         var cp = r.clone(); caches.open(C).then(function(c){ c.put(req, cp); }); return r;
       });
-    }));
-  }
-});
+  

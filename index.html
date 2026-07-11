@@ -443,8 +443,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 20;
-var VER = 'T0711-01';
+var CODE_VERSION = 21;
+var VER = 'T0711-02';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍜','餐飲'],['trans','🚇','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -481,7 +481,7 @@ var HELPQA = [
  {q:'轉帳完成在哪看？', a:'結算頁每筆建議左邊打勾（全團同步），旁邊可複製收款帳號。', k:'轉帳 完成 勾 帳號 銀行'},
  {q:'徽章的字和顏色可以改嗎？', a:'可以，成員設定改「代表字」與顏色，全 App 一起變。', k:'徽章 代表字 顏色 頭像'},
  {q:'怎麼備份？換手機怎麼辦？', a:'「⬇匯出備份」存檔（含私人帳），新手機「⬆還原備份」。私人帳只存本機，換機前務必備份！', k:'備份 還原 換手機 匯出 csv'},
- {q:'旅伴怎麼加入？', a:'旅伴開同一個網址 →「➕其他旅程」→ 輸入 6 碼代碼即可共編。', k:'加入 代碼 旅伴 同步 分享'},
+ {q:'旅伴怎麼加入？', a:'旅伴開同一個網址 →「➕旅程計畫」→ 輸入 6 碼代碼即可共編。', k:'加入 代碼 旅伴 同步 分享'},
  {q:'離線可以用嗎？', a:'可以，資料存本機、回網自動同步；加到主畫面就像 App。', k:'離線 斷網 pwa 主畫面'},
  {q:'「我是誰」怎麼變更？', a:'旅程頁鎖定卡按「變更」，點新徽章確認。', k:'我是誰 鎖定 變更 誤觸'},
  {q:'常用項目怎麼管理？', a:'點常用項目帶入；「編輯」裡 ✕ 刪除、➕ 把最近記過的收藏成常用。', k:'常用 模板 收藏 編輯'},
@@ -1724,7 +1724,9 @@ function renderSettle(){
     '<button class="btn mini fix" id="btnImg">🖼 存成圖片</button></div>' +
     '<label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-top:8px;color:var(--tx2)"><input type="checkbox" id="imgAcct"' + (S.imgAcct !== false ? ' checked' : '') + ' style="width:16px;height:16px">圖片含收款帳號</label>' +
     '<div class="hint" style="margin-top:4px">圖片字大、欄位對齊，最適合貼群組；文字版方便再編輯。</div></div>';
-  html += '<button class="btn sub" id="btnReport" style="margin-top:8px">📝 複製旅程總結報告</button>';
+  html += '<div class="card" style="margin-top:8px"><div class="lbl" style="margin:0 0 6px;font-weight:600;color:var(--tx)">旅程總結報告</div>' +
+    '<div class="row"><button class="btn sub mini" id="btnReport" style="flex:1">📋 複製報告</button><button class="btn mini fix" id="btnRepImg">🖼 存成圖片</button></div>' +
+    '<div class="hint" style="margin-top:4px">去除多餘符號、色塊呈現花費分布，適合貼群組。</div></div>';
   box.innerHTML = html;
   box.querySelectorAll('[data-tbv]').forEach(function(el){
     el.onclick = function(){ S.tblView = el.dataset.tbv; saveLocal(); renderSettle(); };
@@ -1743,6 +1745,7 @@ function renderSettle(){
   };
   document.getElementById('btnImg').onclick = function(){ settleImage(t, M); };
   document.getElementById('btnReport').onclick = function(){ copyText(reportText(t, M), '已複製旅程總結'); };
+  document.getElementById('btnRepImg').onclick = function(){ reportImage(t, M); };
 }
 function settleText(t, M){
   var L = [];
@@ -1773,7 +1776,7 @@ function settleText(t, M){
   }
   return L.join('\n');
 }
-function reportText(t, M){
+function reportData(t, M){
   var es = t.expenses.filter(function(e){ return !e._del && e.kind !== 'loan'; });
   var minD = null, maxD = null, byCat = {}, cash = 0, card = 0, fund = 0, top = null;
   es.forEach(function(e){
@@ -1787,26 +1790,105 @@ function reportText(t, M){
   var d1 = t.startDate || minD, d2 = t.endDate || maxD;
   var days = (d1 && d2) ? Math.floor((new Date(d2+'T00:00:00') - new Date(d1+'T00:00:00'))/86400000) + 1 : 0;
   var sw = 0;
-  t.members.forEach(function(m){
-    if((M.overall.share[m.id] || 0) > 0.5 || (M.overall.paid[m.id] || 0) > 0.5) sw += weightOf(t, m.id);
+  t.members.forEach(function(m){ if((M.overall.share[m.id] || 0) > 0.5 || (M.overall.paid[m.id] || 0) > 0.5) sw += weightOf(t, m.id); });
+  var cats = Object.keys(byCat).sort(function(a, b){ return byCat[b] - byCat[a]; }).map(function(c){
+    return { id: c, name: catInfo(c)[2], amt: byCat[c], pct: M.totalSpend > 0 ? byCat[c] / M.totalSpend * 100 : 0, color: CAT_COLORS[c] || '#888780' };
   });
-  var L = [];
-  L.push('🧳【' + t.name + '】旅程總結');
-  if(d1) L.push('📅 ' + d1 + ' ~ ' + d2 + '（' + days + ' 天）· ' + t.members.length + ' 人');
-  L.push('💰 團體總支出 ' + t.home + ' ' + fmt(M.totalSpend));
-  if(days > 0) L.push('📆 每日平均 ' + t.home + ' ' + fmt(M.totalSpend / days));
-  if(sw > 0) L.push('👤 人均（按實際分攤人頭）' + t.home + ' ' + fmt(M.totalSpend / sw));
-  if(top) L.push('🏆 最貴一筆：' + top.desc + ' ' + t.home + ' ' + fmt(top.h) + '（' + top.date + '）');
-  var cats = Object.keys(byCat).sort(function(a,b){ return byCat[b] - byCat[a]; }).slice(0,3);
-  if(cats.length){
-    L.push('📊 花最多：' + cats.map(function(c){
-      var ci = catInfo(c);
-      return ci[1] + ci[2] + ' ' + (M.totalSpend > 0 ? Math.round(byCat[c] / M.totalSpend * 100) : 0) + '%';
-    }).join('｜'));
-  }
-  L.push('💳 刷卡 ' + fmt(card) + '｜💵 現金 ' + fmt(cash) + (M.ft.fin > 0 ? '｜🏦 基金支付 ' + fmt(fund) : ''));
-  if(M.ft.fin > 0) L.push('🏦 基金：入 ' + fmt(M.ft.fin) + '｜支 ' + fmt(M.ft.fout) + '｜餘 ' + fmt(M.ft.bal));
+  return { d1: d1, d2: d2, days: days, sw: sw, cash: cash, card: card, fund: fund, top: top, cats: cats };
+}
+function reportText(t, M){
+  var R = reportData(t, M);
+  var L = [t.name + ' 旅程總結'];
+  if(R.d1) L.push(R.d1.replace(/-/g,'/') + '–' + (R.d2 || R.d1).replace(/-/g,'/').slice(5) + (R.days ? ' · ' + R.days + '天' : '') + ' · ' + t.members.length + '人');
+  L.push('');
+  var rows = [['總支出', t.home + ' ' + fmt(M.totalSpend)]];
+  if(R.days > 0) rows.push(['每日平均', t.home + ' ' + fmt(M.totalSpend / R.days)]);
+  if(R.sw > 0) rows.push(['每人平均', t.home + ' ' + fmt(M.totalSpend / R.sw)]);
+  if(R.top) rows.push(['最貴一筆', R.top.desc + ' ' + fmt(R.top.h) + '（' + R.top.date.slice(5).replace('-','/') + '）']);
+  if(R.cats.length) rows.push(['分布', R.cats.map(function(c){ return c.name + ' ' + Math.round(c.pct) + '%'; }).join('｜')]);
+  rows.push(['付款', '現金 ' + fmt(R.cash) + (R.card > 0.5 ? '｜刷卡 ' + fmt(R.card) : '') + (M.ft.fin > 0 ? '｜基金 ' + fmt(R.fund) : '')]);
+  if(M.ft.fin > 0) rows.push(['基金餘額', fmt(M.ft.bal)]);
+  var wL = 0; rows.forEach(function(r){ wL = Math.max(wL, dispW(r[0])); });
+  rows.forEach(function(r){ L.push(padR(r[0], wL) + '  ' + r[1]); });
   return L.join('\n');
+}
+function reportImage(t, M){
+  var R = reportData(t, M);
+  var sc = 2, W = 720, PAD = 28, acc = skinAcc();
+  var mCards = [['總支出', fmt(M.totalSpend)]];
+  if(R.days > 0) mCards.push(['每日平均', fmt(M.totalSpend / R.days)]);
+  if(R.sw > 0) mCards.push(['每人平均', fmt(M.totalSpend / R.sw)]);
+  var headH = 100, cardH = 66;
+  var barTop = headH + 20 + cardH + 26;
+  var barY = barTop + 24;
+  var legTop = barY + 30 + 14;
+  var legH = R.cats.length * 30;
+  var afterLeg = legTop + legH + 8;
+  var topRowH = R.top ? 32 : 0;
+  var payRowH = 30;
+  var fundRowH = M.ft.fin > 0 ? 28 : 0;
+  var H = afterLeg + 14 + topRowH + payRowH + fundRowH + 44;
+  var cv = document.createElement('canvas');
+  cv.width = W * sc; cv.height = H * sc;
+  var g = cv.getContext('2d'); g.scale(sc, sc); g.textBaseline = 'alphabetic';
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+  g.fillStyle = acc; g.fillRect(0, 0, W, headH);
+  g.fillStyle = '#ffffff'; g.font = '600 30px sans-serif'; g.textAlign = 'left';
+  g.fillText(t.name + ' 旅程總結', PAD, 46);
+  var sub = (R.d1 ? R.d1.replace(/-/g,'/') + '–' + (R.d2 || R.d1).replace(/-/g,'/').slice(5) + (R.days ? ' · ' + R.days + '天' : '') + ' · ' : '') + t.members.length + '人';
+  g.fillStyle = 'rgba(255,255,255,.82)'; g.font = '18px sans-serif'; g.fillText(sub, PAD, 78);
+  var gap = 10, cw = (W - PAD * 2 - gap * (mCards.length - 1)) / mCards.length;
+  mCards.forEach(function(c, i){
+    var x = PAD + i * (cw + gap), yc = headH + 20;
+    g.fillStyle = '#f4f6f5'; roundRect(g, x, yc, cw, cardH, 10); g.fill();
+    g.fillStyle = '#8a8a8a'; g.font = '15px sans-serif'; g.textAlign = 'left'; g.fillText(c[0], x + 12, yc + 26);
+    g.fillStyle = '#111111'; g.font = '600 24px sans-serif'; g.fillText(c[1], x + 12, yc + 52);
+  });
+  g.fillStyle = '#666666'; g.font = '16px sans-serif'; g.textAlign = 'left';
+  g.fillText('花費分布', PAD, barTop + 6);
+  var barW = W - PAD * 2, bx = PAD;
+  if(R.cats.length){
+    R.cats.forEach(function(c){
+      var w = Math.max(2, barW * c.pct / 100);
+      g.fillStyle = c.color; g.fillRect(bx, barY, w, 28);
+      if(w > 72){ g.fillStyle = '#ffffff'; g.font = '13px sans-serif'; g.textAlign = 'left'; g.fillText(c.name + ' ' + Math.round(c.pct) + '%', bx + 8, barY + 19); }
+      bx += w;
+    });
+    var ly = legTop + 18;
+    R.cats.forEach(function(c){
+      g.fillStyle = c.color; roundRect(g, PAD, ly - 12, 14, 14, 3); g.fill();
+      g.fillStyle = '#333333'; g.font = '16px sans-serif'; g.textAlign = 'left';
+      g.fillText(c.name + '  ' + Math.round(c.pct) + '%', PAD + 22, ly);
+      g.textAlign = 'right'; g.fillStyle = '#666666'; g.fillText(fmt(c.amt), W - PAD, ly);
+      ly += 30;
+    });
+  }
+  var y = afterLeg + 22;
+  if(R.top){
+    g.strokeStyle = '#eeeeee'; g.beginPath(); g.moveTo(PAD, y - 20); g.lineTo(W - PAD, y - 20); g.stroke();
+    g.fillStyle = '#888888'; g.font = '16px sans-serif'; g.textAlign = 'left'; g.fillText('最貴一筆', PAD, y);
+    g.fillStyle = '#111111'; g.font = '500 18px sans-serif'; g.textAlign = 'right';
+    g.fillText(R.top.desc + ' ' + fmt(R.top.h) + '（' + R.top.date.slice(5).replace('-','/') + '）', W - PAD, y);
+    y += topRowH;
+  }
+  g.fillStyle = '#888888'; g.font = '16px sans-serif'; g.textAlign = 'left'; g.fillText('付款', PAD, y);
+  g.fillStyle = '#111111'; g.font = '500 18px sans-serif'; g.textAlign = 'right';
+  g.fillText('現金 ' + fmt(R.cash) + (R.card > 0.5 ? '｜刷卡 ' + fmt(R.card) : '') + (M.ft.fin > 0 ? '｜基金 ' + fmt(R.fund) : ''), W - PAD, y);
+  y += payRowH;
+  if(M.ft.fin > 0){
+    g.fillStyle = '#888888'; g.font = '16px sans-serif'; g.textAlign = 'left'; g.fillText('基金餘額', PAD, y);
+    g.fillStyle = '#111111'; g.font = '500 18px sans-serif'; g.textAlign = 'right'; g.fillText(fmt(M.ft.bal), W - PAD, y);
+  }
+  g.fillStyle = '#aaaaaa'; g.font = '15px sans-serif'; g.textAlign = 'center';
+  g.fillText('旅遊分帳 · 代碼 ' + t.code, W / 2, H - 16);
+  cv.toBlob(function(blob){
+    if(!blob){ toast('圖片產生失敗'); return; }
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = safeName(t.name) + '_總結_' + todayISO() + '.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+    toast('已存成圖片');
+  }, 'image/png');
 }
 function dispW(s){ s = String(s); var n = 0; for(var i = 0; i < s.length; i++){ n += s.charCodeAt(i) > 255 ? 2 : 1; } return n; }
 function padR(s, w){ s = String(s); while(dispW(s) < w) s += ' '; return s; }
@@ -2122,9 +2204,19 @@ function renderTrip(){
   if(t){
     var ft = fundTotals(t);
     cap();
-    html += '<div class="lbl">旅程名稱</div><input type="text" id="tName" value="' + esc(t.name) + '">' +
+    var isEmptyTrip = !t.expenses.some(function(e){ return !e._del; }) && !(t.fund || []).some(function(c){ return !c._del; });
+    html += '<div class="codebox" style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;color:var(--accTx)">旅程代碼</span><b>' + t.code + '</b>' +
+      '<button class="btn sub mini" id="btnCpCode" style="margin-left:auto">複製</button></div>' +
+      '<div class="row" style="margin-top:8px"><button class="btn sub mini" id="btnArc" style="flex:1">' + (t.archived ? '↩ 還原' : '📦 封存') + '</button>' +
+      (isEmptyTrip
+        ? '<button class="btn sub mini" id="btnDelTrip" style="flex:1;color:var(--danger)">🗑️ 刪除旅程</button>'
+        : '<button class="btn sub mini" id="btnRmLocal" style="flex:1">📤 移除</button><button class="btn sub mini" id="btnDelTrip" style="flex:1;color:var(--danger)">🗑️ 整團刪除</button>') +
+      '</div>' +
+      '<div class="hint" style="margin-top:5px">代碼給旅伴（旅程計畫→用代碼加入）。' + (isEmptyTrip ? '刪除＝誤建可直接刪。' : '移除＝只清這支手機、可再加入；整團刪除＝連雲端刪、無法復原。') + '</div>' +
+      '<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px"></div>' +
+      '<div class="lbl">旅程名稱</div><input type="text" id="tName" value="' + esc(t.name) + '">' +
       '<div style="margin-top:8px"><div class="lbl">開始日期</div><input type="date" id="tSd" value="' + esc(t.startDate) + '"></div>' +
-      '<div style="margin-top:8px"><div class="lbl">結束日期</div><input type="date" id="tEd" value="' + esc(t.endDate) + '"></div>' +
+      '<div style="margin-top:8px"><div class="lbl">結束日期</div><input type="date" id="tEd" value="' + esc(t.endDate) + '"' + (t.startDate ? ' min="' + esc(t.startDate) + '"' : '') + '></div>' +
       '<label style="display:flex;align-items:center;gap:7px;font-size:14.5px;margin-top:10px"><input type="checkbox" id="tDom"' + (t.domestic ? ' checked' : '') + ' style="width:18px;height:18px">🇹🇼 本國旅遊</label>' +
       '<div class="hint" style="margin-top:3px">無外幣：手續費 0、幣別＝主幣別、不抓匯率</div>' +
       '<div class="row" style="margin-top:8px"><div style="flex:0 0 34%"><div class="lbl">主幣別（結算用）</div><select id="tHome">' +
@@ -2132,16 +2224,7 @@ function renderTrip(){
       '</select></div><div><div class="lbl">預設手續費 %</div><input type="number" id="tFee" inputmode="decimal" step="any" value="' + t.feePct + '"></div></div>' +
       '<div class="hint" style="margin-top:4px">手續費＝國際組織 1%＋發卡行 0.5%（各卡不同，可改；每筆記帳也能單獨調）</div>' +
       '<div class="row" style="margin-top:8px"><div><div class="lbl">總預算（' + t.home + '，0=不設）</div><input type="number" id="tBudT" inputmode="decimal" value="' + (t.budget.total || 0) + '"></div>' +
-      '<div><div class="lbl">每日預算（' + t.home + '）</div><input type="number" id="tBudD" inputmode="decimal" value="' + (t.budget.daily || 0) + '"></div></div>' +
-      '<div class="codebox" style="margin-top:10px"><span style="font-size:13px;color:var(--accTx)">旅程代碼</span><b>' + t.code + '</b>' +
-      '<button class="btn sub mini" id="btnCpCode">複製</button></div>' +
-      '<div class="hint" style="margin-top:6px">旅伴開同一個網頁 →「➕ 其他旅程」→ 輸入這組代碼加入。</div>' +
-      '<button class="btn sub mini" id="btnArc" style="margin-top:8px">' + (t.archived ? '↩ 還原這個旅程' : '📦 封存這個旅程（旅程結束後收納）') + '</button>';
-    var isEmptyTrip = !t.expenses.some(function(e){ return !e._del; }) && !(t.fund || []).some(function(c){ return !c._del; });
-    html += isEmptyTrip
-      ? ' <button class="btn sub mini" id="btnDelTrip" style="margin-top:8px;color:var(--danger)">🗑️ 刪除這個旅程（誤建可直接刪）</button>'
-      : '<div class="row" style="margin-top:8px"><button class="btn sub mini" id="btnRmLocal" style="flex:1">📤 從這支手機移除</button><button class="btn sub mini" id="btnDelTrip" style="flex:1;color:var(--danger)">🗑️ 整團刪除</button></div>' +
-        '<div class="hint" style="margin-top:4px">移除＝只清這支手機、旅伴不受影響，可再用代碼加入；整團刪除＝連雲端一起刪、無法復原。</div>';
+      '<div><div class="lbl">每日預算（' + t.home + '）</div><input type="number" id="tBudD" inputmode="decimal" value="' + (t.budget.daily || 0) + '"></div></div>';
     pop('set', '🧳 旅程設定', esc(t.name) + ' · ' + t.code, !t.startDate);
     cap();
     html += '<div class="hint" style="margin-bottom:6px">名單要含<b>你自己</b>與整團所有人（含小孩）。人頭數：大人 1、小孩 0.5、不分攤 0。</div><div id="memberBox">';
@@ -2267,7 +2350,16 @@ function renderTrip(){
       arc.map(function(c){ return '<span class="chip" style="opacity:.7" data-sw="' + c + '">' + esc(S.trips[c].name) + '</span>'; }).join('') +
       '</div><div class="hint" style="margin-top:4px">點一下開啟；要還原到進行中，開啟後在旅程頁按「還原」。</div></details>';
   }
-  html += secBox('oth', '➕ 其他旅程', act.length + ' 個進行中' + (arc.length ? '｜📦 ' + arc.length : ''), lh, !t);
+  var othChip = '<span style="font-size:11.5px;padding:3px 10px;border-radius:12px;border:1px solid var(--acc);color:var(--acc)">' + act.length + ' 個進行中' + (arc.length ? ' · 📦' + arc.length : '') + ' ›</span>';
+  html += secBox('oth', '➕ 旅程計畫', othChip, lh, !t);
+  if(t){
+    html = '<div class="card" style="display:flex;align-items:center;gap:8px;padding:10px 12px">' +
+      '<span style="font-size:18px">🧳</span>' +
+      '<div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(t.name) + '</div>' +
+      '<div class="hint" style="margin:0">進行中 ' + act.length + (arc.length ? ' · 已結束 ' + arc.length : '') + '</div></div>' +
+      '<button class="btn sub mini" id="btnSwTrip">⇄ 切換</button>' +
+      '<button class="btn sub mini" id="btnNewTrip2">＋ 新增</button></div>' + html;
+  }
   html += secBox('look', '🎨 外觀主題',
     (S.theme === 'dark' ? '深色' : S.theme === 'light' ? '淺色' : '跟隨系統') + '｜' +
     (S.skin === 'white' ? '純白' : S.skin === 'sky' ? '天藍' : S.skin === 'matcha' ? '抹茶' : '經典'), themeBody, false);
@@ -2282,6 +2374,10 @@ function renderTrip(){
     el.onclick = function(){ S.skin = el.dataset.sk; saveLocal(); applyTheme(); renderTrip(); };
   });
   document.getElementById('btnHelp2').onclick = function(){ go('help'); };
+  var bSw = document.getElementById('btnSwTrip');
+  if(bSw) bSw.onclick = function(){ S.tsec = S.tsec || {}; S.tsec.oth = 1; saveLocal(); renderTrip(); var el = document.querySelector('[data-sec="oth"]'); if(el) el.scrollIntoView({ behavior:'smooth', block:'start' }); };
+  var bNw2 = document.getElementById('btnNewTrip2');
+  if(bNw2) bNw2.onclick = function(){ S.tsec = S.tsec || {}; S.tsec.oth = 1; saveLocal(); renderTrip(); var inp = document.getElementById('newTripName'); if(inp){ inp.scrollIntoView({ behavior:'smooth', block:'center' }); inp.focus(); } };
   var cb = document.getElementById('cloudBox');
   if(window._cloud && window._cloud.ready){
     cb.innerHTML = '<div class="card"><span class="tag">☁️ 雲端同步已啟用</span><span class="hint">　同旅程代碼的人即時共享帳本。</span></div>';
@@ -2292,8 +2388,15 @@ function renderTrip(){
   document.getElementById('verTag').textContent = VER + '（CODE_VERSION ' + CODE_VERSION + '）';
   if(t){
     document.getElementById('tName').onchange = function(){ t.name = this.value || '未命名旅程'; bumpMeta(); save(); };
-    document.getElementById('tSd').onchange = function(){ t.startDate = this.value; bumpMeta(); save(); };
-    document.getElementById('tEd').onchange = function(){ t.endDate = this.value; bumpMeta(); save(); };
+    document.getElementById('tSd').onchange = function(){
+      t.startDate = this.value;
+      if(this.value && (!t.endDate || t.endDate < this.value)) t.endDate = this.value;
+      bumpMeta(); save();
+    };
+    document.getElementById('tEd').onchange = function(){
+      if(this.value && t.startDate && this.value < t.startDate){ toast('結束日期不能早於開始日期'); this.value = t.endDate || t.startDate; return; }
+      t.endDate = this.value; bumpMeta(); save();
+    };
     document.getElementById('tDom').onchange = function(){
       t.domestic = this.checked;
       if(t.domestic && t.feePct !== 0){ t.feePct = 0; toast('本國旅遊：預設手續費已改為 0'); }
@@ -2919,4 +3022,4 @@ try{
 </body>
 </html>
 
-<!-- T0711-01 deploy -->
+<!-- T0711-02 deploy -->
