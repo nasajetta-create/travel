@@ -422,6 +422,14 @@ details.tsec>.tbody{padding:2px 1px 15px}
   <div id="friList" style="max-height:300px;overflow-y:auto"></div>
   <div class="row" style="margin-top:12px"><button class="btn mini" id="friGo" style="flex:1">帶入勾選的好朋友</button><button class="btn sub mini" id="friClose" style="flex:1">取消</button></div>
 </div></div>
+<div id="cdSplash" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:24px">
+  <div style="background:linear-gradient(135deg,#2563eb,#1e4fc4);border-radius:20px;padding:30px 26px;text-align:center;max-width:340px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.4)">
+    <div id="cdSplashTop" style="font-size:14px;color:#cfe0fb"></div>
+    <div id="cdSplashNum" style="font-size:60px;font-weight:800;color:#fff;line-height:1.08"></div>
+    <div id="cdSplashSub" style="font-size:13px;color:#cfe0fb;margin-top:6px"></div>
+    <div style="font-size:11px;color:#9db8ee;margin-top:14px">點一下關閉</div>
+  </div>
+</div>
 <div class="modal" id="tripModal"><div class="mbox">
   <div style="font-size:16px;font-weight:600;margin-bottom:2px">切換旅程</div>
   <div class="hint" style="margin-bottom:10px">依開始日期新→舊</div>
@@ -469,8 +477,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 27;
-var VER = 'T0711-08';
+var CODE_VERSION = 28;
+var VER = 'T0711-09';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -695,17 +703,65 @@ function goAdd(){
   if(!F){ F = blankF(); }
   go('add');
 }
+function tripCD(t){
+  if(!t || !t.startDate) return t ? { state:'nodate' } : null;
+  var tday = todayISO();
+  var total = t.endDate ? Math.floor((new Date(t.endDate+'T00:00:00') - new Date(t.startDate+'T00:00:00'))/86400000) + 1 : 0;
+  if(tday < t.startDate){ return { state:'before', days: Math.floor((new Date(t.startDate+'T00:00:00') - new Date(tday+'T00:00:00'))/86400000), total: total }; }
+  if(t.endDate && tday > t.endDate){ return { state:'after', total: total }; }
+  return { state:'during', dayN: Math.floor((new Date(tday+'T00:00:00') - new Date(t.startDate+'T00:00:00'))/86400000) + 1, total: total };
+}
+function tripCDLabel(cd){
+  if(!cd) return '';
+  if(cd.state === 'nodate') return '未設日期';
+  if(cd.state === 'before') return cd.days === 0 ? '今天出發' : (cd.days === 1 ? '明天出發' : '倒數 ' + cd.days + ' 天');
+  if(cd.state === 'during') return '第 ' + cd.dayN + (cd.total ? ' / ' + cd.total : '') + ' 天';
+  return '已結束';
+}
+function maybeCdSplash(){
+  var t = trip(), cd = tripCD(t);
+  if(!cd || cd.state !== 'before' || cd.days > 14) return;
+  var key = 'tsplit_cd_' + t.code + '_' + todayISO();
+  try{ if(localStorage.getItem(key)) return; localStorage.setItem(key, '1'); }catch(e){}
+  var el = document.getElementById('cdSplash');
+  document.getElementById('cdSplashTop').textContent = cd.days === 0 ? '🎉' : '🎉 距離出發還有';
+  document.getElementById('cdSplashNum').innerHTML = cd.days === 0 ? '今天出發！' : (cd.days + '<span style="font-size:22px;font-weight:500"> 天</span>');
+  document.getElementById('cdSplashSub').textContent = t.startDate.replace(/-/g,'/') + ' · ' + t.name;
+  el.style.display = 'flex';
+  var close = function(){ if(el.style.display === 'none') return; el.style.display = 'none'; document.removeEventListener('pointerdown', close, true); window.removeEventListener('scroll', close, true); clearTimeout(el._t); };
+  el._t = setTimeout(close, 10000);
+  el.onclick = close;
+  setTimeout(function(){ document.addEventListener('pointerdown', close, true); window.addEventListener('scroll', close, true); }, 500);
+}
+function cdBannerHtml(t){
+  var cd = tripCD(t); if(!cd) return '';
+  if(cd.state === 'after') return '<div class="card" style="text-align:center;color:var(--tx2);font-size:14px;padding:12px">✓ 旅程已結束</div>';
+  if(cd.state === 'nodate') return '<div class="card" style="text-align:center;padding:12px"><span data-cdnodate="1" style="color:var(--warnTx);font-size:14px;cursor:pointer">⚠️ 未設日期 › 點我去設定</span></div>';
+  var big, cap, sub, bg;
+  if(cd.state === 'before'){ big = (cd.days === 0 ? '🎉' : cd.days); cap = (cd.days === 0 ? '' : 'DAYS'); sub = (cd.days === 0 ? '今天出發' : (cd.days === 1 ? '明天出發' : '距出發')); bg = '#2563eb'; }
+  else { big = cd.dayN; cap = '/ ' + (cd.total || '?'); sub = '旅程中'; bg = '#0f6e56'; }
+  var dr = t.startDate.slice(5).replace('-','/') + (t.endDate ? ' ✈ ' + t.endDate.slice(5).replace('-','/') : '');
+  return '<div class="card" style="overflow:hidden;padding:0;display:flex">' +
+    '<div style="background:' + bg + ';color:#fff;padding:12px 16px;display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:66px">' +
+    '<div style="font-size:30px;font-weight:600;line-height:1">' + big + '</div><div style="font-size:10px;opacity:.85;margin-top:2px">' + cap + '</div></div>' +
+    '<div style="flex:1;padding:11px 14px;min-width:0">' +
+    '<div style="font-size:10px;color:var(--tx3);letter-spacing:1px">BOARDING · ' + sub + '</div>' +
+    '<div style="font-size:15px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(t.name) + (landmark(t.name) ? ' ' + landmark(t.name) : '') + '</div>' +
+    '<div style="font-size:12px;color:var(--tx2);margin-top:3px">' + dr + (cd.total ? ' · ' + cd.total + '天' : '') + '</div></div></div>';
+}
 function renderAll(){
   var t = trip();
   document.getElementById('hName').textContent = t ? (t.name + (landmark(t.name) ? ' ' + landmark(t.name) : '')) : '旅遊分帳';
   var hd = '';
   if(t && t.startDate){
-    hd = t.startDate.slice(5).replace('-','/');
+    hd = t.startDate.replace(/-/g,'/');
     if(t.endDate){
       hd += ' ~ ' + t.endDate.slice(5).replace('-','/');
       var dn = Math.floor((new Date(t.endDate+'T00:00:00') - new Date(t.startDate+'T00:00:00'))/86400000) + 1;
       if(dn > 0) hd += '・' + dn + '天';
     }
+    var _cl = tripCDLabel(tripCD(t));
+    if(_cl && _cl !== '未設日期') hd += '・' + _cl;
   }
   if(t && t.domestic) hd += (hd ? '・' : '') + '🇹🇼 本國';
   document.getElementById('hDates').textContent = hd;
@@ -2481,7 +2537,7 @@ function renderTrip(){
       '<div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(t.name) + '</div>' +
       '<div class="hint" style="margin:0">進行中 ' + act.length + (arc.length ? ' · 已結束 ' + arc.length : '') + '</div></div>' +
       '<button class="btn sub mini" id="btnSwTrip">⇄ 切換</button>' +
-      '<button class="btn sub mini" id="btnNewTrip2">＋ 新增</button></div>';
+      '<button class="btn sub mini" id="btnNewTrip2">＋ 新增</button></div>' + cdBannerHtml(t);
   }
   html = tripBar + (SEC.oth||'') + (SEC.set||'') + (SEC.mem||'') + (SEC.fund||'') + (SEC.look||'') + (SEC.bak||'');
   tb.innerHTML = html;
@@ -2498,6 +2554,7 @@ function renderTrip(){
   if(bH2) bH2.onclick = function(){ go('help'); };
   var bSw = document.getElementById('btnSwTrip');
   if(bSw) bSw.onclick = openTripSwitch;
+  tb.querySelectorAll('[data-cdnodate]').forEach(function(el){ el.onclick = function(){ S.tsec = S.tsec || {}; S.tsec.set = 1; saveLocal(); renderTrip(); var s = document.querySelector('[data-sec="set"]'); if(s) s.scrollIntoView({ behavior:'smooth', block:'start' }); }; });
   var bNw2 = document.getElementById('btnNewTrip2');
   if(bNw2) bNw2.onclick = function(){ S.tsec = S.tsec || {}; S.tsec.oth = 1; saveLocal(); renderTrip(); var inp = document.getElementById('newTripName'); if(inp){ inp.scrollIntoView({ behavior:'smooth', block:'center' }); inp.focus(); } };
   var cb = document.getElementById('cloudBox');
@@ -3172,6 +3229,7 @@ function closestActiveTripCode(){
   saveLocal();
   renderAll();
   go(Object.keys(S.trips).length ? 'ledger' : 'trip');
+  setTimeout(maybeCdSplash, 600);
 })();
 </script>
 <script type="module">
@@ -3232,4 +3290,4 @@ try{
 </body>
 </html>
 
-<!-- T0711-08 deploy -->
+<!-- T0711-09 deploy -->
