@@ -540,8 +540,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 39;
-var VER = 'T0711-20';
+var CODE_VERSION = 40;
+var VER = 'T0711-21';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -2633,9 +2633,9 @@ function renderTrip(){
       var grp = (m.famId && famName(t, m.famId)) ? _famList[m.famId] : null;
       var gLine = '';
       if(grp && grp.length > 1){
-        var gi = grp.indexOf(m.id), gcol = lighten(bcolor(grp[0]), .35);
-        if(gi > 0) gLine += '<i style="top:0;height:50%;background:' + gcol + '"></i>';
-        if(gi < grp.length - 1) gLine += '<i style="top:50%;bottom:-8px;background:' + gcol + '"></i>';
+        var gi = grp.indexOf(m.id), gcol = lighten(bcolor(grp[0]), .3);
+        var gbot = (gi < grp.length - 1) ? 'bottom:-8px' : 'bottom:0';
+        gLine = '<i style="top:0;' + gbot + ';background:' + gcol + '"></i>';
       }
       if(_memEdit === m.id){
         var famMems = m.famId ? t.members.filter(function(x){ return x.famId === m.famId; }) : [];
@@ -2668,6 +2668,10 @@ function renderTrip(){
                           : 'background:var(--card);color:' + bcolor(x.id) + ';border:2px solid ' + bcolor(x.id);
               return '<span class="bdg b34" data-hhm="' + m.id + '|' + x.id + '" style="' + st + bshape(x.id) + '" title="' + esc(x.name) + '">' + esc(bchar(x.id)) + '</span>';
             }).join('') : '<span class="hint" style="margin:0">還沒有其他成員可選</span>') + '</div>';
+          if(m.famId && famName(t, m.famId)){
+            html += '<div class="lbl" style="margin-top:10px">戶名（結算合併顯示用）</div>' +
+              '<input type="text" data-famname="' + m.famId + '" value="' + esc(famName(t, m.famId)) + '" placeholder="例：雨潔家">';
+          }
         }
         html += '</details>' +
           '<button class="btn sub mini" data-savefri="' + m.id + '" style="width:100%;margin-top:12px">⭐ 存為好朋友</button>' +
@@ -2705,8 +2709,8 @@ function renderTrip(){
       t.members.length ? (t.members.length + ' 位' + (me() ? '' : '｜⚠️ 先選我是誰')) : '⚠️ 先新增成員',
       !t.members.length || !me() || !!_memEdit);
     cap();
-    var keeperSel = '<select id="fKeep" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" style="width:auto;font-size:13px;padding:5px 8px;font-weight:400;color:var(--tx);max-width:130px"><option value="">保管人：未指定</option>' +
-      t.members.map(function(m){ return '<option value="' + m.id + '"' + (t.fundKeeper === m.id ? ' selected' : '') + '>保管人：' + esc(m.name) + '</option>'; }).join('') +
+    var keeperSel = '<select id="fKeep" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" style="width:auto;font-size:13px;padding:5px 8px;font-weight:400;color:var(--tx);max-width:120px"><option value="">未指定保管人</option>' +
+      t.members.map(function(m){ return '<option value="' + m.id + '"' + (t.fundKeeper === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('') +
       '</select>';
     html += '<div class="hint" style="margin-bottom:4px">大家先出一筆公費，記帳時付款人選「🏦基金」就從這裡扣。保管人在右上角指定。</div>';
     var contribs = (t.fund || []).filter(function(c){ return !c._del; });
@@ -2956,6 +2960,13 @@ function renderTrip(){
         var hit = hhResetTf(t, affected);
         famCleanup(t); bumpMeta('members'); saveLocal(); pushCloud(); renderTrip();
         if(hit) toast('已重置 ' + hit + ' 筆相關轉帳勾選');
+      };
+    });
+    tb.querySelectorAll('input[data-famname]').forEach(function(inp){
+      inp.onchange = function(){
+        var fid = inp.dataset.famname, nm = (inp.value || '').trim();
+        for(var i = 0; i < t.families.length; i++){ if(t.families[i].id === fid){ if(nm) t.families[i].name = nm; break; } }
+        bumpMeta('members'); saveLocal(); pushCloud(); renderTrip();
       };
     });
     tb.querySelectorAll('[data-hhm]').forEach(function(el){
@@ -3479,7 +3490,8 @@ function closestActiveTripCode(){
   S.tsec = {}; S.pvOpen = false; S.pvAdv = false;
   saveLocal();
   renderAll();
-  go(trip() ? 'ledger' : 'trip');
+  var _pwa = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  go((_pwa && trip()) ? 'ledger' : 'trip');
   setTimeout(maybeCdSplash, 600);
 })();
 </script>
@@ -3540,5 +3552,5 @@ try{
 </script>
 </body>
 </html>
-<!-- T0711-20 deploy -->
+<!-- T0711-21 deploy -->
 
