@@ -217,6 +217,8 @@ input[type=date]{-webkit-appearance:none;appearance:none;height:47px;display:fle
 .lrow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:.5px solid var(--line);cursor:pointer;touch-action:pan-y;position:relative}
 .lrow .delhint{position:absolute;right:12px;top:0;bottom:0;display:flex;align-items:center;color:var(--danger);font-size:14px;font-weight:600;opacity:0;pointer-events:none}
 .lrow:last-child{border-bottom:none}
+.lmhead{font-size:13px;font-weight:600;color:var(--tx2);padding:7px 2px 4px;margin-top:6px;border-bottom:.5px solid var(--line)}
+.lmhead:first-child{margin-top:0}
 .ldate{flex:0 0 auto;width:34px;text-align:center;line-height:1.15}
 .ldate .m{font-size:11px;color:var(--tx3)}
 .ldate .d{font-size:19px;font-weight:700;color:var(--tx2)}
@@ -540,8 +542,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 40;
-var VER = 'T0711-21';
+var CODE_VERSION = 41;
+var VER = 'T0712-01';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -1608,11 +1610,13 @@ function renderLedger(){
   }
   var es = ges.concat(pes);
   if(!es.length){ list.innerHTML = banner + myCard + '<div class="empty">還沒有記帳<br>按下面「➕ 記一筆」開始</div>'; return; }
-  es.sort(function(a,b){ if(a.date !== b.date) return a.date < b.date ? -1 : 1; return (a._mt||0) - (b._mt||0); });
+  es.sort(function(a,b){ if(a.date !== b.date) return a.date > b.date ? -1 : 1; return (b._mt||0) - (a._mt||0); });
   var dayTot = {};
   es.forEach(function(e){ dayTot[e.date] = (dayTot[e.date] || 0) + homeAmt(e); });
-  var rows = '';
+  var rows = '', prevYM = null;
   es.forEach(function(e){
+    var ym = e.date.slice(0,7);
+    if(ym !== prevYM){ rows += '<div class="lmhead">' + e.date.slice(0,4) + '/' + e.date.slice(5,7) + '</div>'; prevYM = ym; }
     var sd;
     if(e.priv){ sd = '🔒 私人（只有你看得到）'; }
     else if(e.kind === 'loan'){
@@ -1646,7 +1650,7 @@ function renderLedger(){
       (e.cur !== t.home ? '<div class="a2">' + e.cur + ' ' + fmt2(e.amt) + '</div>' : '') +
       (per && per.type === 'owe' ? '<div class="ap" style="color:#c02626">你要付 ' + fmt(per.amt) + '</div>' : '');
     rows += '<div class="lrow" data-eid="' + e.id + '">' +
-      '<div class="ldate"><div class="m">' + Number(e.date.slice(5,7)) + '月</div><div class="d">' + e.date.slice(8,10) + '</div></div>' +
+      '<div class="ldate"><div class="d">' + e.date.slice(8,10) + '</div></div>' +
       ico +
       '<div class="lmid"><div class="t1">' + esc(e.desc) + '</div><div class="t2">' + sd + '</div></div>' +
       '<div class="lamt">' + amtH + '</div></div>';
@@ -3552,5 +3556,5 @@ try{
 </script>
 </body>
 </html>
-<!-- T0711-21 deploy -->
+<!-- T0712-01 deploy -->
 
