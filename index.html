@@ -471,7 +471,7 @@ details.tsec>.tbody{padding:2px 1px 15px}
   <button id="nb-stats" onclick="go('stats')"><span class="nico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M6 20V11"/><path d="M12 20V4"/><path d="M18 20v-6"/></svg></span>統計</button>
   <button id="nb-trip" onclick="go('trip')"><span class="nico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4c.7 0 1.1 1.2 1.1 2.8v3l7.4 4.3v1.7l-7.4-2.1v3.2l1.9 1.4v1.3l-3-.9-3 .9v-1.3l1.9-1.4v-3.2L3.5 15.8v-1.7l7.4-4.3v-3C10.9 5.2 11.3 4 12 4z"/></svg></span>旅程</button>
 </nav>
-<button id="fabBack" style="display:none;position:fixed;top:76px;right:12px;z-index:30;border:none;border-radius:20px;padding:9px 15px;font-size:14px;font-weight:600;background:var(--card);color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.25);cursor:pointer">✕ 返回不儲存</button>
+<button id="fabBack" style="display:none;position:fixed;top:76px;right:12px;z-index:30;border:none;border-radius:20px;padding:9px 16px;font-size:14px;font-weight:600;background:var(--tx);color:var(--card);box-shadow:0 3px 10px rgba(0,0,0,.35);cursor:pointer">✕ 返回不儲存</button>
 <div id="toast"></div>
 <div class="modal" id="adjModal"><div class="mbox">
   <div style="font-size:16px;font-weight:700;margin-bottom:6px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>帳單補正</div>
@@ -547,8 +547,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 55;
-var VER = 'T0712-15';
+var CODE_VERSION = 56;
+var VER = 'T0712-16';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -912,6 +912,8 @@ function renderAll(){
     }
   }
   if(t && t.domestic) hd += (hd ? '・' : '') + '🇹🇼 本國';
+  var _nowLeg = t ? legOf(t, todayISO()) : null;
+  if(_nowLeg && _nowLeg.name) hd += (hd ? '・' : '') + _nowLeg.name;
   document.getElementById('hDates').textContent = hd;
   document.getElementById('hDates').style.display = hd ? '' : 'none';
   var hb = document.getElementById('hBoard'), tag = document.getElementById('hBoardTag');
@@ -971,8 +973,9 @@ function renderHelp(){
 /* ───── 記一筆 ───── */
 function blankF(){
   var t = trip(); var lk = lockObj();
+  var _lg = t ? legOf(t, todayISO()) : null;
   return { date: todayISO(), cat:'food', desc:'',
-    cur: (t && t.domestic) ? t.home : ((lk.on && lk.cur) ? lk.cur : guessCur(t)),
+    cur: (t && t.domestic) ? t.home : ((lk.on && lk.cur) ? lk.cur : ((_lg && _lg.cur) ? _lg.cur : guessCur(t))),
     amt:'', rate: (lk.on && lk.rate) ? lk.rate : '',
     card:false, feePct: (t && t.feePct != null) ? t.feePct : 1.5,
     payer: me() || ((t && t.members.length) ? t.members[0].id : null),
@@ -2693,7 +2696,8 @@ function renderTrip(){
         return '<div class="card" style="padding:8px;margin-bottom:6px;background:var(--ro)">' +
           '<div class="fld3"><input class="fld3-amt" data-lg="name" data-lid="' + g.id + '" value="' + esc(g.name) + '" placeholder="城市，例：維也納"><span style="display:flex;align-items:center;padding:0 8px;color:var(--tx3);border-left:1px solid var(--inBd);border-right:1px solid var(--inBd)">·</span><input class="fld3-amt" data-lg="country" data-lid="' + g.id + '" value="' + esc(g.country) + '" placeholder="國家"></div>' +
           '<div class="fld3" style="margin-top:6px"><input type="date" class="fld3-amt" data-lg="start" data-lid="' + g.id + '" value="' + esc(g.start) + '"><span style="display:flex;align-items:center;padding:0 8px;color:var(--tx3);border-left:1px solid var(--inBd);border-right:1px solid var(--inBd)">→</span><input type="date" class="fld3-amt" data-lg="end" data-lid="' + g.id + '" value="' + esc(g.end) + '"></div>' +
-          '<button class="btn sub mini" data-lgdel="' + g.id + '" style="margin-top:6px;color:var(--danger)">🗑 刪除此段</button>' +
+          '<div style="margin-top:6px"><select class="fld3-amt" data-lg="cur" data-lid="' + g.id + '" style="width:100%"><option value="">當地幣別（記帳自動帶，選填）</option>' + CURS.map(function(c){ return '<option' + (g.cur === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select></div>' +
+          '<button class="btn sub mini" data-lgdel="' + g.id + '" style="margin-top:6px;color:var(--danger)">' + btnIco(IC.trash) + '刪除此段</button>' +
         '</div>';
       }).join('') +
       '<button class="btn sub mini" id="btnAddLeg">' + btnIco(IC.plus) + '新增分段</button>';
@@ -2944,7 +2948,7 @@ function renderTrip(){
     tb.querySelectorAll('[data-lg]').forEach(function(el){ el.onchange = function(){ var g = legById(t, el.dataset.lid); if(g){ g[el.dataset.lg] = el.value; bumpMeta('info'); save(); } }; });
     tb.querySelectorAll('[data-lgdel]').forEach(function(el){ el.onclick = function(){ t.legs = (t.legs || []).filter(function(x){ return x.id !== el.dataset.lgdel; }); bumpMeta('info'); save(); renderTrip(); }; });
     var _bAddLeg = document.getElementById('btnAddLeg');
-    if(_bAddLeg) _bAddLeg.onclick = function(){ t.legs = t.legs || []; t.legs.push({ id: uid(), name: '', country: '', start: t.startDate || '', end: t.endDate || '' }); bumpMeta('info'); save(); renderTrip(); };
+    if(_bAddLeg) _bAddLeg.onclick = function(){ t.legs = t.legs || []; t.legs.push({ id: uid(), name: '', country: '', cur: '', start: t.startDate || '', end: t.endDate || '' }); bumpMeta('info'); save(); renderTrip(); };
     document.getElementById('btnAddM').onclick = function(){
       var nid = uid();
       t.members.push({ id: nid, name: '', bank: '', acct: '', weight: 1, casual: false, famId: null });
@@ -3695,4 +3699,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-15 deploy -->
+<!-- T0712-16 deploy -->
