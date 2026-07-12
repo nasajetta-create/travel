@@ -542,8 +542,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 43;
-var VER = 'T0712-03';
+var CODE_VERSION = 44;
+var VER = 'T0712-04';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -2618,6 +2618,7 @@ function renderTrip(){
     var isEmptyTrip = !t.expenses.some(function(e){ return !e._del; }) && !(t.fund || []).some(function(c){ return !c._del; });
     html += '<div class="codebox" style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;color:var(--accTx)">旅程代碼</span><b>' + t.code + '</b>' +
       '<button class="btn sub mini" id="btnCpCode" style="margin-left:auto">複製</button></div>' +
+      '<button class="btn sub mini" id="btnShareInv" style="margin-top:8px;width:100%">🔗 分享邀請連結（免打代碼）</button>' +
       '<div class="row" style="margin-top:8px"><button class="btn sub mini" id="btnArc" style="flex:1">' + (t.archived ? '↩ 還原' : '📦 封存') + '</button>' +
       (isEmptyTrip
         ? '<button class="btn sub mini" id="btnDelTrip" style="flex:1;color:var(--danger)">🗑️ 刪除旅程</button>'
@@ -2890,6 +2891,8 @@ function renderTrip(){
       el.onclick = function(){ _budMode = el.dataset.bud; renderTrip(); };
     });
     document.getElementById('btnCpCode').onclick = function(){ copyText(t.code, '已複製旅程代碼'); };
+    var _bShare = document.getElementById('btnShareInv');
+    if(_bShare) _bShare.onclick = function(){ shareInvite(t); };
     var _secCode = document.getElementById('secCode');
     if(_secCode){ _secCode.onmousedown = function(e){ e.stopPropagation(); }; _secCode.onclick = function(e){ e.preventDefault(); e.stopPropagation(); copyText(t.code, '已複製旅程代碼'); }; }
     tb.querySelectorAll('[data-lg]').forEach(function(el){ el.onchange = function(){ var g = legById(t, el.dataset.lid); if(g){ g[el.dataset.lg] = el.value; bumpMeta('info'); save(); } }; });
@@ -3336,11 +3339,14 @@ function createTrip(){
   startListen(); save();
   toast('已建立「' + name + '」，先去新增成員');
 }
-function joinTrip(){
-  var code = document.getElementById('joinCode').value.trim().toUpperCase();
+var _pendingJoin = '';
+function joinByCode(code){
+  code = (code || '').trim().toUpperCase();
   if(!code){ toast('請輸入代碼'); return; }
-  if(S.trips[code]){ S.cur = code; startListen(); save(); toast('已切換到 ' + S.trips[code].name); return; }
-  if(!(window._cloud && window._cloud.ready)){ toast('要先啟用雲端同步才能用代碼加入'); return; }
+  if(S.nuked && S.nuked[code]){ toast('這個旅程已被整團刪除'); return; }
+  if(S.trips[code]){ _pendingJoin = ''; S.cur = code; startListen(); saveLocal(); renderAll(); toast('已切換到 ' + S.trips[code].name); return; }
+  if(!(window._cloud && window._cloud.ready)){ _pendingJoin = code; return; }
+  _pendingJoin = '';
   toast('查詢中…');
   window._cloud.load(code).then(function(d){
     if(!d){ toast('找不到這個代碼'); return; }
@@ -3348,6 +3354,13 @@ function joinTrip(){
     startListen(); saveLocal(); renderAll();
     toast('已加入「' + d.name + '」');
   }).catch(function(){ toast('查詢失敗，請稍後再試'); });
+}
+function joinTrip(){ joinByCode(document.getElementById('joinCode').value); }
+function shareInvite(t){
+  if(!t) return;
+  var url = location.href.split('#')[0].split('?')[0] + '?join=' + t.code;
+  if(navigator.share){ navigator.share({ title: t.name, text: '一起記帳「' + t.name + '」（免註冊，點連結加入）', url: url }).catch(function(){}); }
+  else { copyText(url, '已複製邀請連結'); }
 }
 
 /* ───── 雲端 ───── */
@@ -3401,6 +3414,7 @@ window.addEventListener('cloud-ready', function(){
   var t = trip(); if(t) pushCloud();
   var vt = document.getElementById('v-trip');
   if(vt && vt.classList.contains('act')) renderTrip();
+  if(_pendingJoin) joinByCode(_pendingJoin);
 });
 
 /* ───── 初始化 ───── */
@@ -3420,6 +3434,7 @@ function closestActiveTripCode(){
 }
 (function init(){
   applyTheme();
+  try{ var _jm = new URLSearchParams(location.search).get('join'); if(_jm){ _pendingJoin = _jm.trim().toUpperCase(); history.replaceState(null, '', location.pathname); } }catch(e){}
   document.getElementById('eCur').innerHTML = CURS.map(function(c){ return '<option>' + c + '</option>'; }).join('');
   document.getElementById('eConvCur').innerHTML = CURS.map(function(c){ return '<option>' + c + '</option>'; }).join('');
   document.getElementById('eDate').onchange = function(){
@@ -3531,6 +3546,7 @@ function closestActiveTripCode(){
   renderAll();
   var _pwa = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
   go((_pwa && trip()) ? 'ledger' : 'trip');
+  if(_pendingJoin) joinByCode(_pendingJoin);
   setTimeout(maybeCdSplash, 600);
 })();
 </script>
@@ -3591,4 +3607,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-03 deploy -->
+<!-- T0712-04 deploy -->
