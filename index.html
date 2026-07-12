@@ -139,7 +139,7 @@ section.act{display:block}
 .card{background:var(--card);border:1px solid var(--cardBd);border-radius:16px;padding:12px;margin-bottom:10px;box-shadow:var(--shadow)}
 .dash{background:var(--dash);border:1px solid var(--cardBd);border-radius:16px;padding:12px 14px;margin-bottom:10px}
 .dash .drow{display:flex;gap:16px;flex-wrap:wrap}
-.dash .dl{font-size:16px;color:var(--dashTx2);margin:0}
+.dash .dl{font-size:16px;color:var(--dashTx2);margin:0 0 9px}
 .dash .dv{font-size:19px;font-weight:700;color:var(--dashTx);margin:0}
 .dash .dv.acc{color:var(--dashAcc)}
 .dash .dv.warn{color:#FCD34D}
@@ -547,8 +547,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 57;
-var VER = 'T0712-17';
+var CODE_VERSION = 58;
+var VER = 'T0712-18';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -1616,7 +1616,7 @@ function renderLedger(){
   }
   var lcols = [
     '<div class="dcol"><p class="dl">今日</p><p class="dv acc">' + money(t.home, today) + '</p></div>',
-    '<div class="dcol" style="flex:1.4"><p class="dl">團體總支出</p><p class="dv" style="display:inline-flex;align-items:center;gap:7px;justify-content:center"><span>' + money(t.home, total) + '</span><span style="width:1px;height:15px;background:var(--dashBar);display:inline-block"></span><span style="font-size:11px;font-weight:400;opacity:.8">' + (ges.length + pes.length) + '筆·' + t.members.length + '人</span></p></div>'
+    '<div class="dcol"><p class="dl">團體總支出</p><p class="dv">' + money(t.home, total) + '</p></div>'
   ];
   if(pes.length) lcols.push('<div class="dcol"><p class="dl">' + btnIco(IC.lock) + '我的私人</p><p class="dv">' + money(t.home, ptotal) + '</p></div>');
   if(ft.fin > 0) lcols.push('<div class="dcol"><p class="dl">' + btnIco(IC_BANK) + '基金餘額</p><p class="dv' + (ft.bal < 0 ? ' warn' : '') + '">' + money(t.home, ft.bal) + '</p></div>');
@@ -3702,4 +3702,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-17 deploy -->
+<!-- T0712-18 deploy -->
