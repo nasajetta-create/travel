@@ -545,8 +545,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 48;
-var VER = 'T0712-08';
+var CODE_VERSION = 49;
+var VER = 'T0712-09';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -554,6 +554,15 @@ var LANDMARKS = [['東京','🗼'],['大阪','🏯'],['京都','⛩️'],['奈�
 function landmark(name){
   for(var i=0;i<LANDMARKS.length;i++){ if(String(name||'').indexOf(LANDMARKS[i][0]) >= 0) return LANDMARKS[i][1]; }
   return '';
+}
+var TRIP_FALLBACK = ['✈️','🧭','🗺️'];
+function tripIcon(t){
+  if(!t) return '🧭';
+  var lm = landmark(t.name);
+  if(lm) return lm;
+  var s = String(t.code || t.name || ''), h = 0;
+  for(var i=0;i<s.length;i++){ h = (h * 31 + s.charCodeAt(i)) & 0x7fffffff; }
+  return TRIP_FALLBACK[h % TRIP_FALLBACK.length];
 }
 var CURS = ['JPY','TWD','USD','KRW','EUR','THB','VND','CNY','HKD','SGD','MYR','GBP','AUD','IDR','PHP','CAD','CHF'];
 var WD = ['日','一','二','三','四','五','六'];
@@ -869,6 +878,8 @@ function renderAll(){
   var t = trip();
   var _dBar = document.getElementById('demoBar');
   if(_dBar) _dBar.style.display = (t && t._demo) ? 'flex' : 'none';
+  var _navTrip = document.querySelector('#nb-trip .nico');
+  if(_navTrip) _navTrip.textContent = t ? tripIcon(t) : '🧭';
   document.getElementById('hName').textContent = t ? (t.name + (landmark(t.name) ? ' ' + landmark(t.name) : '')) : '旅遊分帳';
   var hd = '';
   if(t && t.startDate){
@@ -2815,8 +2826,8 @@ function renderTrip(){
     (S.skin === 'white' ? '純白' : S.skin === 'sky' ? '天藍' : S.skin === 'matcha' ? '抹茶' : '經典'), themeBody, false);
   var tripBar = '';
   if(t){
-    tripBar = '<div class="card" style="display:flex;align-items:center;gap:8px;padding:10px 12px">' +
-      '<span style="font-size:18px">🧳</span>' +
+    tripBar = '<div class="card" style="display:flex;align-items:center;gap:10px;padding:10px 12px">' +
+      '<span style="font-size:30px;line-height:1;flex:0 0 auto">' + tripIcon(t) + '</span>' +
       '<div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(t.name) + '</div>' +
       '<div class="hint" style="margin:0">進行中 ' + act.length + (arc.length ? ' · 已結束 ' + arc.length : '') + '</div></div>' +
       '<button class="btn sub mini" id="btnSwTrip">⇄ 切換</button>' +
@@ -3181,7 +3192,7 @@ function openTripSwitch(){
   function row(c){
     var tp = S.trips[c], cur = (c === S.cur);
     var dt = tp.startDate ? (tp.startDate.slice(5).replace('-','/') + (tp.endDate ? '–' + tp.endDate.slice(5).replace('-','/') : '')) : '無日期';
-    return '<div class="tsw-row' + (cur ? ' on' : '') + '" data-tsw="' + c + '"><span style="font-size:18px">🧳</span>' +
+    return '<div class="tsw-row' + (cur ? ' on' : '') + '" data-tsw="' + c + '"><span style="font-size:24px;line-height:1">' + tripIcon(tp) + '</span>' +
       '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:' + (cur ? '600' : '400') + '">' + esc(tp.name) + '</div>' +
       '<div style="font-size:11px;color:var(--tx3)">' + dt + (cur ? ' · 目前' : '') + '</div></div>' +
       (cur ? '<span style="color:var(--acc)">✓</span>' : '') + '</div>';
@@ -3659,4 +3670,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-08 deploy -->
+<!-- T0712-09 deploy -->
