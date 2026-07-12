@@ -1,4 +1,4 @@
-var C = 'tsplit-v38'; /* T0711-19 deploy */
+var C = 'tsplit-v39'; /* T0711-20 */
 self.addEventListener('install', function(e){ self.skipWaiting(); });
 self.addEventListener('activate', function(e){
   e.waitUntil(caches.keys().then(function(ks){
@@ -16,5 +16,4 @@ self.addEventListener('fetch', function(e){
     e.respondWith(caches.match(req).then(function(m){
       return m || fetch(req).then(function(r){
         var cp = r.clone(); caches.open(C).then(function(c){ c.put(req, cp); }); return r;
-      });
-  
+     

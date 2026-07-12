@@ -540,8 +540,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 38;
-var VER = 'T0711-19';
+var CODE_VERSION = 39;
+var VER = 'T0711-20';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -1608,7 +1608,7 @@ function renderLedger(){
   }
   var es = ges.concat(pes);
   if(!es.length){ list.innerHTML = banner + myCard + '<div class="empty">還沒有記帳<br>按下面「➕ 記一筆」開始</div>'; return; }
-  es.sort(function(a,b){ if(a.date !== b.date) return a.date < b.date ? 1 : -1; return (b._mt||0) - (a._mt||0); });
+  es.sort(function(a,b){ if(a.date !== b.date) return a.date < b.date ? -1 : 1; return (a._mt||0) - (b._mt||0); });
   var dayTot = {};
   es.forEach(function(e){ dayTot[e.date] = (dayTot[e.date] || 0) + homeAmt(e); });
   var rows = '';
@@ -2690,7 +2690,7 @@ function renderTrip(){
       '<div class="hint" style="margin-top:6px">帳戶給結算轉帳用、旅伴看得到；同一戶結算時合併轉帳。好朋友清單存這支手機。</div>' +
       '<div class="lbl" style="margin-top:12px;font-weight:600;color:var(--tx)">我是誰（這支手機的使用者）</div>' +
       ((me() && !_meChange)
-        ? '<div class="fbtn" style="margin-top:6px"><div class="fbc">' + softBdg(me(), 40) + '<div><div style="font-size:16px;font-weight:600">' + esc(mname(me())) + ' <span style="font-size:12px">🔒</span></div><div style="font-size:12px;color:var(--tx3)">這支手機的使用者</div></div></div><button class="fba" id="btnMeChg">變更</button></div>' +
+        ? '<div class="mcard2" style="cursor:default;margin-top:6px">' + softBdg(me(), 42) + '<div style="flex:1;min-width:0"><div class="mn1b">' + esc(mname(me())) + ' <span style="font-size:12px">🔒</span></div><div class="mn2b">這支手機的使用者</div></div><button class="btn sub mini" id="btnMeChg" style="width:auto;flex:0 0 auto;padding:8px 15px">變更</button></div>' +
           '<div class="hint" style="margin-top:4px">已鎖定防誤觸。私人帳歸這個人名下，也是預設付款人。</div>'
         : '<div class="chips" id="meChips">' +
           t.members.map(function(m){
@@ -2705,11 +2705,10 @@ function renderTrip(){
       t.members.length ? (t.members.length + ' 位' + (me() ? '' : '｜⚠️ 先選我是誰')) : '⚠️ 先新增成員',
       !t.members.length || !me() || !!_memEdit);
     cap();
-    html += '<div class="fbtn"><div class="fbc"><span class="lico" style="background:' + SEC_TINT.fund[0] + '"><svg viewBox="0 0 24 24" fill="none" stroke="' + SEC_TINT.fund[1] + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + SEC_SVG.fund + '</svg></span><span style="font-size:16px;font-weight:600">基金（公費）</span></div>' +
-      '<select id="fKeep" class="fba" style="padding:0 12px"><option value="">未指定</option>' +
-      t.members.map(function(m){ return '<option value="' + m.id + '"' + (t.fundKeeper === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('') +
-      '</select></div>' +
-      '<div class="hint" style="margin-top:2px">大家先出一筆公費，記帳時付款人選「🏦基金」就從這裡扣。右上可指定保管人。</div>';
+    var keeperSel = '<select id="fKeep" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" style="width:auto;font-size:13px;padding:5px 8px;font-weight:400;color:var(--tx);max-width:130px"><option value="">保管人：未指定</option>' +
+      t.members.map(function(m){ return '<option value="' + m.id + '"' + (t.fundKeeper === m.id ? ' selected' : '') + '>保管人：' + esc(m.name) + '</option>'; }).join('') +
+      '</select>';
+    html += '<div class="hint" style="margin-bottom:4px">大家先出一筆公費，記帳時付款人選「🏦基金」就從這裡扣。保管人在右上角指定。</div>';
     var contribs = (t.fund || []).filter(function(c){ return !c._del; });
     if(contribs.length){
       var subBy = {};
@@ -2733,7 +2732,7 @@ function renderTrip(){
       '<input type="number" id="fcAmt" inputmode="decimal" placeholder="金額（' + t.home + '）" class="fld3-amt">' +
       '<button class="fld3-icon" id="btnFc" style="width:auto;padding:0 13px;font-size:13px;color:var(--accTx);white-space:nowrap">＋入金</button></div>' +
       '<div class="hint" style="margin-top:6px">記帳時付款人選「🏦基金」＝從基金支出；餘額按入金比例退還。</div>';
-    pop('fund', secIcon('fund') + '基金(公費)', contribs.length ? ('餘額 ' + fmt(ft.bal)) : '沒用到可不理', false);
+    pop('fund', secIcon('fund') + '基金(公費)', keeperSel, false);
     cap();
     html += '<div class="sbtns"><button id="btnBakOut">⬇ 匯出備份</button><button id="btnBakIn">⬆ 還原備份</button><button id="btnCsv">📄 匯出CSV</button></div>' +
       '<div class="hint" style="margin-top:6px">⚠️ 私人帳只存這支手機，換手機前先匯出備份。CSV 可用 Excel 開。</div>';
@@ -2776,6 +2775,11 @@ function renderTrip(){
       '<button class="btn sub mini" id="btnSwTrip">⇄ 切換</button>' +
       '<button class="btn sub mini" id="btnNewTrip2">＋ 新增</button></div>' +
       (tripCD(t) && tripCD(t).state === 'nodate' ? '<div class="card" style="text-align:center;padding:10px"><span data-cdnodate="1" style="color:var(--warnTx);font-size:13px;cursor:pointer">⚠️ 未設日期 › 點我去設定</span></div>' : '');
+  } else {
+    tripBar = '<div class="card" style="text-align:center;padding:20px 16px 16px">' +
+      '<div style="font-size:34px;line-height:1">🧳</div>' +
+      '<div style="font-size:18px;font-weight:800;margin:6px 0 2px">目前沒有進行中的旅程</div>' +
+      '<div class="hint">在下方「旅程計畫」建立新旅程，或到「已結束旅程」還原</div></div>';
   }
   html = tripBar + (SEC.oth||'') + (SEC.set||'') + (SEC.mem||'') + (SEC.fund||'') + (SEC.look||'') + (SEC.bak||'');
   tb.innerHTML = html;
@@ -2823,8 +2827,12 @@ function renderTrip(){
     if(geoEl) geoEl.onchange = function(){ S.geoOff = !this.checked; if(!S.geoOff) _geoTried = false; saveLocal(); toast(this.checked ? '已開啟定位建議幣別' : '已關閉'); };
     document.getElementById('btnArc').onclick = function(){
       if(!t.archived && !confirm('封存「' + t.name + '」？封存後收進「已結束旅程」區，隨時可還原。')) return;
-      t.archived = !t.archived; bumpMeta('info'); save();
-      toast(t.archived ? '已封存' : '已還原');
+      t.archived = !t.archived; bumpMeta('info');
+      var wasArc = t.archived;
+      if(wasArc && S.cur === t.code){ S.cur = closestActiveTripCode() || ''; }
+      save();
+      toast(wasArc ? '已封存' : '已還原');
+      if(wasArc) go('trip');
     };
     document.getElementById('fKeep').onchange = function(){ t.fundKeeper = this.value; bumpMeta('info'); saveLocal(); pushCloud(); };
     document.getElementById('tHome').onchange = function(){
@@ -3467,10 +3475,11 @@ function closestActiveTripCode(){
   }
   var _cc = closestActiveTripCode();
   if(_cc){ S.cur = _cc; }
+  else if(S.cur && (!S.trips[S.cur] || S.trips[S.cur].archived)){ S.cur = ''; }
   S.tsec = {}; S.pvOpen = false; S.pvAdv = false;
   saveLocal();
   renderAll();
-  go(Object.keys(S.trips).length ? 'ledger' : 'trip');
+  go(trip() ? 'ledger' : 'trip');
   setTimeout(maybeCdSplash, 600);
 })();
 </script>
@@ -3531,5 +3540,5 @@ try{
 </script>
 </body>
 </html>
-<!-- T0711-19 deploy -->
+<!-- T0711-20 deploy -->
 
