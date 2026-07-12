@@ -186,7 +186,7 @@ input[type=date]{-webkit-appearance:none;appearance:none;height:47px;display:fle
 .splitsum .adj{font-size:12px;color:var(--acc)}
 .advsec>summary{list-style:none;cursor:pointer;font-size:13px;color:var(--acc);padding:4px 0;user-select:none}
 .advsec>summary::-webkit-details-marker{display:none}
-.advsec>summary::before{content:'▸ ';font-size:11px}
+.advsec>summary::before{content:'▸ ';font-size:18px;vertical-align:-1px}
 .advsec[open]>summary::before{content:'▾ '}
 .pbmark{position:absolute;right:-3px;bottom:-3px;width:19px;height:19px;border-radius:50%;background:#0f6e56;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid var(--card);font-weight:700}
 .chip.pay{background:var(--acc);border-color:var(--acc);color:var(--accOn);font-weight:600}
@@ -251,7 +251,7 @@ table.st td{text-align:right;padding:5px 2px;border-bottom:1px solid var(--line)
 details.day{background:var(--card);border:1px solid var(--cardBd);border-radius:14px;margin-bottom:8px;box-shadow:var(--shadow)}
 details.day>summary{list-style:none;cursor:pointer;padding:11px 12px;display:flex;justify-content:space-between;align-items:center;font-size:13.5px;font-weight:600}
 details.day>summary::-webkit-details-marker{display:none}
-details.day>summary .arr{color:var(--tx3);margin-right:6px;font-size:11px}
+details.day>summary .arr{color:var(--tx2);margin-right:6px;font-size:18px}
 details.day[open]>summary .arr{transform:rotate(90deg);display:inline-block}
 details.day .dbody{padding:0 12px 11px}
 nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
@@ -273,7 +273,7 @@ nav button.on{color:var(--acc);font-weight:700}
 details.tsec{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:0 14px;margin-bottom:10px;box-shadow:var(--shadow,none)}
 details.tsec>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:14px 1px;cursor:pointer;font-weight:700;font-size:15.5px;color:var(--tx);-webkit-tap-highlight-color:transparent}
 details.tsec>summary::-webkit-details-marker{display:none}
-details.tsec>summary .car{color:var(--tx3);font-size:11px;transition:transform .15s;flex:0 0 auto}
+details.tsec>summary .car{color:var(--tx2);font-size:18px;transition:transform .15s;flex:0 0 auto}
 details.tsec[open]>summary .car{transform:rotate(90deg)}
 details.tsec>summary .tsx{margin-left:auto;font-size:12px;font-weight:400;color:var(--tx3);text-align:right;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 details.tsec>.tbody{padding:2px 1px 15px}
@@ -542,8 +542,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 42;
-var VER = 'T0712-02';
+var CODE_VERSION = 43;
+var VER = 'T0712-03';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -631,6 +631,7 @@ function trip(){
     if(!t.fund) t.fund = [];
     if(!t.families) t.families = [];
     if(!t.tfDone) t.tfDone = {};
+    if(!t.legs) t.legs = [];
     if(!t.mt) t.mt = {};
     if(t.startDate == null) t.startDate = '';
     if(t.endDate == null) t.endDate = '';
@@ -642,6 +643,9 @@ function trip(){
   return t;
 }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function legById(t, id){ var L = t.legs || []; for(var i=0;i<L.length;i++){ if(L[i].id === id) return L[i]; } return null; }
+function legOf(t, date){ var L = t.legs || []; for(var i=0;i<L.length;i++){ var g = L[i]; if(g.start && g.end && date >= g.start && date <= g.end) return g; } return null; }
+function legLabel(g){ return g ? (esc(g.name || '未命名') + (g.country ? ' · ' + esc(g.country) : '')) : '未分段'; }
 function todayISO(){ var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
@@ -1613,10 +1617,13 @@ function renderLedger(){
   es.sort(function(a,b){ if(a.date !== b.date) return a.date > b.date ? -1 : 1; return (b._mt||0) - (a._mt||0); });
   var dayTot = {};
   es.forEach(function(e){ dayTot[e.date] = (dayTot[e.date] || 0) + homeAmt(e); });
-  var rows = '', prevYM = null;
+  var useLeg = S.divMode === 'leg' && t.legs && t.legs.length;
+  var rows = '', prevKey = null;
   es.forEach(function(e){
-    var ym = e.date.slice(0,7);
-    if(ym !== prevYM){ rows += '<div class="lmhead">' + e.date.slice(0,4) + '/' + e.date.slice(5,7) + '</div>'; prevYM = ym; }
+    var _k, _lab;
+    if(useLeg){ var _g = legOf(t, e.date); _k = _g ? _g.id : '_none'; _lab = _g ? legLabel(_g) : '未分段'; }
+    else { _k = e.date.slice(0,7); _lab = e.date.slice(0,4) + '/' + e.date.slice(5,7); }
+    if(_k !== prevKey){ rows += '<div class="lmhead">' + _lab + '</div>'; prevKey = _k; }
     var sd;
     if(e.priv){ sd = '🔒 私人（只有你看得到）'; }
     else if(e.kind === 'loan'){
@@ -1656,7 +1663,9 @@ function renderLedger(){
       '<div class="lamt">' + amtH + '</div></div>';
   });
   var html = rows ? '<div class="card" style="padding:2px 12px">' + rows + '</div>' : '';
-  list.innerHTML = banner + myCard + '<div class="hint" style="margin:2px 4px 6px">點整列＝編輯｜👈 往左滑刪除</div>' + html;
+  var divSeg = (t.legs && t.legs.length) ? '<div class="seg" style="margin:2px 4px 8px"><span data-div="ym"' + (S.divMode !== 'leg' ? ' class="on"' : '') + '>年月</span><span data-div="leg"' + (S.divMode === 'leg' ? ' class="on"' : '') + '>所在地</span></div>' : '';
+  list.innerHTML = banner + myCard + divSeg + '<div class="hint" style="margin:2px 4px 6px">點整列＝編輯｜👈 往左滑刪除</div>' + html;
+  list.querySelectorAll('[data-div]').forEach(function(el){ el.onclick = function(){ S.divMode = el.dataset.div; saveLocal(); renderLedger(); }; });
   var ax = document.getElementById('a2hsX');
   if(ax) ax.onclick = function(){ S.dismiss['a2hs'] = true; saveLocal(); renderLedger(); };
   bindPay(list, renderLedger);
@@ -1881,7 +1890,7 @@ function buildPayCard(t, M, onLedger){
   var open = !!S.pvOpen;
   var html = '<div class="card" style="border:2px solid var(--warnBd)">' +
     '<div data-pvtog="1" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;cursor:pointer">' +
-    '<span class="arr" style="display:inline-block;font-size:12px;color:var(--tx3)' + (open ? ';transform:rotate(90deg)' : '') + '">▶</span>' +
+    '<span class="arr" style="display:inline-block;font-size:18px;color:var(--tx2)' + (open ? ';transform:rotate(90deg)' : '') + '">▶</span>' +
     (mu && scope === 'me' ? bdg(me(), 18) : '👥') +
     '<span style="font-size:14.5px;font-weight:600">' + (scope === 'me' ? '你的待付' : '全團待付') + '</span>' +
     '<span data-nettog="1" style="display:inline-flex;align-items:center;gap:5px;margin-left:6px;font-size:12px;color:var(--tx2)">互沖帳' +
@@ -2059,11 +2068,15 @@ function renderSettle(){
     memberStatHtml(t, M.overall.paid, M.overall.share, { weight: true, skipZero: !_ovAll }) +
     (_ovZero ? '<div style="margin-top:8px"><span data-ovall="1" style="font-size:12.5px;color:var(--acc);cursor:pointer">' + (_ovAll ? '收起沒帳的成員' : '顯示全部成員（' + _ovZero + ' 位沒帳）') + '</span></div>' : '') +
     '</div>';
+  if(t.legs && t.legs.length){ html += '<div class="seg" style="margin:2px 4px 8px"><span data-div="ym"' + (S.divMode !== 'leg' ? ' class="on"' : '') + '>年月</span><span data-div="leg"' + (S.divMode === 'leg' ? ' class="on"' : '') + '>所在地</span></div>'; }
   var tday = todayISO();
-  var prevYM = null;
+  var useLegS = S.divMode === 'leg' && t.legs && t.legs.length;
+  var prevKeyS = null;
   M.days.forEach(function(dy, di){
-    var ym = dy.date.slice(0,7);
-    if(ym !== prevYM){ html += '<div class="lmhead">' + dy.date.slice(0,4) + '/' + dy.date.slice(5,7) + '</div>'; prevYM = ym; }
+    var _ks, _labs;
+    if(useLegS){ var _gs = legOf(t, dy.date); _ks = _gs ? _gs.id : '_none'; _labs = _gs ? legLabel(_gs) : '未分段'; }
+    else { _ks = dy.date.slice(0,7); _labs = dy.date.slice(0,4) + '/' + dy.date.slice(5,7); }
+    if(_ks !== prevKeyS){ html += '<div class="lmhead">' + _labs + '</div>'; prevKeyS = _ks; }
     var wd = '';
     try{ wd = '（' + WD[new Date(dy.date + 'T00:00:00').getDay()] + '）'; }catch(x){}
     var isToday = dy.date === tday;
@@ -2123,6 +2136,7 @@ function renderSettle(){
   });
   box.querySelectorAll('[data-ovhelp]').forEach(function(el){ el.onclick = function(){ toast(OV_HELP); }; });
   box.querySelectorAll('[data-ovall]').forEach(function(el){ el.onclick = function(){ _ovAll = !_ovAll; renderSettle(); }; });
+  box.querySelectorAll('[data-div]').forEach(function(el){ el.onclick = function(){ S.divMode = el.dataset.div; saveLocal(); renderSettle(); }; });
   bindPay(box, renderSettle);
   var gm = document.getElementById('btnGoMe');
   if(gm) gm.onclick = function(){ go('trip'); toast('到「我是誰」點自己的徽章'); };
@@ -2629,6 +2643,17 @@ function renderTrip(){
       '<input type="number" id="tBud" inputmode="decimal" value="' + ((_budMode === 'daily' ? t.budget.daily : t.budget.total) || 0) + '"></div>' +
       (( _budMode === 'daily' ? t.budget.total : t.budget.daily) ? '<div class="hint" style="margin-top:3px">' + (_budMode === 'daily' ? '總額' : '每日') + '預算：' + fmt(_budMode === 'daily' ? t.budget.total : t.budget.daily) + '（切換上方可改）</div>' : '') +
       '</div>';
+    html += '<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px"></div>' +
+      '<div class="lbl">所在地分段（選填）</div>' +
+      '<div class="hint" style="margin:0 0 6px">設城市＋日期後，帳本／結算會多一個「所在地」分隔選項；沒設維持年月分隔。</div>' +
+      (t.legs || []).map(function(g){
+        return '<div class="card" style="padding:8px;margin-bottom:6px;background:var(--ro)">' +
+          '<div class="fld3"><input class="fld3-amt" data-lg="name" data-lid="' + g.id + '" value="' + esc(g.name) + '" placeholder="城市，例：維也納"><span style="display:flex;align-items:center;padding:0 8px;color:var(--tx3);border-left:1px solid var(--inBd);border-right:1px solid var(--inBd)">·</span><input class="fld3-amt" data-lg="country" data-lid="' + g.id + '" value="' + esc(g.country) + '" placeholder="國家"></div>' +
+          '<div class="fld3" style="margin-top:6px"><input type="date" class="fld3-amt" data-lg="start" data-lid="' + g.id + '" value="' + esc(g.start) + '"><span style="display:flex;align-items:center;padding:0 8px;color:var(--tx3);border-left:1px solid var(--inBd);border-right:1px solid var(--inBd)">→</span><input type="date" class="fld3-amt" data-lg="end" data-lid="' + g.id + '" value="' + esc(g.end) + '"></div>' +
+          '<button class="btn sub mini" data-lgdel="' + g.id + '" style="margin-top:6px;color:var(--danger)">🗑 刪除此段</button>' +
+        '</div>';
+      }).join('') +
+      '<button class="btn sub mini" id="btnAddLeg">＋ 新增分段</button>';
     pop('set', secIcon('set') + '旅程設定', '<span id="secCode" style="display:inline-flex;align-items:center;gap:5px;background:var(--accBg);border:1px solid var(--acc);border-radius:999px;padding:2px 10px;font-size:16px;font-weight:700;letter-spacing:1px;color:var(--accTx);font-family:ui-monospace,monospace;cursor:pointer">' + t.code + '<span style="font-size:13px">📋</span></span>', !t.startDate);
     cap();
     html += '<div class="hint" style="margin-bottom:6px">名單要含<b>你自己</b>與整團所有人（含小孩）。人頭數：大人 1、小孩 0.5、不分攤 0。</div><div id="memberBox">';
@@ -2867,6 +2892,10 @@ function renderTrip(){
     document.getElementById('btnCpCode').onclick = function(){ copyText(t.code, '已複製旅程代碼'); };
     var _secCode = document.getElementById('secCode');
     if(_secCode){ _secCode.onmousedown = function(e){ e.stopPropagation(); }; _secCode.onclick = function(e){ e.preventDefault(); e.stopPropagation(); copyText(t.code, '已複製旅程代碼'); }; }
+    tb.querySelectorAll('[data-lg]').forEach(function(el){ el.onchange = function(){ var g = legById(t, el.dataset.lid); if(g){ g[el.dataset.lg] = el.value; bumpMeta('info'); save(); } }; });
+    tb.querySelectorAll('[data-lgdel]').forEach(function(el){ el.onclick = function(){ t.legs = (t.legs || []).filter(function(x){ return x.id !== el.dataset.lgdel; }); bumpMeta('info'); save(); renderTrip(); }; });
+    var _bAddLeg = document.getElementById('btnAddLeg');
+    if(_bAddLeg) _bAddLeg.onclick = function(){ t.legs = t.legs || []; t.legs.push({ id: uid(), name: '', country: '', start: t.startDate || '', end: t.endDate || '' }); bumpMeta('info'); save(); renderTrip(); };
     document.getElementById('btnAddM').onclick = function(){
       var nid = uid();
       t.members.push({ id: nid, name: '', bank: '', acct: '', weight: 1, casual: false, famId: null });
@@ -3301,7 +3330,7 @@ function createTrip(){
   var code = genCode();
   while(S.trips[code]) code = genCode();
   var now0 = Date.now();
-  S.trips[code] = { code: code, name: name, home: 'TWD', feePct: 1.5, members: [], expenses: [], templates: [], budget: { total:0, daily:0 }, fund: [], families: [], tfDone: {}, startDate: '', endDate: '', domestic: false, fundKeeper: '', archived: false, metaMt: now0, mt: { info: now0, members: now0, fund: now0, templates: now0, tfDone: now0 }, createdAt: now0 };
+  S.trips[code] = { code: code, name: name, home: 'TWD', feePct: 1.5, members: [], expenses: [], templates: [], budget: { total:0, daily:0 }, fund: [], families: [], tfDone: {}, legs: [], startDate: '', endDate: '', domestic: false, fundKeeper: '', archived: false, metaMt: now0, mt: { info: now0, members: now0, fund: now0, templates: now0, tfDone: now0 }, createdAt: now0 };
   S.cur = code; F = null; editId = null; _convCur = null;
   S.tsec = S.tsec || {}; S.tsec.set = 1; S.tsec.mem = 1;
   startListen(); save();
@@ -3349,6 +3378,7 @@ function applyRemote(code, remote){
       local.budget = remote.budget || { total:0, daily:0 };
       local.startDate = remote.startDate || ''; local.endDate = remote.endDate || '';
       local.domestic = !!remote.domestic; local.fundKeeper = remote.fundKeeper || ''; local.archived = !!remote.archived;
+      local.legs = remote.legs || [];
       setMt('info');
     }
     if(grpNewer('members')){ local.members = remote.members || []; local.families = remote.families || []; setMt('members'); }
@@ -3561,4 +3591,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-02 deploy -->
+<!-- T0712-03 deploy -->
