@@ -320,6 +320,37 @@ details.tsec>.tbody{padding:2px 1px 15px}
 .mcard .mn1{font-size:15px;font-weight:600}
 .mcard .mn2{font-size:12px;color:var(--tx2);margin-top:1px}
 .mcard.edit{border:2px solid var(--acc);cursor:default;display:block}
+/* 框＋分隔線＋淡底色按鈕（164/166/167） */
+.fbtn{display:flex;align-items:stretch;border:1.5px solid var(--inBd);border-radius:12px;overflow:hidden;background:var(--card);margin-bottom:8px}
+.fbtn>input{flex:1;min-width:0;border:none;background:transparent;padding:12px 13px;font-size:14px;outline:none;color:var(--tx)}
+.fbtn>.fbc{flex:1;min-width:0;display:flex;align-items:center;gap:11px;padding:10px 13px}
+.fbtn>.fba{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:0 17px;border:none;border-left:1.5px solid var(--inBd);background:var(--accBg);color:var(--accTx);font-weight:600;font-size:14px;cursor:pointer;font-family:inherit}
+/* 三顆併一列分段（165/169） */
+.sbtns{display:flex;border:1px solid var(--inBd);border-radius:11px;overflow:hidden;margin-top:8px}
+.sbtns button{flex:1;border:none;background:var(--card);color:var(--tx);font-size:13px;padding:11px 5px;cursor:pointer;border-left:1px solid var(--inBd);font-family:inherit}
+.sbtns button:first-child{border-left:none}
+.sbtns button:active{background:var(--accBg);color:var(--accTx)}
+/* 成員卡改版（163） */
+.mrw{display:flex;align-items:stretch;margin-bottom:8px}
+.mgut{width:16px;flex:0 0 auto;position:relative}
+.mgut i{position:absolute;left:6px;width:3px;border-radius:2px}
+.mcard2{flex:1;min-width:0;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--inBd);border-radius:12px;padding:10px 13px;cursor:pointer}
+.mcard2 .sb{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;font-weight:600}
+.mcard2 .mn1b{font-size:16px;font-weight:600}
+.mcard2 .mn2b{font-size:12px;color:var(--tx2);margin-top:2px}
+/* 成員編輯卡（162） */
+.medit2{flex:1;min-width:0;background:var(--card);border:2px solid var(--acc);border-radius:12px;padding:12px}
+.e1{display:flex;align-items:stretch;border:1px solid var(--inBd);border-radius:9px;overflow:hidden}
+.e1 .ebg{position:relative;display:flex;align-items:center;justify-content:center;width:46px;flex:0 0 auto;font-weight:600;cursor:pointer;overflow:hidden}
+.e1 .ebg input[type=color]{position:absolute;inset:0;opacity:0;width:100%;height:100%;border:none;cursor:pointer;padding:0}
+.e1 .en{flex:1;min-width:0;border:none;background:transparent;padding:10px 11px;font-size:15px;font-weight:600;outline:none;color:var(--tx)}
+.e1 .mx{flex:0 0 auto;border:none;background:none;border-left:1px solid var(--inBd);color:var(--tx3);font-size:16px;cursor:pointer;padding:0 13px}
+.e2{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:13px;color:var(--tx2);flex-wrap:wrap}
+.e2 .erep{width:92px;border:1px solid var(--inBd);border-radius:8px;padding:7px 9px;font-size:13px;background:var(--card);color:var(--tx);text-align:left}
+.cntseg{display:inline-flex;border:1px solid var(--inBd);border-radius:8px;overflow:hidden}
+.cntseg span{padding:7px 11px;color:var(--tx2);cursor:pointer;background:var(--card);white-space:nowrap}
+.cntseg span+span{border-left:1px solid var(--inBd)}
+.cntseg span.on{background:var(--acc);color:var(--accOn);font-weight:600}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:60}
 .modal.on{display:flex}
 .mbox{background:var(--card);border-radius:16px;padding:16px;width:86%;max-width:340px}
@@ -509,8 +540,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 37;
-var VER = 'T0711-18';
+var CODE_VERSION = 38;
+var VER = 'T0711-19';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -634,6 +665,48 @@ function bdg(id, size, extra){
 }
 function weightOf(t, id){ for(var i=0;i<t.members.length;i++){ if(t.members[i].id===id){ var w = Number(t.members[i].weight); return isNaN(w) ? 1 : w; } } return 1; }
 function famName(t, fid){ for(var i=0;i<t.families.length;i++){ if(t.families[i].id===fid) return t.families[i].name; } return null; }
+function isFam(id){ var t = trip(); var m = member(id); return !!(m && m.famId && famName(t, m.famId)); }
+function softBdg(id, px){
+  px = px || 42;
+  var c = bcolor(id);
+  var rad = isFam(id) ? Math.round(px * 0.29) + 'px' : '50%';
+  return '<span class="sb" style="width:' + px + 'px;height:' + px + 'px;border-radius:' + rad + ';background:' + lighten(c, .76) + ';color:' + darken(c, .12) + ';font-size:' + Math.round(px * 0.4) + 'px">' + esc(bchar(id)) + '</span>';
+}
+function catSvgSm(key, px){
+  px = px || 24; var tt = CAT_TINT[key] || CAT_TINT.misc, sz = Math.round(px * 0.62);
+  return '<span style="display:inline-flex;flex:0 0 auto;width:' + px + 'px;height:' + px + 'px;border-radius:' + Math.round(px * 0.29) + 'px;background:' + tt[0] + ';align-items:center;justify-content:center;vertical-align:middle"><svg viewBox="0 0 24 24" width="' + sz + '" height="' + sz + '" fill="none" stroke="' + tt[1] + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (CAT_SVG[key] || CAT_SVG.misc) + '</svg></span>';
+}
+function orderedMembers(t){
+  var seen = {}, out = [];
+  t.members.forEach(function(m){
+    if(seen[m.id]) return;
+    if(m.famId && famName(t, m.famId)){
+      t.members.forEach(function(x){ if(x.famId === m.famId && !seen[x.id]){ seen[x.id] = 1; out.push(x); } });
+    } else { seen[m.id] = 1; out.push(m); }
+  });
+  return out;
+}
+var _geoTried = false;
+var GEO_CUR = { JP:'JPY',TW:'TWD',US:'USD',KR:'KRW',TH:'THB',VN:'VND',CN:'CNY',HK:'HKD',MO:'HKD',SG:'SGD',MY:'MYR',GB:'GBP',AU:'AUD',NZ:'AUD',ID:'IDR',PH:'PHP',CA:'CAD',CH:'CHF',
+  DE:'EUR',FR:'EUR',IT:'EUR',ES:'EUR',NL:'EUR',BE:'EUR',AT:'EUR',PT:'EUR',IE:'EUR',FI:'EUR',GR:'EUR',LU:'EUR',SK:'EUR',SI:'EUR',EE:'EUR',LV:'EUR',LT:'EUR',MT:'EUR',CY:'EUR',HR:'EUR' };
+function tryGeoCur(){
+  var t = trip();
+  if(_geoTried || S.geoOff || !t || t.domestic || !F) return;
+  if(!navigator.geolocation) return;
+  _geoTried = true;
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var la = pos.coords.latitude, lo = pos.coords.longitude;
+    fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + la + '&longitude=' + lo + '&localityLanguage=zh')
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var cc = ((d && d.countryCode) || '').toUpperCase(), cur = GEO_CUR[cc];
+        if(!cur || CURS.indexOf(cur) < 0 || !F || F.cur === cur) return;
+        if(confirm('📍 偵測到你在' + ((d && d.countryName) || cc) + '，把記帳幣別切換為 ' + cur + '？')){
+          F.cur = cur; F.rate = ''; renderAdd(); toast('幣別已切換為 ' + cur);
+        }
+      }).catch(function(){});
+  }, function(){}, { timeout:8000, maximumAge:600000 });
+}
 var META_GROUPS = ['info', 'members', 'fund', 'templates', 'tfDone'];
 function bumpMeta(field){
   var t = trip(); if(!t) return;
@@ -881,6 +954,7 @@ function fundPayerBadge(){
 }
 function renderAdd(){
   var t = trip(); if(!t) return;
+  tryGeoCur();
   if(!F) F = blankF();
   var lk = lockObj();
   document.getElementById('eDate').value = F.date;
@@ -1414,7 +1488,7 @@ function copyAsNew(){
 }
 
 /* ───── 帳本 ───── */
-var CAT_TINT = { food:['#e1f5ee','#0f6e56'], trans:['#e6f1fb','#185fa5'], stay:['#eae8fa','#5a52b0'], shop:['#fbeaf0','#993556'], tix:['#faeeda','#854f0b'], daily:['#faece7','#993c1d'], misc:['#f1efe8','#5f5e5a'] };
+var CAT_TINT = { food:['#e0f3ec','#12805c'], trans:['#dceffa','#1e93d6'], stay:['#e9e2fa','#6d4bd8'], shop:['#fbe4ee','#c81d6b'], tix:['#f8ecd6','#c77f0a'], daily:['#f9e7e0','#c0451f'], misc:['#eeede9','#6b6a66'] };
 var CAT_SVG = {
   food:'<path d="M6 3v6a2 2 0 0 0 4 0V3"/><path d="M8 9v12"/><path d="M17 3c-1.3 1-2 2.8-2 5s.7 3 2 3v10"/>',
   trans:'<rect x="3" y="11" width="18" height="6" rx="2"/><path d="M6 11l1.6-4a2 2 0 0 1 1.9-1.3h5a2 2 0 0 1 1.9 1.3L19 11"/><path d="M7 20v-3"/><path d="M17 20v-3"/>',
@@ -1445,7 +1519,7 @@ var SEC_SVG = {
   oth:'<path d="M9 5l-5 2v12l5-2 6 2 5-2V5l-5 2-6-2z"/><path d="M9 5v12M15 7v12"/>',
   look:'<path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.8 1.5-1.5 0-.4-.2-.8-.5-1-.3-.3-.5-.6-.5-1 0-.8.7-1.5 1.5-1.5H16a5 5 0 0 0 5-5c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10.5" r="1"/>'
 };
-function secIcon(key){ var t = SEC_TINT[key] || SEC_TINT.set; return '<span style="display:inline-flex;width:26px;height:26px;border-radius:7px;background:' + t[0] + ';align-items:center;justify-content:center;vertical-align:-8px;margin-right:7px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="' + t[1] + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (SEC_SVG[key] || '') + '</svg></span>'; }
+function secIcon(key){ var t = SEC_TINT[key] || SEC_TINT.set; return '<span style="display:inline-flex;width:34px;height:34px;border-radius:9px;background:' + t[0] + ';align-items:center;justify-content:center;vertical-align:middle;margin-right:9px"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="' + t[1] + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (SEC_SVG[key] || '') + '</svg></span>'; }
 function renderLedger(){
   var t = trip();
   var sum = document.getElementById('ledgerSum'), list = document.getElementById('ledgerList');
@@ -2323,7 +2397,7 @@ function roundRect(g, x, y, w, h, r){
 }
 
 /* ───── 統計 ───── */
-var CAT_COLORS = { food:'#0f6e56', trans:'#185fa5', stay:'#5a52b0', shop:'#993556', tix:'#854f0b', daily:'#993c1d', misc:'#5f5e5a' };
+var CAT_COLORS = { food:'#12805c', trans:'#1e93d6', stay:'#6d4bd8', shop:'#c81d6b', tix:'#c77f0a', daily:'#c0451f', misc:'#6b6a66' };
 function renderStats(){
   var t = trip();
   var box = document.getElementById('statsBox');
@@ -2400,9 +2474,9 @@ function renderStats(){
         '<div style="flex:1;font-size:14px">' +
         dcats.map(function(c){
           var ci = catInfo(c);
-          return '<div style="display:flex;align-items:baseline;gap:5px;padding:4px 0">' +
-            '<span style="white-space:nowrap"><span style="color:' + (CAT_COLORS[c] || '#888') + '">■</span> ' + ci[1] + ' ' + ci[2] + '</span>' +
-            '<span style="flex:1;border-bottom:2px dotted var(--inBd);transform:translateY(-4px)"></span>' +
+          return '<div style="display:flex;align-items:center;gap:5px;padding:4px 0">' +
+            '<span style="white-space:nowrap;display:inline-flex;align-items:center;gap:6px">' + catSvgSm(c, 24) + ci[2] + '</span>' +
+            '<span style="flex:1;border-bottom:2px dotted var(--inBd)"></span>' +
             '<span style="color:var(--tx2);white-space:nowrap;font-variant-numeric:tabular-nums"><span style="display:inline-block;min-width:66px;text-align:right">' + fmt(byCat[c]) + '</span><span style="display:inline-block;min-width:46px;text-align:right">' + (total > 0 ? Math.round(byCat[c] / total * 100) : 0) + '%</span></span></div>';
         }).join('') + '</div></div>';
     } else if(cv === 'heat'){
@@ -2538,6 +2612,8 @@ function renderTrip(){
       '<details class="advsec" style="margin-top:8px"><summary>本國旅遊／預設手續費</summary>' +
       '<label style="display:flex;align-items:center;gap:7px;font-size:14px;margin-top:8px"><input type="checkbox" id="tDom"' + (t.domestic ? ' checked' : '') + ' style="width:18px;height:18px">🇹🇼 本國旅遊</label>' +
       '<div class="hint" style="margin-top:3px">無外幣：手續費 0、幣別＝主幣別、不抓匯率</div>' +
+      '<label style="display:flex;align-items:center;gap:7px;font-size:14px;margin-top:10px"><input type="checkbox" id="tGeo"' + (S.geoOff ? '' : ' checked') + ' style="width:18px;height:18px">📍 到當地自動建議幣別</label>' +
+      '<div class="hint" style="margin-top:3px">進記帳頁時用定位判斷所在國家，詢問是否切換記帳幣別（每次開 App 最多問一次）。</div>' +
       '<div style="margin-top:8px"><div class="lbl">預設手續費 %</div><input type="number" id="tFee" inputmode="decimal" step="any" value="' + t.feePct + '"></div>' +
       '<div class="hint" style="margin-top:4px">手續費＝國際組織 1%＋發卡行 0.5%（各卡不同，可改；每筆記帳也能單獨調）</div>' +
       '</details>' +
@@ -2549,18 +2625,32 @@ function renderTrip(){
     pop('set', secIcon('set') + '旅程設定', esc(t.name) + ' · ' + t.code, !t.startDate);
     cap();
     html += '<div class="hint" style="margin-bottom:6px">名單要含<b>你自己</b>與整團所有人（含小孩）。人頭數：大人 1、小孩 0.5、不分攤 0。</div><div id="memberBox">';
-    t.members.forEach(function(m, mi){
+    var _ord = orderedMembers(t);
+    var _famList = {};
+    _ord.forEach(function(m){ if(m.famId && famName(t, m.famId)){ (_famList[m.famId] = _famList[m.famId] || []).push(m.id); } });
+    _ord.forEach(function(m){
       var used = t.expenses.some(function(e){ return !e._del && (e.payer === m.id || (e.split || []).indexOf(m.id) >= 0); });
+      var grp = (m.famId && famName(t, m.famId)) ? _famList[m.famId] : null;
+      var gLine = '';
+      if(grp && grp.length > 1){
+        var gi = grp.indexOf(m.id), gcol = lighten(bcolor(grp[0]), .35);
+        if(gi > 0) gLine += '<i style="top:0;height:50%;background:' + gcol + '"></i>';
+        if(gi < grp.length - 1) gLine += '<i style="top:50%;bottom:-8px;background:' + gcol + '"></i>';
+      }
       if(_memEdit === m.id){
         var famMems = m.famId ? t.members.filter(function(x){ return x.famId === m.famId; }) : [];
         var hhOn = famMems.length > 0 || _hhShow;
-        html += '<div class="mcard edit"><div style="display:flex;align-items:center;gap:9px">' + bdg(m.id, 18) +
-          '<input type="text" data-f="name" data-m="' + m.id + '" value="' + esc(m.name) + '" placeholder="輸入名字" style="flex:1;font-size:14px;font-weight:600">' +
+        var w2e = weightOf(t, m.id);
+        html += '<div class="mrw"><div class="mgut"></div><div class="medit2">' +
+          '<div class="e1"><label class="ebg" style="background:' + lighten(bcolor(m.id), .72) + ';color:' + darken(bcolor(m.id), .12) + '">' + esc(bchar(m.id)) +
+          '<input type="color" data-col="' + m.id + '" value="' + bcolor(m.id) + '" title="徽章顏色"></label>' +
+          '<input type="text" class="en" data-f="name" data-m="' + m.id + '" value="' + esc(m.name) + '" placeholder="輸入名字">' +
           '<button class="mx" data-del="' + m.id + '"' + (used ? ' data-used="1"' : '') + '>🗑️</button></div>' +
-          '<div class="mrow2" style="font-size:13.5px;margin-top:8px">代表字 <input type="text" maxlength="2" data-bg="' + m.id + '" value="' + esc(bchar(m.id)) + '" style="width:52px;text-align:center">' +
-          '<input type="color" data-col="' + m.id + '" value="' + bcolor(m.id) + '" title="徽章顏色">' +
-          '人頭數 <input type="number" step="0.5" min="0" data-w="' + m.id + '" value="' + weightOf(t, m.id) + '" style="width:64px"></div>' +
-          '<details class="advsec" id="memAdvSec" style="margin-top:8px"' + (_memAdv ? ' open' : '') + '><summary>收款帳戶／部分參加／結算歸戶</summary>' +
+          '<div class="e2"><span>代表字</span><input type="text" maxlength="2" class="erep" data-bg="' + m.id + '" value="' + esc(m.badge || '') + '" placeholder="留空＝名字首字">' +
+          '<span style="margin-left:4px">計數</span><span class="cntseg">' +
+          '<span data-wt="0.5|' + m.id + '"' + (w2e === 0.5 ? ' class="on"' : '') + '>小孩0.5</span>' +
+          '<span data-wt="0|' + m.id + '"' + (w2e === 0 ? ' class="on"' : '') + '>不分攤0</span></span></div>' +
+          '<details class="advsec" id="memAdvSec" style="margin-top:10px"' + (_memAdv ? ' open' : '') + '><summary>收款帳戶／部分參加／結算歸戶</summary>' +
           '<div class="lbl" style="margin-top:10px">收款帳戶（結算轉帳用）</div>' +
           '<div class="fld3"><input type="text" data-f="bank" data-m="' + m.id + '" value="' + esc(m.bank || '') + '" placeholder="銀行/代碼" class="fld3-cur" style="flex:0 0 36%;width:36%">' +
           '<input type="text" data-f="acct" data-m="' + m.id + '" value="' + esc(m.acct || '') + '" placeholder="帳號" inputmode="numeric" class="fld3-amt"></div>' +
@@ -2581,26 +2671,26 @@ function renderTrip(){
         }
         html += '</details>' +
           '<button class="btn sub mini" data-savefri="' + m.id + '" style="width:100%;margin-top:12px">⭐ 存為好朋友</button>' +
-          '<div class="row" style="margin-top:8px"><button class="btn sub mini" data-mcxl="1" style="flex:1">取消</button><button class="btn mini" data-mdone="1" style="flex:1">完成</button></div></div>';
+          '<div class="row" style="margin-top:8px"><button class="btn sub mini" data-mcxl="1" style="flex:1">取消</button><button class="btn mini" data-mdone="1" style="flex:1">完成</button></div></div></div>';
       } else {
         var fn2 = m.famId && famName(t, m.famId);
-        var w2 = weightOf(t, m.id);
-        var meta = (w2 !== 1 ? '人頭 ' + w2 + ' · ' : '') + (fn2 ? esc(fn2) : '個人') +
-          (m.casual ? ' · 部分參加' : '') + ' · ' +
-          ((m.bank || m.acct) ? '<span style="color:#059669">帳戶✓</span>' : '<span style="color:var(--warnTx)">未登記帳戶</span>');
-        html += '<div class="mcard" data-medit="' + m.id + '">' + bdg(m.id, 18) +
-          '<div style="flex:1;min-width:0"><div class="mn1">' + (m.name ? esc(m.name) : '<span style="color:var(--tx3)">未命名，點我編輯</span>') + '</div>' +
-          '<div class="mn2">' + meta + '</div></div>' +
-          '<span style="color:var(--tx3);font-size:14px">✏️</span></div>';
+        var w2b = weightOf(t, m.id);
+        var acctTag = (m.bank || m.acct) ? '<span style="font-size:11px;color:#0f9d6e;font-weight:500">✓帳戶</span>' : '<span style="font-size:11px;color:var(--warnTx);font-weight:500">未登記帳戶</span>';
+        var m2 = [];
+        if(fn2) m2.push(esc(fn2));
+        if(m.casual) m2.push('部分參加');
+        if(w2b !== 1) m2.push('計數 ' + w2b);
+        html += '<div class="mrw"><div class="mgut">' + gLine + '</div><div class="mcard2" data-medit="' + m.id + '">' + softBdg(m.id, 42) +
+          '<div style="flex:1;min-width:0"><div class="mn1b">' + (m.name ? esc(m.name) + ' ' + acctTag : '<span style="color:var(--tx3)">未命名，點我編輯</span>') + '</div>' +
+          (m2.length ? '<div class="mn2b">' + m2.join(' · ') + '</div>' : '') + '</div>' +
+          '<span style="color:var(--tx3);font-size:14px">✏️</span></div></div>';
       }
     });
-    html += '</div><button class="btn sub mini" id="btnAddM" style="margin-top:6px">＋ 新增成員</button> ' +
-      '<button class="btn sub mini" id="btnFriM" style="margin-top:6px">⭐ 好朋友帶入</button> ' +
-      '<button class="btn sub mini" id="btnImpM" style="margin-top:6px">📇 從舊旅程帶入</button>' +
+    html += '</div><div class="sbtns"><button id="btnAddM">＋ 新增成員</button><button id="btnFriM">⭐ 好朋友</button><button id="btnImpM">📇 舊旅程</button></div>' +
       '<div class="hint" style="margin-top:6px">帳戶給結算轉帳用、旅伴看得到；同一戶結算時合併轉帳。好朋友清單存這支手機。</div>' +
       '<div class="lbl" style="margin-top:12px;font-weight:600;color:var(--tx)">我是誰（這支手機的使用者）</div>' +
       ((me() && !_meChange)
-        ? '<div class="mcard" style="cursor:default">' + bdg(me(), 18) + '<div style="flex:1"><span class="mn1">' + esc(mname(me())) + '</span> <span style="font-size:13px">🔒</span></div><button class="btn sub mini" id="btnMeChg">變更</button></div>' +
+        ? '<div class="fbtn" style="margin-top:6px"><div class="fbc">' + softBdg(me(), 40) + '<div><div style="font-size:16px;font-weight:600">' + esc(mname(me())) + ' <span style="font-size:12px">🔒</span></div><div style="font-size:12px;color:var(--tx3)">這支手機的使用者</div></div></div><button class="fba" id="btnMeChg">變更</button></div>' +
           '<div class="hint" style="margin-top:4px">已鎖定防誤觸。私人帳歸這個人名下，也是預設付款人。</div>'
         : '<div class="chips" id="meChips">' +
           t.members.map(function(m){
@@ -2615,10 +2705,11 @@ function renderTrip(){
       t.members.length ? (t.members.length + ' 位' + (me() ? '' : '｜⚠️ 先選我是誰')) : '⚠️ 先新增成員',
       !t.members.length || !me() || !!_memEdit);
     cap();
-    html += '<div style="display:flex;justify-content:space-between;align-items:center"><span class="lbl" style="margin:0">大家先出一筆公費，吃飯門票從這裡扣</span>' +
-      '<span style="font-size:12px;color:var(--tx2)">保管人 <select id="fKeep" style="width:auto;padding:3px 6px;font-size:12px"><option value="">（未指定）</option>' +
+    html += '<div class="fbtn"><div class="fbc"><span class="lico" style="background:' + SEC_TINT.fund[0] + '"><svg viewBox="0 0 24 24" fill="none" stroke="' + SEC_TINT.fund[1] + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + SEC_SVG.fund + '</svg></span><span style="font-size:16px;font-weight:600">基金（公費）</span></div>' +
+      '<select id="fKeep" class="fba" style="padding:0 12px"><option value="">未指定</option>' +
       t.members.map(function(m){ return '<option value="' + m.id + '"' + (t.fundKeeper === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('') +
-      '</select></span></div>';
+      '</select></div>' +
+      '<div class="hint" style="margin-top:2px">大家先出一筆公費，記帳時付款人選「🏦基金」就從這裡扣。右上可指定保管人。</div>';
     var contribs = (t.fund || []).filter(function(c){ return !c._del; });
     if(contribs.length){
       var subBy = {};
@@ -2644,9 +2735,7 @@ function renderTrip(){
       '<div class="hint" style="margin-top:6px">記帳時付款人選「🏦基金」＝從基金支出；餘額按入金比例退還。</div>';
     pop('fund', secIcon('fund') + '基金(公費)', contribs.length ? ('餘額 ' + fmt(ft.bal)) : '沒用到可不理', false);
     cap();
-    html += '<div class="row"><button class="btn sub mini" id="btnBakOut" style="flex:1">⬇ 匯出備份</button>' +
-      '<button class="btn sub mini" id="btnBakIn" style="flex:1">⬆ 還原備份</button>' +
-      '<button class="btn sub mini" id="btnCsv" style="flex:1">📄 匯出CSV</button></div>' +
+    html += '<div class="sbtns"><button id="btnBakOut">⬇ 匯出備份</button><button id="btnBakIn">⬆ 還原備份</button><button id="btnCsv">📄 匯出CSV</button></div>' +
       '<div class="hint" style="margin-top:6px">⚠️ 私人帳只存這支手機，換手機前先匯出備份。CSV 可用 Excel 開。</div>';
     pop('bak', secIcon('bak') + '備份與匯出', '', false);
   }
@@ -2661,9 +2750,9 @@ function renderTrip(){
   var act = codes.filter(function(c){ return !S.trips[c].archived; });
   var arc = codes.filter(function(c){ return S.trips[c].archived; });
   var lh = '<div class="lbl">用代碼加入旅伴的旅程</div>' +
-    '<div class="row"><input type="text" id="joinCode" placeholder="輸入 6 碼旅程代碼" style="text-transform:uppercase"><button class="btn sub mini fix" id="btnJoin">加入</button></div>' +
+    '<div class="fbtn"><input type="text" id="joinCode" placeholder="輸入 6 碼旅程代碼" style="text-transform:uppercase"><button class="fba" id="btnJoin">加入</button></div>' +
     '<div class="lbl" style="margin-top:10px">建立新旅程</div>' +
-    '<div class="row"><input type="text" id="newTripName" placeholder="旅程名稱，例：東京行"><button class="btn mini fix" id="btnNewTrip">建立</button></div>';
+    '<div class="fbtn"><input type="text" id="newTripName" placeholder="旅程名稱，例：東京行"><button class="fba" id="btnNewTrip">建立</button></div>';
   if(act.length > 1 || (act.length >= 1 && !t)){
     lh += '<div class="lbl" style="margin-top:10px">切換旅程（依開始日期新→舊）</div><div class="chips">' +
       act.map(function(c){ return '<span class="chip' + (S.cur === c ? ' on' : '') + '" data-sw="' + c + '">' + esc(S.trips[c].name) + (S.trips[c].startDate ? ' <span style="font-size:10px;color:var(--tx3)">' + S.trips[c].startDate.slice(5).replace('-','/') + '</span>' : '') + '</span>'; }).join('') + '</div>';
@@ -2730,6 +2819,8 @@ function renderTrip(){
       if(t.domestic && t.feePct !== 0){ t.feePct = 0; toast('本國旅遊：預設手續費已改為 0'); }
       bumpMeta('info'); save();
     };
+    var geoEl = document.getElementById('tGeo');
+    if(geoEl) geoEl.onchange = function(){ S.geoOff = !this.checked; if(!S.geoOff) _geoTried = false; saveLocal(); toast(this.checked ? '已開啟定位建議幣別' : '已關閉'); };
     document.getElementById('btnArc').onclick = function(){
       if(!t.archived && !confirm('封存「' + t.name + '」？封存後收進「已結束旅程」區，隨時可還原。')) return;
       t.archived = !t.archived; bumpMeta('info'); save();
@@ -2831,12 +2922,13 @@ function renderTrip(){
         if(m){ m.color = inp.value; bumpMeta('members'); saveLocal(); pushCloud(); renderTrip(); }
       };
     });
-    tb.querySelectorAll('input[data-w]').forEach(function(inp){
-      inp.onchange = function(){
-        var m = member(inp.dataset.w);
-        if(m){ var w = Number(inp.value); m.weight = isNaN(w) || w < 0 ? 1 : w; bumpMeta('members'); saveLocal(); pushCloud();
-          if(m.weight !== 1) toast('人頭數 ' + m.weight + '：分攤時此人算 ' + m.weight + ' 份（大人1、小孩0.5、不分攤0）');
-        }
+    tb.querySelectorAll('[data-wt]').forEach(function(el){
+      el.onclick = function(){
+        var p = el.dataset.wt.split('|'), val = Number(p[0]), m = member(p[1]);
+        if(!m) return;
+        m.weight = (weightOf(t, m.id) === val) ? 1 : val;
+        bumpMeta('members'); saveLocal(); pushCloud(); renderTrip();
+        toast(m.weight === 1 ? '計數 1（大人）' : (m.weight === 0.5 ? '計數 0.5（小孩）' : '計數 0（不分攤）'));
       };
     });
     tb.querySelectorAll('input[data-cas]').forEach(function(inp){
@@ -3439,5 +3531,5 @@ try{
 </script>
 </body>
 </html>
+<!-- T0711-19 deploy -->
 
-<!-- T0711-18 deploy -->
