@@ -275,7 +275,7 @@ details.tsec>summary{list-style:none;display:flex;align-items:center;gap:8px;pad
 details.tsec>summary::-webkit-details-marker{display:none}
 details.tsec>summary .car{color:var(--tx2);font-size:18px;transition:transform .15s;flex:0 0 auto}
 details.tsec[open]>summary .car{transform:rotate(90deg)}
-details.tsec>summary .tsx{margin-left:auto;font-size:12px;font-weight:400;color:var(--tx3);text-align:right;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.tsec>summary .tsx{margin-left:auto;font-size:12px;font-weight:400;color:var(--tx3);text-align:right;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 details.tsec>.tbody{padding:2px 1px 15px}
 .wbtn{display:block;width:100%;text-align:left;padding:14px 16px;border:2px solid var(--bd);border-radius:14px;background:var(--bg);margin-top:12px;cursor:pointer;font-size:16px}
 .wbtn:active{border-color:var(--acc)}
@@ -542,8 +542,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 45;
-var VER = 'T0712-05';
+var CODE_VERSION = 46;
+var VER = 'T0712-06';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -2620,7 +2620,6 @@ function renderTrip(){
     var isEmptyTrip = !t.expenses.some(function(e){ return !e._del; }) && !(t.fund || []).some(function(c){ return !c._del; });
     html += '<div class="codebox" style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;color:var(--accTx)">旅程代碼</span><b>' + t.code + '</b>' +
       '<button class="btn sub mini" id="btnCpCode" style="margin-left:auto">複製</button></div>' +
-      '<button class="btn sub mini" id="btnShareInv" style="margin-top:8px;width:100%">🔗 分享邀請連結（免打代碼）</button>' +
       '<div class="row" style="margin-top:8px"><button class="btn sub mini" id="btnArc" style="flex:1">' + (t.archived ? '↩ 還原' : '📦 封存') + '</button>' +
       (isEmptyTrip
         ? '<button class="btn sub mini" id="btnDelTrip" style="flex:1;color:var(--danger)">🗑️ 刪除旅程</button>'
@@ -2657,7 +2656,10 @@ function renderTrip(){
         '</div>';
       }).join('') +
       '<button class="btn sub mini" id="btnAddLeg">＋ 新增分段</button>';
-    pop('set', secIcon('set') + '旅程設定', '<span id="secCode" style="display:inline-flex;align-items:center;gap:5px;background:var(--accBg);border:1px solid var(--acc);border-radius:999px;padding:2px 10px;font-size:16px;font-weight:700;letter-spacing:1px;color:var(--accTx);font-family:ui-monospace,monospace;cursor:pointer">' + t.code + '<span style="font-size:13px">📋</span></span>', !t.startDate);
+    pop('set', secIcon('set') + '旅程設定', '<span style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap">' +
+      '<span id="secInvite" style="display:inline-flex;align-items:center;gap:4px;background:var(--accBg);border:1px solid var(--acc);border-radius:999px;padding:4px 10px;font-size:13px;color:var(--accTx);cursor:pointer">🔗<span>加入連結</span></span>' +
+      '<span id="secCode" style="display:inline-flex;align-items:center;gap:4px;background:var(--accBg);border:1px solid var(--acc);border-radius:999px;padding:4px 10px;font-size:13px;color:var(--accTx);cursor:pointer">📋<span>複製代碼</span></span>' +
+      '</span>', !t.startDate);
     cap();
     html += '<div class="hint" style="margin-bottom:6px">名單要含<b>你自己</b>與整團所有人（含小孩）。人頭數：大人 1、小孩 0.5、不分攤 0。</div><div id="memberBox">';
     var _ord = orderedMembers(t);
@@ -2893,10 +2895,10 @@ function renderTrip(){
       el.onclick = function(){ _budMode = el.dataset.bud; renderTrip(); };
     });
     document.getElementById('btnCpCode').onclick = function(){ copyText(t.code, '已複製旅程代碼'); };
-    var _bShare = document.getElementById('btnShareInv');
-    if(_bShare) _bShare.onclick = function(){ shareInvite(t); };
     var _secCode = document.getElementById('secCode');
     if(_secCode){ _secCode.onmousedown = function(e){ e.stopPropagation(); }; _secCode.onclick = function(e){ e.preventDefault(); e.stopPropagation(); copyText(t.code, '已複製旅程代碼'); }; }
+    var _secInv = document.getElementById('secInvite');
+    if(_secInv){ _secInv.onmousedown = function(e){ e.stopPropagation(); }; _secInv.onclick = function(e){ e.preventDefault(); e.stopPropagation(); shareInvite(t); }; }
     tb.querySelectorAll('[data-lg]').forEach(function(el){ el.onchange = function(){ var g = legById(t, el.dataset.lid); if(g){ g[el.dataset.lg] = el.value; bumpMeta('info'); save(); } }; });
     tb.querySelectorAll('[data-lgdel]').forEach(function(el){ el.onclick = function(){ t.legs = (t.legs || []).filter(function(x){ return x.id !== el.dataset.lgdel; }); bumpMeta('info'); save(); renderTrip(); }; });
     var _bAddLeg = document.getElementById('btnAddLeg');
@@ -3653,4 +3655,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-05 deploy -->
+<!-- T0712-06 deploy -->
