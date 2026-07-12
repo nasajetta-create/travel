@@ -547,8 +547,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 53;
-var VER = 'T0712-13';
+var CODE_VERSION = 54;
+var VER = 'T0712-14';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -567,6 +567,8 @@ function tripIcon(t){
   return TRIP_FALLBACK[h % TRIP_FALLBACK.length];
 }
 function btnIco(p){ return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px">' + p + '</svg>'; }
+function svgi(p, sz){ sz = sz || 16; return '<svg viewBox="0 0 24 24" width="' + sz + '" height="' + sz + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px">' + p + '</svg>'; }
+var IC_BANK = '<path d="M4 10l8-5 8 5"/><path d="M6 10v7M10 10v7M14 10v7M18 10v7"/><path d="M4 20h16"/>';
 var IC = {
   swap:'<path d="M7 4l-3 3 3 3"/><path d="M4 7h13"/><path d="M17 20l3-3-3-3"/><path d="M20 17H7"/>',
   plus:'<path d="M12 5v14"/><path d="M5 12h14"/>',
@@ -699,7 +701,7 @@ function bshape(id){
   return (m && m.famId && famName(t, m.famId)) ? ';border-radius:7px' : '';
 }
 function bdg(id, size, extra){
-  if(id === FUND) return '<span class="tag" style="font-size:' + (size===34?'13px':'10px') + '">🏦基金</span>';
+  if(id === FUND) return '<span class="tag" style="font-size:' + (size===34?'13px':'10px') + '">' + svgi(IC_BANK, 14) + '基金</span>';
   return '<span class="bdg b' + (size===34?'34':'18') + '" style="background:' + bcolor(id) + ';color:#fff' + bshape(id) + '" title="' + esc(mname(id)) + '">' + esc(bchar(id)) + (extra||'') + '</span>';
 }
 function weightOf(t, id){ for(var i=0;i<t.members.length;i++){ if(t.members[i].id===id){ var w = Number(t.members[i].weight); return isNaN(w) ? 1 : w; } } return 1; }
@@ -995,7 +997,7 @@ function payerBadge(m){
 function fundPayerBadge(){
   var on = F.payer === FUND;
   var st = (on ? glossStyle('#0f6e56') : 'background:transparent;color:var(--tx3);border:2px dashed var(--inBd)') + ';border-radius:13px';
-  return '<span class="bdg b34" data-m="' + FUND + '" style="' + st + '" title="基金">🏦' + (on ? '<span class="pbmark">✓</span>' : '') + '</span>';
+  return '<span class="bdg b34" data-m="' + FUND + '" style="' + st + '" title="基金">' + svgi(IC_BANK, 20) + (on ? '<span class="pbmark">✓</span>' : '') + '</span>';
 }
 function renderAdd(){
   var t = trip(); if(!t) return;
@@ -1613,7 +1615,7 @@ function renderLedger(){
     '<div class="dcol"><p class="dl">團體總支出</p><p class="dv">' + money(t.home, total) + '</p></div>'
   ];
   if(pes.length) lcols.push('<div class="dcol"><p class="dl">' + btnIco(IC.lock) + '我的私人</p><p class="dv">' + money(t.home, ptotal) + '</p></div>');
-  if(ft.fin > 0) lcols.push('<div class="dcol"><p class="dl">🏦 基金餘額</p><p class="dv' + (ft.bal < 0 ? ' warn' : '') + '">' + money(t.home, ft.bal) + '</p></div>');
+  if(ft.fin > 0) lcols.push('<div class="dcol"><p class="dl">' + btnIco(IC_BANK) + '基金餘額</p><p class="dv' + (ft.bal < 0 ? ' warn' : '') + '">' + money(t.home, ft.bal) + '</p></div>');
   if(MU && myAll){
     lcols.push(myUnpaid > 0.5
       ? '<div class="dcol" id="dashUnpaid" style="cursor:pointer"><p class="dl">💸 我還要付</p><p class="dv" style="color:#FCA5A5">' + money(t.home, myUnpaid) + '</p></div>'
@@ -1668,7 +1670,7 @@ function renderLedger(){
     else if(e.kind === 'loan'){
       var _lender = e.payer, _borrower = (e.split||[])[0];
       sd = '<span style="display:inline-flex;align-items:center;gap:7px">' +
-        '<span style="color:' + (_lender === FUND ? '#0f6e56' : bcolor(_lender)) + ';font-weight:600">' + (_lender === FUND ? '🏦' : esc(bchar(_lender))) + '</span>' +
+        '<span style="color:' + (_lender === FUND ? '#0f6e56' : bcolor(_lender)) + ';font-weight:600">' + (_lender === FUND ? svgi(IC_BANK, 16) : esc(bchar(_lender))) + '</span>' +
         '<span style="color:var(--tx3)">→</span>' +
         '<span style="color:var(--tx3)">' + esc(bchar(_borrower)) + '</span>' +
         '<span style="font-size:11px;color:var(--tx2);background:var(--card);border:1px solid var(--inBd);border-radius:999px;padding:1px 8px">借款</span></span>';
@@ -1681,7 +1683,7 @@ function renderLedger(){
       ids.forEach(function(id){ if(id !== e.payer) ordered.push(id); });
       var segs = ordered.map(function(id){
         var isPayer = (id === e.payer);
-        var ch = id === FUND ? '🏦' : esc(bchar(id));
+        var ch = id === FUND ? svgi(IC_BANK, 16) : esc(bchar(id));
         var gift = treats.indexOf(id) >= 0 ? btnIco(IC.gift) : '';
         var stl = isPayer ? ('color:' + (id === FUND ? '#0f6e56' : bcolor(id)) + ';font-weight:600') : 'color:var(--tx3)';
         return '<span style="' + stl + '">' + ch + gift + '</span>';
@@ -2093,7 +2095,7 @@ function renderSettle(){
     '<div class="dcol"><p class="dl">已結清</p><p class="dv acc">' + money(t.home, M.settled) + '</p></div>',
     '<div class="dcol"><p class="dl">未結清</p><p class="dv warn">' + money(t.home, M.unsettled) + '</p></div>'
   ];
-  if(M.ft.fin > 0) cols.push('<div class="dcol"><p class="dl">🏦 基金餘額</p><p class="dv">' + money(t.home, M.ft.bal) + '</p></div>');
+  if(M.ft.fin > 0) cols.push('<div class="dcol"><p class="dl">' + btnIco(IC_BANK) + '基金餘額</p><p class="dv">' + money(t.home, M.ft.bal) + '</p></div>');
   var html = '<div class="dash" style="padding:12px 4px 10px"><div style="display:flex">' + cols.join('<div class="divv"></div>') + '</div>' +
     '<p class="dnote" style="margin:7px 10px 0;padding-top:6px;border-top:1px solid var(--dashBar);text-align:center">每天轉完帳打勾＝當日結清；總結算只算未結清的部分</p></div>';
   if(me()){
@@ -2141,7 +2143,7 @@ function renderSettle(){
     html += '<div class="hint" style="margin-top:4px">這是把所有未結清日子合併後的最少轉帳；各日結清後這裡會自動歸零。</div></div>';
   }
   if(M.ft.fin > 0){
-    html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">🏦 基金結算</div>' +
+    html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">' + btnIco(IC_BANK) + '基金結算</div>' +
       '<div class="sumrow" style="color:var(--tx2)"><span>入金 ' + fmt(M.ft.fin) + '｜基金支付 ' + fmt(M.ft.fout) + '</span><span>餘額 <b>' + fmt(M.ft.bal) + '</b></span></div>';
     if(M.refunds.length){
       html += '<div class="lbl" style="margin-top:6px">餘額退還（依入金比例，勾＝已退）</div>';
@@ -2150,7 +2152,7 @@ function renderSettle(){
         var done = !!t.tfDone[key];
         var rm = member(f.mid) || {};
         html += '<div class="tf' + (done ? ' done' : '') + '"><input type="checkbox" data-tfk="' + key + '"' + (done ? ' checked' : '') + '>' +
-          '<div style="flex:1"><div class="who">🏦 → <span ' + saTag(mname(f.mid), rm.bank, rm.acct) + '>' + bdg(f.mid, 18) + ' ' + esc(mname(f.mid)) + '</span></div></div>' +
+          '<div style="flex:1"><div class="who">' + svgi(IC_BANK, 16) + ' → <span ' + saTag(mname(f.mid), rm.bank, rm.acct) + '>' + bdg(f.mid, 18) + ' ' + esc(mname(f.mid)) + '</span></div></div>' +
           '<div class="amt">' + money(t.home, f.amt) + '</div></div>';
       });
     }
@@ -2489,7 +2491,7 @@ function renderStats(){
   html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">付款方式</div>' +
     '<div class="sumrow"><span>💵 現金</span><b>' + t.home + ' ' + fmt(cash) + '</b></div>' +
     '<div class="sumrow"><span>💳 信用卡（含手續費）</span><b>' + t.home + ' ' + fmt(card) + '</b></div>' +
-    (fund > 0 ? '<div class="sumrow"><span>🏦 共同基金</span><b>' + t.home + ' ' + fmt(fund) + '</b></div>' : '') +
+    (fund > 0 ? '<div class="sumrow"><span>' + btnIco(IC_BANK) + '共同基金</span><b>' + t.home + ' ' + fmt(fund) + '</b></div>' : '') +
     '<div class="hint" style="margin-top:4px">回國對信用卡帳單用刷卡合計核對。</div></div>';
   var days = Object.keys(byDay).sort();
   if(days.length >= 1){
@@ -2567,7 +2569,7 @@ function renderStats(){
     var maxP = byPayer[payers[0]] || 1;
     html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">誰先付最多（團體帳）</div>';
     payers.forEach(function(p){
-      html += '<div class="srow"><span class="sl">' + (p === FUND ? '🏦基金' : bdg(p, 18) + ' ' + esc(mname(p))) + '</span>' +
+      html += '<div class="srow"><span class="sl">' + (p === FUND ? svgi(IC_BANK, 16) + '基金' : bdg(p, 18) + ' ' + esc(mname(p))) + '</span>' +
         '<div class="hbar"><div style="width:' + Math.max(3, Math.round(byPayer[p] / maxP * 100)) + '%;background:var(--acc)"></div></div>' +
         '<span class="sv">' + fmt(byPayer[p]) + '</span></div>';
     });
@@ -3693,4 +3695,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-13 deploy -->
+<!-- T0712-14 deploy -->
