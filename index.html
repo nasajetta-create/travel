@@ -542,8 +542,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 41;
-var VER = 'T0712-01';
+var CODE_VERSION = 42;
+var VER = 'T0712-02';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -2060,12 +2060,15 @@ function renderSettle(){
     (_ovZero ? '<div style="margin-top:8px"><span data-ovall="1" style="font-size:12.5px;color:var(--acc);cursor:pointer">' + (_ovAll ? '收起沒帳的成員' : '顯示全部成員（' + _ovZero + ' 位沒帳）') + '</span></div>' : '') +
     '</div>';
   var tday = todayISO();
+  var prevYM = null;
   M.days.forEach(function(dy, di){
+    var ym = dy.date.slice(0,7);
+    if(ym !== prevYM){ html += '<div class="lmhead">' + dy.date.slice(0,4) + '/' + dy.date.slice(5,7) + '</div>'; prevYM = ym; }
     var wd = '';
     try{ wd = '（' + WD[new Date(dy.date + 'T00:00:00').getDay()] + '）'; }catch(x){}
     var isToday = dy.date === tday;
     var st = dy.done ? '<span class="pos">✅ 已結清 ' + fmt(dy.total) + '</span>' : '<span style="color:var(--warnTx)">未結清 ' + fmt(dy.total) + '</span>';
-    html += '<details class="day"><summary><span><span class="arr">▶</span>' + dy.date.slice(5).replace('-','/') + wd + (isToday ? ' 今天' : '') + '</span>' + st + '</summary><div class="dbody">';
+    html += '<details class="day"><summary><span><span class="arr">▶</span>' + dy.date.slice(8,10) + wd + (isToday ? ' 今天' : '') + '</span>' + st + '</summary><div class="dbody">';
     var anyRow = t.members.some(function(m){ return (dy.calc.paid[m.id] || 0) > 0.5 || (dy.calc.share[m.id] || 0) > 0.5; });
     if(anyRow) html += memberStatHtml(t, dy.calc.paid, dy.calc.share, { skipZero: true });
     if(dy.calc.transfers.length){
@@ -2626,7 +2629,7 @@ function renderTrip(){
       '<input type="number" id="tBud" inputmode="decimal" value="' + ((_budMode === 'daily' ? t.budget.daily : t.budget.total) || 0) + '"></div>' +
       (( _budMode === 'daily' ? t.budget.total : t.budget.daily) ? '<div class="hint" style="margin-top:3px">' + (_budMode === 'daily' ? '總額' : '每日') + '預算：' + fmt(_budMode === 'daily' ? t.budget.total : t.budget.daily) + '（切換上方可改）</div>' : '') +
       '</div>';
-    pop('set', secIcon('set') + '旅程設定', esc(t.name) + ' · ' + t.code, !t.startDate);
+    pop('set', secIcon('set') + '旅程設定', '<span id="secCode" style="display:inline-flex;align-items:center;gap:5px;background:var(--accBg);border:1px solid var(--acc);border-radius:999px;padding:2px 10px;font-size:16px;font-weight:700;letter-spacing:1px;color:var(--accTx);font-family:ui-monospace,monospace;cursor:pointer">' + t.code + '<span style="font-size:13px">📋</span></span>', !t.startDate);
     cap();
     html += '<div class="hint" style="margin-bottom:6px">名單要含<b>你自己</b>與整團所有人（含小孩）。人頭數：大人 1、小孩 0.5、不分攤 0。</div><div id="memberBox">';
     var _ord = orderedMembers(t);
@@ -2862,6 +2865,8 @@ function renderTrip(){
       el.onclick = function(){ _budMode = el.dataset.bud; renderTrip(); };
     });
     document.getElementById('btnCpCode').onclick = function(){ copyText(t.code, '已複製旅程代碼'); };
+    var _secCode = document.getElementById('secCode');
+    if(_secCode){ _secCode.onmousedown = function(e){ e.stopPropagation(); }; _secCode.onclick = function(e){ e.preventDefault(); e.stopPropagation(); copyText(t.code, '已複製旅程代碼'); }; }
     document.getElementById('btnAddM').onclick = function(){
       var nid = uid();
       t.members.push({ id: nid, name: '', bank: '', acct: '', weight: 1, casual: false, famId: null });
@@ -3556,5 +3561,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-01 deploy -->
-
+<!-- T0712-02 deploy -->
