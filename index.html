@@ -360,7 +360,9 @@ details.tsec>.tbody{padding:2px 1px 15px}
 </head>
 <body>
 <div id="wrap">
-<header>
+<div id="hdWrap" style="position:sticky;top:0;z-index:10">
+<div id="demoBar" style="display:none;background:#f0b429;color:#663c06;align-items:center;justify-content:space-between;padding:6px 14px;font-size:13px;font-weight:600"><span>🧪 範例旅程（只能看）</span><button id="demoExit" style="border:none;background:rgba(255,255,255,.55);color:#663c06;border-radius:999px;padding:3px 12px;font-size:13px;font-weight:600;cursor:pointer">結束範例</button></div>
+<header style="position:static">
   <div id="hBoard" style="display:none;text-align:center;flex:0 0 auto;padding-right:12px;margin-right:12px;border-right:1px solid rgba(255,255,255,.32)">
     <div id="hBoardNum" style="font-size:34px;font-weight:700;line-height:.95;color:#fff"></div>
     <div id="hBoardCap" style="font-size:10px;letter-spacing:2px;color:#cfe0fb">DAYS</div>
@@ -375,6 +377,7 @@ details.tsec>.tbody{padding:2px 1px 15px}
     <div class="hq" id="hHelp" title="使用說明">❓</div>
   </div>
 </header>
+</div>
 
 <section id="v-ledger" class="act">
   <div class="dash" id="ledgerSum"></div>
@@ -542,8 +545,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 47;
-var VER = 'T0712-07';
+var CODE_VERSION = 48;
+var VER = 'T0712-08';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -864,6 +867,8 @@ function cdBannerHtml(t){
 }
 function renderAll(){
   var t = trip();
+  var _dBar = document.getElementById('demoBar');
+  if(_dBar) _dBar.style.display = (t && t._demo) ? 'flex' : 'none';
   document.getElementById('hName').textContent = t ? (t.name + (landmark(t.name) ? ' ' + landmark(t.name) : '')) : '旅遊分帳';
   var hd = '';
   if(t && t.startDate){
@@ -1664,7 +1669,7 @@ function renderLedger(){
   });
   var html = rows ? '<div class="card" style="padding:2px 12px">' + rows + '</div>' : '';
   var divSeg = (t.legs && t.legs.length) ? '<div class="seg" style="margin:2px 4px 8px"><span data-div="ym"' + (S.divMode !== 'leg' ? ' class="on"' : '') + '>年月</span><span data-div="leg"' + (S.divMode === 'leg' ? ' class="on"' : '') + '>所在地</span></div>' : '';
-  list.innerHTML = demoBanner() + banner + myCard + divSeg + '<div class="hint" style="margin:2px 4px 6px">點整列＝編輯｜👈 往左滑刪除</div>' + html;
+  list.innerHTML = banner + myCard + divSeg + '<div class="hint" style="margin:2px 4px 6px">點整列＝編輯｜👈 往左滑刪除</div>' + html;
   list.querySelectorAll('[data-div]').forEach(function(el){ el.onclick = function(){ S.divMode = el.dataset.div; saveLocal(); renderLedger(); }; });
   var ax = document.getElementById('a2hsX');
   if(ax) ax.onclick = function(){ S.dismiss['a2hs'] = true; saveLocal(); renderLedger(); };
@@ -2130,7 +2135,7 @@ function renderSettle(){
     '<div style="font-size:12.5px;color:var(--tx2);margin-bottom:4px">旅程總結（花費統計）</div>' +
     '<div class="row"><button class="btn sub mini" id="btnReport" style="flex:1">📋 複製報告</button><button class="btn mini fix" id="btnRepImg">🖼 存成圖片</button></div>' +
     '<div class="hint" style="margin-top:8px">CSV 明細在「旅程 → 備份與匯出」。</div></div>';
-  box.innerHTML = demoBanner() + html;
+  box.innerHTML = html;
   box.querySelectorAll('[data-tbv]').forEach(function(el){
     el.onclick = function(){ S.tblView = el.dataset.tbv; saveLocal(); renderSettle(); };
   });
@@ -2535,7 +2540,7 @@ function renderStats(){
     html += '</div>';
   }
   html += '<div class="hint" style="text-align:center;padding:4px 0">金額皆為 ' + t.home + '，🔒 私人帳只算進你自己這台的統計</div>';
-  box.innerHTML = demoBanner() + html;
+  box.innerHTML = html;
   box.querySelectorAll('[data-cv]').forEach(function(el){
     el.onclick = function(){ S.chartView = el.dataset.cv; saveLocal(); renderStats(); };
   });
@@ -3408,11 +3413,6 @@ function clearDemo(){
   if(S.cur === DEMO_CODE) S.cur = closestActiveTripCode() || '';
   saveLocal(); renderAll(); go('trip');
 }
-function demoBanner(){
-  var t = trip();
-  if(!t || !t._demo) return '';
-  return '<div class="banner" style="background:var(--accBg);border:1px solid var(--acc)"><span class="bt" style="color:var(--accTx)">🧪 範例旅程（只能看）· 看帳本／結算／統計怎麼運作</span><button class="bx" style="width:auto;padding:4px 10px;color:var(--acc)" onclick="clearDemo()">結束範例</button></div>';
-}
 
 /* ───── 雲端 ───── */
 function startListen(){
@@ -3486,6 +3486,7 @@ function closestActiveTripCode(){
 (function init(){
   applyTheme();
   try{ var _jm = new URLSearchParams(location.search).get('join'); if(_jm){ _pendingJoin = _jm.trim().toUpperCase(); history.replaceState(null, '', location.pathname); } }catch(e){}
+  document.getElementById('demoExit').onclick = clearDemo;
   document.getElementById('eCur').innerHTML = CURS.map(function(c){ return '<option>' + c + '</option>'; }).join('');
   document.getElementById('eConvCur').innerHTML = CURS.map(function(c){ return '<option>' + c + '</option>'; }).join('');
   document.getElementById('eDate').onchange = function(){
@@ -3658,4 +3659,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-07 deploy -->
+<!-- T0712-08 deploy -->
