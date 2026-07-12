@@ -542,8 +542,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 46;
-var VER = 'T0712-06';
+var CODE_VERSION = 47;
+var VER = 'T0712-07';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -2587,7 +2587,7 @@ function renderTrip(){
       '<div class="wbtn" id="wJoin"><b>🔑 用代碼加入旅程</b><div class="hint" style="margin-top:3px">旅伴已建好，向他要 6 碼旅程代碼</div>' +
       '<div class="row" id="wJoinForm" style="display:none;margin-top:10px"><input type="text" id="joinCode" placeholder="輸入 6 碼代碼" style="text-transform:uppercase"><button class="btn sub mini fix" id="btnJoin">加入</button></div></div>' +
       '<button class="btn sub mini" id="btnHelp2" style="margin-top:16px">❓ 使用說明</button>' +
-      '<button class="btn sub mini" id="btnDemo" style="margin-top:8px">👀 先看範例（免註冊、只能看）</button></div>';
+      '<button class="btn sub mini" id="btnDemo" style="margin-top:8px">📖 看範例（免註冊、只能看）</button></div>';
     function wTog(boxId, formId, otherId, inpId){
       document.getElementById(boxId).onclick = function(ev){
         if(ev.target.closest('#' + formId)) return;
@@ -2792,7 +2792,8 @@ function renderTrip(){
   var lh = '<div class="lbl">用代碼加入旅伴的旅程</div>' +
     '<div class="fbtn"><input type="text" id="joinCode" placeholder="輸入 6 碼旅程代碼" style="text-transform:uppercase"><button class="fba" id="btnJoin">加入</button></div>' +
     '<div class="lbl" style="margin-top:10px">建立新旅程</div>' +
-    '<div class="fbtn"><input type="text" id="newTripName" placeholder="旅程名稱，例：東京行"><button class="fba" id="btnNewTrip">建立</button></div>';
+    '<div class="fbtn"><input type="text" id="newTripName" placeholder="旅程名稱，例：東京行"><button class="fba" id="btnNewTrip">建立</button></div>' +
+    '<button class="btn sub mini" id="btnDemo2" style="margin-top:10px;width:100%">📖 看範例（免註冊、只能看）</button>';
   if(act.length > 1 || (act.length >= 1 && !t)){
     lh += '<div class="lbl" style="margin-top:10px">切換旅程（依開始日期新→舊）</div><div class="chips">' +
       act.map(function(c){ return '<span class="chip' + (S.cur === c ? ' on' : '') + '" data-sw="' + c + '">' + esc(S.trips[c].name) + (S.trips[c].startDate ? ' <span style="font-size:10px;color:var(--tx3)">' + S.trips[c].startDate.slice(5).replace('-','/') + '</span>' : '') + '</span>'; }).join('') + '</div>';
@@ -3087,6 +3088,8 @@ function renderTrip(){
   if(bNew) bNew.onclick = createTrip;
   var bJoin = document.getElementById('btnJoin');
   if(bJoin) bJoin.onclick = joinTrip;
+  var bDemo2 = document.getElementById('btnDemo2');
+  if(bDemo2) bDemo2.onclick = loadDemo;
   tb.querySelectorAll('[data-sw]').forEach(function(el){
     el.onclick = function(){ S.cur = el.dataset.sw; F = null; editId = null; _convCur = null; startListen(); save(); toast('已切換'); };
   });
@@ -3655,4 +3658,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-06 deploy -->
+<!-- T0712-07 deploy -->
