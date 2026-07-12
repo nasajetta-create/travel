@@ -139,8 +139,8 @@ section.act{display:block}
 .card{background:var(--card);border:1px solid var(--cardBd);border-radius:16px;padding:12px;margin-bottom:10px;box-shadow:var(--shadow)}
 .dash{background:var(--dash);border:1px solid var(--cardBd);border-radius:16px;padding:12px 14px;margin-bottom:10px}
 .dash .drow{display:flex;gap:16px;flex-wrap:wrap}
-.dash .dl{font-size:11.5px;color:var(--dashTx2);margin:0}
-.dash .dv{font-size:18px;font-weight:700;color:var(--dashTx);margin:0}
+.dash .dl{font-size:16px;color:var(--dashTx2);margin:0}
+.dash .dv{font-size:19px;font-weight:700;color:var(--dashTx);margin:0}
 .dash .dv.acc{color:var(--dashAcc)}
 .dash .dv.warn{color:#FCD34D}
 .dash .dtag{font-size:10px;background:var(--dashBar);color:var(--dashTx);padding:2px 8px;border-radius:9px}
@@ -547,8 +547,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 56;
-var VER = 'T0712-16';
+var CODE_VERSION = 57;
+var VER = 'T0712-17';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -585,7 +585,8 @@ var IC = {
   gift:'<rect x="4" y="9" width="16" height="11" rx="1"/><path d="M4 13h16"/><path d="M12 9v11"/><path d="M12 9C10.3 9 8.5 8.2 8.5 6.7A2.2 2.2 0 0 1 12 6a2.2 2.2 0 0 1 3.5.7C15.5 8.2 13.7 9 12 9z"/>',
   card:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>',
   book:'<path d="M5 5a2 2 0 0 1 2-2h11v14H7a2 2 0 0 0-2 2z"/><path d="M9 8h6"/>',
-  key:'<circle cx="8" cy="14" r="4"/><path d="M11 11l8-8"/><path d="M16 6l3 3"/><path d="M18.5 8.5l2-2"/>'
+  key:'<circle cx="8" cy="14" r="4"/><path d="M11 11l8-8"/><path d="M16 6l3 3"/><path d="M18.5 8.5l2-2"/>',
+  cash:'<rect x="3" y="7" width="18" height="10" rx="2"/><circle cx="12" cy="12" r="2.3"/><path d="M6 7v10M18 7v10"/>'
 };
 var CURS = ['JPY','TWD','USD','KRW','EUR','THB','VND','CNY','HKD','SGD','MYR','GBP','AUD','IDR','PHP','CAD','CHF'];
 var WD = ['日','一','二','三','四','五','六'];
@@ -1578,7 +1579,7 @@ function renderLedger(){
   var pes = privList().filter(function(e){ return !e._del; });
   var total = 0, ptotal = 0, today = 0, tday = todayISO(), minD = null;
   ges.forEach(function(e){ if(e.kind === 'loan'){ if(!minD || e.date < minD) minD = e.date; return; } var h = homeAmt(e); total += h; if(e.date === tday) today += h; if(!minD || e.date < minD) minD = e.date; });
-  pes.forEach(function(e){ var h = homeAmt(e); ptotal += h; if(e.date === tday) today += h; if(!minD || e.date < minD) minD = e.date; });
+  pes.forEach(function(e){ var h = homeAmt(e); ptotal += h; if(!minD || e.date < minD) minD = e.date; });
   var ft = fundTotals(t);
   var dayN = '';
   var base = t.startDate || minD;
@@ -1614,17 +1615,17 @@ function renderLedger(){
     }
   }
   var lcols = [
-    '<div class="dcol"><p class="dl">今日（含私人）</p><p class="dv acc">' + money(t.home, today) + '</p></div>',
-    '<div class="dcol"><p class="dl">團體總支出</p><p class="dv">' + money(t.home, total) + '</p></div>'
+    '<div class="dcol"><p class="dl">今日</p><p class="dv acc">' + money(t.home, today) + '</p></div>',
+    '<div class="dcol" style="flex:1.4"><p class="dl">團體總支出</p><p class="dv" style="display:inline-flex;align-items:center;gap:7px;justify-content:center"><span>' + money(t.home, total) + '</span><span style="width:1px;height:15px;background:var(--dashBar);display:inline-block"></span><span style="font-size:11px;font-weight:400;opacity:.8">' + (ges.length + pes.length) + '筆·' + t.members.length + '人</span></p></div>'
   ];
   if(pes.length) lcols.push('<div class="dcol"><p class="dl">' + btnIco(IC.lock) + '我的私人</p><p class="dv">' + money(t.home, ptotal) + '</p></div>');
   if(ft.fin > 0) lcols.push('<div class="dcol"><p class="dl">' + btnIco(IC_BANK) + '基金餘額</p><p class="dv' + (ft.bal < 0 ? ' warn' : '') + '">' + money(t.home, ft.bal) + '</p></div>');
   if(MU && myAll){
     lcols.push(myUnpaid > 0.5
-      ? '<div class="dcol" id="dashUnpaid" style="cursor:pointer"><p class="dl">💸 我還要付</p><p class="dv" style="color:#FCA5A5">' + money(t.home, myUnpaid) + '</p></div>'
-      : '<div class="dcol"><p class="dl">💸 我還要付</p><p class="dv acc">✅ 已結清</p></div>');
+      ? '<div class="dcol" id="dashUnpaid" style="cursor:pointer"><p class="dl">我還要付</p><p class="dv" style="color:#FCA5A5">' + money(t.home, myUnpaid) + '</p></div>'
+      : '<div class="dcol"><p class="dl">我還要付</p><p class="dv acc">✅ 已結清</p></div>');
   } else if(!MU && t.members.length){
-    lcols.push('<div class="dcol" id="dashSetMe" style="cursor:pointer"><p class="dl">💸 我還要付</p><p class="dv" style="font-size:12px;color:var(--dashTx2)">未設定我是誰<br>點此設定 →</p></div>');
+    lcols.push('<div class="dcol" id="dashSetMe" style="cursor:pointer"><p class="dl">我還要付</p><p class="dv" style="font-size:12px;color:var(--dashTx2)">未設定我是誰<br>點此設定 →</p></div>');
   }
   var h1 = '<div style="display:flex;flex:1;min-width:0">' + lcols.join('<div class="divv"></div>') + '</div>';
   var bud = t.budget || {};
@@ -1640,7 +1641,6 @@ function renderLedger(){
     h1 += '<div class="dbar' + (overd ? ' over' : '') + '"><div style="width:' + pcd + '%"></div></div>' +
       '<p class="dnote">今日預算 ' + fmt(bd) + '｜' + (overd ? '超支 ' + fmt(today - bd) : '剩 ' + fmt(bd - today)) + '</p>';
   }
-  h1 += '<p class="dnote">' + (ges.length + pes.length) + ' 筆 · ' + t.members.length + ' 人</p>';
   sum.innerHTML = h1;
   var du = document.getElementById('dashUnpaid');
   if(du) du.onclick = function(){ go('settle'); };
@@ -1648,7 +1648,7 @@ function renderLedger(){
   if(dm) dm.onclick = function(){ go('trip'); toast('到「我是誰」點自己的徽章'); };
   var banner = '';
   var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
-  if(!standalone && location.protocol.indexOf('http') === 0 && !S.dismiss['a2hs']){
+  if(!standalone && location.protocol.indexOf('http') === 0 && !S.dismiss['a2hs'] && !_a2hsGone){
     banner += '<div class="banner"><span class="bt">📲 加入主畫面更好用：iPhone＝Safari 分享鍵→加入主畫面；Android＝選單→安裝應用程式</span>' +
       '<button class="bx" id="a2hsX">✕</button></div>';
   }
@@ -1712,6 +1712,8 @@ function renderLedger(){
   list.querySelectorAll('[data-div]').forEach(function(el){ el.onclick = function(){ S.divMode = el.dataset.div; saveLocal(); renderLedger(); }; });
   var ax = document.getElementById('a2hsX');
   if(ax) ax.onclick = function(){ S.dismiss['a2hs'] = true; saveLocal(); renderLedger(); };
+  var _abn = list.querySelector('.banner');
+  if(_abn){ setTimeout(function(){ if(_abn){ _abn.style.transition = 'opacity .5s'; _abn.style.opacity = '0'; setTimeout(function(){ _a2hsGone = true; if(_abn) _abn.style.display = 'none'; }, 500); } }, 10000); }
   bindPay(list, renderLedger);
   list.querySelectorAll('.lrow[data-eid]').forEach(function(el){ bindSwipeRow(el); });
 }
@@ -2492,8 +2494,8 @@ function renderStats(){
   });
   html += '</div>';
   html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">付款方式</div>' +
-    '<div class="sumrow"><span>💵 現金</span><b>' + t.home + ' ' + fmt(cash) + '</b></div>' +
-    '<div class="sumrow"><span>💳 信用卡（含手續費）</span><b>' + t.home + ' ' + fmt(card) + '</b></div>' +
+    '<div class="sumrow"><span>' + btnIco(IC.cash) + '現金</span><b>' + t.home + ' ' + fmt(cash) + '</b></div>' +
+    '<div class="sumrow"><span>' + btnIco(IC.card) + '信用卡（含手續費）</span><b>' + t.home + ' ' + fmt(card) + '</b></div>' +
     (fund > 0 ? '<div class="sumrow"><span>' + btnIco(IC_BANK) + '共同基金</span><b>' + t.home + ' ' + fmt(fund) + '</b></div>' : '') +
     '<div class="hint" style="margin-top:4px">回國對信用卡帳單用刷卡合計核對。</div></div>';
   var days = Object.keys(byDay).sort();
@@ -2504,7 +2506,7 @@ function renderStats(){
     html += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center">' +
       '<span class="lbl" style="margin:0;font-weight:600;color:var(--tx)">每日支出</span>' +
       '<span class="cseg" id="cvSeg">' +
-      [['bar','📊'],['stack','🧱'],['donut','🍩'],['heat','🗓️']].map(function(v){ return '<span data-cv="' + v[0] + '"' + (cv === v[0] ? ' class="on"' : '') + '>' + v[1] + '</span>'; }).join('') +
+      [['bar','<path d="M4 20h16"/><path d="M6 20V11"/><path d="M12 20V4"/><path d="M18 20v-8"/>'],['stack','<rect x="4" y="4" width="16" height="5" rx="1"/><rect x="4" y="11" width="16" height="5" rx="1"/><path d="M4 20h16"/>'],['donut','<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.3"/>'],['heat','<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/>']].map(function(v){ return '<span data-cv="' + v[0] + '"' + (cv === v[0] ? ' class="on"' : '') + '>' + svgi(v[1], 20) + '</span>'; }).join('') +
       '</span></div>';
     if(cv === 'bar'){
       html += '<div class="cols">';
@@ -2664,10 +2666,10 @@ function renderTrip(){
     var isEmptyTrip = !t.expenses.some(function(e){ return !e._del; }) && !(t.fund || []).some(function(c){ return !c._del; });
     html += '<div class="codebox" style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;color:var(--accTx)">旅程代碼</span><b>' + t.code + '</b>' +
       '<button class="btn sub mini" id="btnCpCode" style="margin-left:auto">複製</button></div>' +
-      '<div class="row" style="margin-top:8px"><button class="btn sub mini" id="btnArc" style="flex:1">' + (t.archived ? btnIco(IC.restore) + '還原' : btnIco(IC.arch) + '封存') + '</button>' +
+      '<div style="display:flex;margin-top:8px;border:0.5px solid var(--inBd);border-radius:12px;overflow:hidden"><button class="btn sub mini" id="btnArc" style="flex:1;border:none;border-radius:0">' + (t.archived ? btnIco(IC.restore) + '還原' : btnIco(IC.arch) + '封存') + '</button>' +
       (isEmptyTrip
-        ? '<button class="btn sub mini" id="btnDelTrip" style="flex:1;color:var(--danger)">' + btnIco(IC.trash) + '刪除旅程</button>'
-        : '<button class="btn sub mini" id="btnRmLocal" style="flex:1">' + btnIco(IC.logout) + '移除</button><button class="btn sub mini" id="btnDelTrip" style="flex:1;color:var(--danger)">' + btnIco(IC.trash) + '整團刪除</button>') +
+        ? '<button class="btn sub mini" id="btnDelTrip" style="flex:1;border:none;border-radius:0;border-left:0.5px solid var(--inBd);color:var(--danger)">' + btnIco(IC.trash) + '刪除旅程</button>'
+        : '<button class="btn sub mini" id="btnRmLocal" style="flex:1;border:none;border-radius:0;border-left:0.5px solid var(--inBd)">' + btnIco(IC.logout) + '移除</button><button class="btn sub mini" id="btnDelTrip" style="flex:1;border:none;border-radius:0;border-left:0.5px solid var(--inBd);color:var(--danger)">' + btnIco(IC.trash) + '整團刪除</button>') +
       '</div>' +
       '<div class="hint" style="margin-top:5px">代碼給旅伴（旅程計畫→用代碼加入）。' + (isEmptyTrip ? '刪除＝誤建可直接刪。' : '移除＝只清這支手機、可再加入；整團刪除＝連雲端刪、無法復原。') + '</div>' +
       '<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px"></div>' +
@@ -3392,6 +3394,7 @@ function createTrip(){
   toast('已建立「' + name + '」，先去新增成員');
 }
 var _pendingJoin = '';
+var _a2hsGone = false;
 function joinByCode(code){
   code = (code || '').trim().toUpperCase();
   if(!code){ toast('請輸入代碼'); return; }
@@ -3699,4 +3702,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-16 deploy -->
+<!-- T0712-17 deploy -->
