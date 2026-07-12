@@ -131,7 +131,8 @@ body{font-family:system-ui,-apple-system,"Noto Sans TC","Microsoft JhengHei",san
 #wrap{max-width:520px;margin:0 auto;min-height:100vh}
 header{position:sticky;top:0;z-index:10;background:var(--hdr);color:var(--hdrTx);padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
 header .hname{font-size:17px;font-weight:600}
-header .hsync{font-size:12px;background:rgba(255,255,255,.16);padding:2px 8px;border-radius:10px}
+header .hsync{font-size:12px;background:rgba(255,255,255,.16);padding:3px 9px;border-radius:10px;display:inline-flex;align-items:center;gap:4px}
+header .hsync svg{width:14px;height:14px;flex:0 0 auto}
 header .hq{font-size:13px;background:rgba(255,255,255,.16);width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;margin-left:6px}
 section{display:none;padding:12px 12px 90px}
 section.act{display:block}
@@ -546,8 +547,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 50;
-var VER = 'T0712-10';
+var CODE_VERSION = 51;
+var VER = 'T0712-11';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -912,11 +913,15 @@ function renderAll(){
     if(v==='ledger') renderLedger(); else if(v==='settle') renderSettle(); else if(v==='stats') renderStats(); else if(v==='trip') renderTrip(); else if(v==='add') renderAdd(); else if(v==='help') renderHelp(); }
 }
 var _pendSync = false;
+function syncIco(p){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>'; }
 function renderSync(){
   var el = document.getElementById('hSync');
-  if(!(window._cloud && window._cloud.ready)){ el.textContent = '📴 本機'; return; }
-  if(typeof navigator.onLine === 'boolean' && !navigator.onLine){ el.textContent = '📴 離線（暫存本機）'; return; }
-  el.textContent = _pendSync ? '⏳ 同步中…' : '☁️ 已同步';
+  var OFF = '<path d="M3 3l18 18"/><path d="M6.7 9.2A4.5 4.5 0 0 1 16 8.7"/><path d="M18.6 12A3.5 3.5 0 0 1 18 19H8"/>';
+  var REF = '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v6h-6"/>';
+  var CHK = '<path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.4A3.4 3.4 0 0 1 17 18H7z"/><path d="M9.3 14l1.8 1.8 3.4-3.4"/>';
+  if(!(window._cloud && window._cloud.ready)){ el.innerHTML = syncIco(OFF) + '本機'; return; }
+  if(typeof navigator.onLine === 'boolean' && !navigator.onLine){ el.innerHTML = syncIco(OFF) + '離線（暫存本機）'; return; }
+  el.innerHTML = _pendSync ? (syncIco(REF) + '同步中…') : (syncIco(CHK) + '已同步');
 }
 function renderHelp(){
   var q = (document.getElementById('helpQ').value || '').trim().toLowerCase();
@@ -1628,7 +1633,7 @@ function renderLedger(){
     myCard = buildPayCard(t, Ms, true);
   }
   var es = ges.concat(pes);
-  if(!es.length){ list.innerHTML = banner + myCard + '<div class="empty">還沒有記帳<br>按下面「➕ 記一筆」開始</div>'; return; }
+  if(!es.length){ list.innerHTML = banner + myCard + '<div class="empty" style="padding:26px 14px"><svg viewBox="0 0 64 64" width="68" height="68" fill="none" stroke="var(--tx3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block"><path d="M16 8h24l8 8v40H16z"/><path d="M40 8v8h8"/><path d="M23 30h18M23 38h18M23 46h10"/></svg><div style="font-size:15px;font-weight:500;color:var(--tx);margin-bottom:3px">還沒有記帳</div><div style="font-size:13px;color:var(--tx2);margin-bottom:14px">按下面「＋ 記一筆」開始，回國自動算好誰轉誰</div><button class="btn" style="width:auto;padding:9px 20px" onclick="goAdd()">＋ 記一筆</button></div>'; return; }
   es.sort(function(a,b){ if(a.date !== b.date) return a.date > b.date ? -1 : 1; return (b._mt||0) - (a._mt||0); });
   var dayTot = {};
   es.forEach(function(e){ dayTot[e.date] = (dayTot[e.date] || 0) + homeAmt(e); });
@@ -2594,8 +2599,8 @@ function renderTrip(){
     '<div class="hint" style="margin-top:5px">上排＝深淺色、下排＝主題配色，只影響這支手機。</div>';
   if(!Object.keys(S.trips).length){
     tb.innerHTML = '<div class="card" style="text-align:center;padding:26px 16px 20px">' +
-      '<div style="font-size:42px;line-height:1">🧳</div>' +
-      '<div style="font-size:20px;font-weight:800;margin:8px 0 2px">開始旅遊分帳</div>' +
+      '<svg viewBox="0 0 64 64" width="66" height="66" fill="none" stroke="var(--acc)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block"><path d="M24 20V14a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v6"/><rect x="12" y="20" width="40" height="30" rx="4"/><path d="M32 20v30"/></svg>' +
+      '<div style="font-size:20px;font-weight:500;margin:4px 0 2px">開始旅遊分帳</div>' +
       '<div class="hint">和旅伴共享帳本，自動算好誰該轉多少給誰</div>' +
       '<div class="wbtn" id="wNew"><b>🆕 建立新旅程</b><div class="hint" style="margin-top:3px">我是發起人，建好後把「旅程代碼」給旅伴</div>' +
       '<div class="row" id="wNewForm" style="display:none;margin-top:10px"><input type="text" id="newTripName" placeholder="旅程名稱，例：東京行"><button class="btn mini fix" id="btnNewTrip">建立</button></div></div>' +
@@ -2833,9 +2838,9 @@ function renderTrip(){
       '<button class="btn sub mini" id="btnNewTrip2">＋ 新增</button></div>' +
       (tripCD(t) && tripCD(t).state === 'nodate' ? '<div class="card" style="text-align:center;padding:10px"><span data-cdnodate="1" style="color:var(--warnTx);font-size:13px;cursor:pointer">⚠️ 未設日期 › 點我去設定</span></div>' : '');
   } else {
-    tripBar = '<div class="card" style="text-align:center;padding:20px 16px 16px">' +
-      '<div style="font-size:34px;line-height:1">🧳</div>' +
-      '<div style="font-size:18px;font-weight:800;margin:6px 0 2px">目前沒有進行中的旅程</div>' +
+    tripBar = '<div class="card" style="text-align:center;padding:22px 16px 16px">' +
+      '<svg viewBox="0 0 64 64" width="60" height="60" fill="none" stroke="var(--tx3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block"><path d="M24 20V14a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v6"/><rect x="12" y="20" width="40" height="30" rx="4"/><path d="M32 20v30"/></svg>' +
+      '<div style="font-size:17px;font-weight:500;margin:2px 0 2px">目前沒有進行中的旅程</div>' +
       '<div class="hint">在下方「旅程計畫」建立新旅程，或到「已結束旅程」還原</div></div>';
   }
   html = tripBar + (SEC.oth||'') + (SEC.set||'') + (SEC.mem||'') + (SEC.fund||'') + (SEC.look||'') + (SEC.bak||'');
@@ -3669,4 +3674,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-10 deploy -->
+<!-- T0712-11 deploy -->
