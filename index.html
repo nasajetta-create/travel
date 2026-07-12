@@ -256,8 +256,9 @@ details.day[open]>summary .arr{transform:rotate(90deg);display:inline-block}
 details.day .dbody{padding:0 12px 11px}
 nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
 nav button{flex:1;border:none;background:none;padding:8px 0 7px;font-size:12px;color:var(--tx3);cursor:pointer}
-nav button .nico{display:block;font-size:21px;margin-bottom:1px}
-nav button.on{color:var(--acc);font-weight:700}
+nav button .nico{display:block;font-size:21px;margin-bottom:2px}
+nav button .nico svg{display:block;margin:0 auto;width:23px;height:23px}
+nav button.on{color:var(--acc);font-weight:500}
 .mgrp{border-bottom:1px dashed var(--line);padding:7px 0}
 .mrow{display:flex;gap:6px;align-items:center}
 .mrow input{padding:7px 8px;font-size:14px}
@@ -364,7 +365,7 @@ details.tsec>.tbody{padding:2px 1px 15px}
 <div id="demoBar" style="display:none;background:#f0b429;color:#663c06;align-items:center;justify-content:space-between;padding:6px 14px;font-size:13px;font-weight:600"><span>🧪 範例旅程（只能看）</span><button id="demoExit" style="border:none;background:rgba(255,255,255,.55);color:#663c06;border-radius:999px;padding:3px 12px;font-size:13px;font-weight:600;cursor:pointer">結束範例</button></div>
 <header style="position:static">
   <div id="hBoard" style="display:none;text-align:center;flex:0 0 auto;padding-right:12px;margin-right:12px;border-right:1px solid rgba(255,255,255,.32)">
-    <div id="hBoardNum" style="font-size:34px;font-weight:700;line-height:.95;color:#fff"></div>
+    <div id="hBoardNum" style="font-size:34px;font-weight:500;line-height:.95;color:#fff"></div>
     <div id="hBoardCap" style="font-size:10px;letter-spacing:2px;color:#cfe0fb">DAYS</div>
   </div>
   <div style="min-width:0;flex:1">
@@ -374,7 +375,7 @@ details.tsec>.tbody{padding:2px 1px 15px}
   </div>
   <div style="display:flex;align-items:center;flex:0 0 auto">
     <div class="hsync" id="hSync">本機</div>
-    <div class="hq" id="hHelp" title="使用說明">❓</div>
+    <div class="hq" id="hHelp" title="使用說明"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 9a2.8 2.8 0 0 1 5.4 1c0 1.9-2.8 2.1-2.8 4"/><path d="M12 17.5h.01"/></svg></div>
   </div>
 </header>
 </div>
@@ -463,11 +464,11 @@ details.tsec>.tbody{padding:2px 1px 15px}
 </section>
 
 <nav>
-  <button id="nb-add" onclick="goAdd()"><span class="nico">➕</span>記一筆</button>
-  <button id="nb-ledger" class="on" onclick="go('ledger')"><span class="nico">📒</span>帳本</button>
-  <button id="nb-settle" onclick="go('settle')"><span class="nico">⚖️</span>結算</button>
-  <button id="nb-stats" onclick="go('stats')"><span class="nico">📊</span>統計</button>
-  <button id="nb-trip" onclick="go('trip')"><span class="nico">🧳</span>旅程</button>
+  <button id="nb-add" onclick="goAdd()"><span class="nico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg></span>記一筆</button>
+  <button id="nb-ledger" class="on" onclick="go('ledger')"><span class="nico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h13V3z"/><path d="M9 7h7"/><path d="M9 11h5"/></svg></span>帳本</button>
+  <button id="nb-settle" onclick="go('settle')"><span class="nico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15"/><path d="M8 19h8"/><path d="M5 8l7-2 7 2"/><path d="M3 13a2 2 0 0 0 4 0l-2-5z"/><path d="M17 13a2 2 0 0 0 4 0l-2-5z"/></svg></span>結算</button>
+  <button id="nb-stats" onclick="go('stats')"><span class="nico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M6 20V11"/><path d="M12 20V4"/><path d="M18 20v-6"/></svg></span>統計</button>
+  <button id="nb-trip" onclick="go('trip')"><span class="nico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4c.7 0 1.1 1.2 1.1 2.8v3l7.4 4.3v1.7l-7.4-2.1v3.2l1.9 1.4v1.3l-3-.9-3 .9v-1.3l1.9-1.4v-3.2L3.5 15.8v-1.7l7.4-4.3v-3C10.9 5.2 11.3 4 12 4z"/></svg></span>旅程</button>
 </nav>
 <button id="fabBack" style="display:none;position:fixed;top:76px;right:12px;z-index:30;border:none;border-radius:20px;padding:9px 15px;font-size:14px;font-weight:600;background:var(--card);color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.25);cursor:pointer">✕ 返回不儲存</button>
 <div id="toast"></div>
@@ -545,8 +546,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 49;
-var VER = 'T0712-09';
+var CODE_VERSION = 50;
+var VER = 'T0712-10';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -878,8 +879,6 @@ function renderAll(){
   var t = trip();
   var _dBar = document.getElementById('demoBar');
   if(_dBar) _dBar.style.display = (t && t._demo) ? 'flex' : 'none';
-  var _navTrip = document.querySelector('#nb-trip .nico');
-  if(_navTrip) _navTrip.textContent = t ? tripIcon(t) : '🧭';
   document.getElementById('hName').textContent = t ? (t.name + (landmark(t.name) ? ' ' + landmark(t.name) : '')) : '旅遊分帳';
   var hd = '';
   if(t && t.startDate){
@@ -2828,7 +2827,7 @@ function renderTrip(){
   if(t){
     tripBar = '<div class="card" style="display:flex;align-items:center;gap:10px;padding:10px 12px">' +
       '<span style="font-size:30px;line-height:1;flex:0 0 auto">' + tripIcon(t) + '</span>' +
-      '<div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(t.name) + '</div>' +
+      '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(t.name) + '</div>' +
       '<div class="hint" style="margin:0">進行中 ' + act.length + (arc.length ? ' · 已結束 ' + arc.length : '') + '</div></div>' +
       '<button class="btn sub mini" id="btnSwTrip">⇄ 切換</button>' +
       '<button class="btn sub mini" id="btnNewTrip2">＋ 新增</button></div>' +
@@ -3670,4 +3669,4 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-09 deploy -->
+<!-- T0712-10 deploy -->
