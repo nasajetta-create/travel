@@ -520,6 +520,17 @@ details.tsec>.tbody{padding:2px 1px 15px}
   <div id="presetList" style="max-height:340px;overflow-y:auto"></div>
   <div class="row" style="margin-top:12px"><button class="btn mini" id="presetGo" style="flex:1">加入勾選的項目</button><button class="btn sub mini" id="presetClose" style="flex:1">取消</button></div>
 </div></div>
+<div class="modal" id="rcpModal"><div class="mbox" style="max-width:460px">
+  <div style="font-size:16px;font-weight:600;margin-bottom:2px">逐品項拆單</div>
+  <div class="hint" id="rcpMeta" style="margin-bottom:8px"></div>
+  <div class="lbl">付款人（整張同一人）</div>
+  <div class="chips" id="rcpPayer" style="margin-bottom:10px"></div>
+  <div class="lbl">預設分攤 <span style="color:var(--tx3);font-weight:400">（套到沒單獨設定的品項）</span></div>
+  <div class="chips" id="rcpDef" style="margin-bottom:8px"></div>
+  <div id="rcpItemList" style="max-height:42vh;overflow-y:auto;border-top:1px solid var(--line);padding-top:6px"></div>
+  <div class="hint" id="rcpSum" style="margin-top:8px;min-height:18px"></div>
+  <div class="row" style="margin-top:10px"><button class="btn mini" id="rcpGo" style="flex:1">建立</button><button class="btn sub mini" id="rcpClose" style="flex:1">取消</button></div>
+</div></div>
 <div id="updBar" style="display:none;position:fixed;bottom:64px;left:50%;transform:translateX(-50%);z-index:40;background:var(--acc);color:var(--accOn);border-radius:20px;padding:9px 18px;font-size:14px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.3);cursor:pointer"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v6h-6"/></svg>有新版本，點此更新</div>
 <div class="modal" id="acctModal"><div class="mbox">
   <div id="amTitle" style="font-size:16px;font-weight:600;margin-bottom:6px"></div>
@@ -555,8 +566,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 59;
-var VER = 'T0720-01';
+var CODE_VERSION = 60;
+var VER = 'T0720-02';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -1025,21 +1036,122 @@ function handleReceipt(file){
     if(R.currency && /^[A-Za-z]{3}$/.test(R.currency)){ F.cur = R.currency.toUpperCase(); F.rate = ''; filled.push('幣別'); }
     if(R.amount != null && !isNaN(Number(R.amount)) && Number(R.amount) > 0){ F.amt = String(Number(R.amount)); filled.push('金額'); }
     if(R.category && catInfo(R.category)[0] === R.category){ F.cat = R.category; filled.push('類別'); }
+    var rit = (R.items || []).filter(function(it){ return it && it.name && Number(it.amount) > 0; }).map(function(it){
+      return { name: String(it.name).slice(0, 20), amt: Number(it.amount), cat: (it.category && catInfo(it.category)[0] === it.category) ? it.category : F.cat };
+    });
+    F._rcpItems = rit;
     _receiptBusy = false;
     renderAdd();
     autoRate(false);
-    if(filled.length){
-      _receiptSt('var(--warnTx)', '<b>AI 已填：' + filled.join('、') + '</b>，請核對金額與幣別再儲存（付款人與分攤仍要自己選）');
-      toast('已辨識，請確認後儲存');
-    } else {
-      _receiptSt('var(--tx2)', '辨識不到清楚欄位，請手動輸入');
-      toast('沒抓到欄位，改用手動');
-    }
+    var msg = filled.length ? ('<b>AI 已填：' + filled.join('、') + '</b>，請核對金額與幣別再儲存（付款人、分攤自己選）') : '辨識不到清楚欄位，請手動輸入';
+    if(rit.length >= 2){ msg += '<div style="margin-top:7px"><a id="rcpSplitLink" style="color:var(--acc);cursor:pointer">＋ 或逐品項拆單（辨識到 ' + rit.length + ' 項）›</a></div>'; }
+    _receiptSt(filled.length ? 'var(--warnTx)' : 'var(--tx2)', msg);
+    if(rit.length >= 2){ var _sl = document.getElementById('rcpSplitLink'); if(_sl) _sl.onclick = openReceiptItems; }
+    toast(filled.length ? '已辨識，請確認後儲存' : '沒抓到欄位，改用手動');
   }).catch(function(e){
     _receiptBusy = false;
     _receiptSt('#c0392b', '⚠️ 辨識失敗，請手動輸入（' + String(e && e.message || e).slice(0, 50) + '）');
     toast('收據辨識失敗，改用手動');
   });
+}
+var _rcp = null;
+function openReceiptItems(){
+  var t = trip(); if(!t || !F || !F._rcpItems || !F._rcpItems.length) return;
+  _rcp = {
+    payer: (F.payer && F.payer !== FUND) ? F.payer : (me() || (t.members[0] && t.members[0].id) || null),
+    def: (F.split && F.split.length) ? F.split.slice() : t.members.filter(function(m){ return !m.casual; }).map(function(m){ return m.id; }),
+    cur: F.cur, date: F.date || todayISO(),
+    items: F._rcpItems.map(function(it){ return { name: it.name, amt: it.amt, cat: it.cat, on: true, ov: null }; }),
+    exp: -1
+  };
+  document.getElementById('rcpModal').style.display = 'flex';
+  renderRcpItems();
+}
+function _rcpBadge(id, on){
+  var col = bcolor(id);
+  var st = on ? glossStyle(col) : 'background:transparent;color:var(--tx3);border:2px dashed var(--inBd)';
+  return '<span class="bdg b34" data-m="' + id + '" style="' + st + bshape(id) + '" title="' + esc(mname(id)) + '">' + esc(bchar(id)) + (on ? '<span class="pbmark">✓</span>' : '') + '</span>';
+}
+function renderRcpItems(){
+  var t = trip(); if(!t || !_rcp) return;
+  document.getElementById('rcpMeta').textContent = _rcp.date + '　' + _rcp.cur + '　共 ' + _rcp.items.length + ' 項';
+  var pc = document.getElementById('rcpPayer');
+  pc.innerHTML = t.members.map(function(m){ return _rcpBadge(m.id, _rcp.payer === m.id); }).join('');
+  pc.querySelectorAll('[data-m]').forEach(function(el){ el.onclick = function(){ _rcp.payer = el.dataset.m; renderRcpItems(); }; });
+  var dc = document.getElementById('rcpDef');
+  dc.innerHTML = t.members.map(function(m){ return _rcpBadge(m.id, _rcp.def.indexOf(m.id) >= 0); }).join('');
+  dc.querySelectorAll('[data-m]').forEach(function(el){ el.onclick = function(){
+    var id = el.dataset.m, k = _rcp.def.indexOf(id);
+    if(k >= 0) _rcp.def.splice(k, 1); else _rcp.def.push(id);
+    renderRcpItems();
+  }; });
+  var catOpts = CATS.map(function(c){ return '<option value="' + c[0] + '">' + c[2] + '</option>'; }).join('');
+  var lst = document.getElementById('rcpItemList');
+  lst.innerHTML = _rcp.items.map(function(it, i){
+    var eff = it.ov || _rcp.def;
+    var splTxt = it.ov ? ('自訂 ' + it.ov.length + ' 人') : ('跟預設 ' + _rcp.def.length + ' 人');
+    var chips = '';
+    if(_rcp.exp === i){
+      chips = '<div class="chips" style="margin-top:6px">' + t.members.map(function(m){ return _rcpBadge(m.id, eff.indexOf(m.id) >= 0); }).join('') +
+        '</div><div style="margin-top:4px"><a data-rcpdef="' + i + '" style="color:var(--acc);cursor:pointer;font-size:12px">↺ 改回跟預設</a></div>';
+    }
+    return '<div style="padding:8px 0;border-bottom:1px solid var(--line)">' +
+      '<div style="display:flex;align-items:center;gap:7px">' +
+        '<input type="checkbox" data-rcpon="' + i + '"' + (it.on ? ' checked' : '') + ' style="width:18px;height:18px;flex:0 0 auto">' +
+        '<input type="text" data-rcpname="' + i + '" value="' + esc(it.name) + '" style="flex:1;min-width:0;font-size:13px;padding:5px 7px">' +
+        '<input type="number" inputmode="decimal" data-rcpamt="' + i + '" value="' + it.amt + '" style="width:72px;font-size:13px;padding:5px 6px;text-align:right">' +
+        '<select data-rcpcat="' + i + '" style="width:66px;font-size:12px;padding:4px"></select>' +
+      '</div>' +
+      '<div style="margin-top:5px;font-size:12px"><a data-rcptog="' + i + '" style="color:var(--acc);cursor:pointer">分攤：' + splTxt + ' ▾</a></div>' +
+      chips +
+    '</div>';
+  }).join('');
+  _rcp.items.forEach(function(it, i){ var s = lst.querySelector('[data-rcpcat="' + i + '"]'); if(s){ s.innerHTML = catOpts; s.value = it.cat; } });
+  lst.querySelectorAll('[data-rcpon]').forEach(function(el){ el.onchange = function(){ _rcp.items[+el.dataset.rcpon].on = el.checked; renderRcpSum(); }; });
+  lst.querySelectorAll('[data-rcpname]').forEach(function(el){ el.oninput = function(){ _rcp.items[+el.dataset.rcpname].name = el.value; }; });
+  lst.querySelectorAll('[data-rcpamt]').forEach(function(el){ el.oninput = function(){ _rcp.items[+el.dataset.rcpamt].amt = Number(el.value) || 0; renderRcpSum(); }; });
+  lst.querySelectorAll('[data-rcpcat]').forEach(function(el){ el.onchange = function(){ _rcp.items[+el.dataset.rcpcat].cat = el.value; }; });
+  lst.querySelectorAll('[data-rcptog]').forEach(function(el){ el.onclick = function(){ var i = +el.dataset.rcptog; if(_rcp.exp === i){ _rcp.exp = -1; } else { _rcp.exp = i; if(!_rcp.items[i].ov) _rcp.items[i].ov = _rcp.def.slice(); } renderRcpItems(); }; });
+  lst.querySelectorAll('[data-m]').forEach(function(el){ el.onclick = function(){
+    var i = _rcp.exp; if(i < 0) return;
+    var it = _rcp.items[i]; if(!it.ov) it.ov = _rcp.def.slice();
+    var id = el.dataset.m, k = it.ov.indexOf(id);
+    if(k >= 0) it.ov.splice(k, 1); else it.ov.push(id);
+    renderRcpItems();
+  }; });
+  lst.querySelectorAll('[data-rcpdef]').forEach(function(el){ el.onclick = function(){ _rcp.items[+el.dataset.rcpdef].ov = null; _rcp.exp = -1; renderRcpItems(); }; });
+  renderRcpSum();
+}
+function renderRcpSum(){
+  if(!_rcp) return;
+  var n = 0, sum = 0;
+  _rcp.items.forEach(function(it){ if(it.on && it.amt > 0){ n++; sum += Number(it.amt); } });
+  document.getElementById('rcpSum').textContent = '將建立 ' + n + ' 筆，合計 ' + _rcp.cur + ' ' + (Math.round(sum * 100) / 100);
+}
+function buildReceiptEntries(){
+  var t = trip(); if(!t || !_rcp) return;
+  if(!_rcp.payer){ toast('請選付款人'); return; }
+  var rate = (_rcp.cur === t.home) ? 1 : roundRate(F ? F.rate : '');
+  if(!(rate > 0)){ toast('匯率還沒抓到，請關掉稍等一下再試'); return; }
+  var sel = _rcp.items.filter(function(it){ return it.on && Number(it.amt) > 0; });
+  if(!sel.length){ toast('沒有可建立的品項'); return; }
+  for(var i=0;i<sel.length;i++){
+    var sp0 = (sel[i].ov && sel[i].ov.length) ? sel[i].ov : _rcp.def;
+    if(!sp0.length){ toast('「' + sel[i].name + '」沒有分攤的人'); return; }
+  }
+  if(!resetDaysIfSettled(t, [_rcp.date])) return;
+  var made = 0;
+  sel.forEach(function(it){
+    var sp = ((it.ov && it.ov.length) ? it.ov : _rcp.def).slice();
+    var ci = catInfo(it.cat);
+    var e = { id: uid(), date: _rcp.date, kind: 'exp', cat: it.cat, desc: it.name || ci[2],
+      cur: _rcp.cur, amt: Number(it.amt), rate: rate, card: false, feePct: 0,
+      payer: _rcp.payer, split: sp, treat: [], treatBy: {}, mode: 'avg', custom: {}, rsrc: F ? (F.rsrc || 'hi3') : 'hi3', _mt: Date.now() + made };
+    t.expenses.push(e); made++;
+  });
+  document.getElementById('rcpModal').style.display = 'none';
+  _rcp = null; F = null; editId = null;
+  save(); go('ledger'); toast('已建立 ' + made + ' 筆');
 }
 function blankF(){
   var t = trip(); var lk = lockObj();
@@ -3652,6 +3764,8 @@ function closestActiveTripCode(){
   document.getElementById('btnSave').onclick = saveExpense;
   document.getElementById('btnReceipt').onclick = function(){ document.getElementById('receiptFile').click(); };
   document.getElementById('receiptFile').onchange = function(){ var f = this.files && this.files[0]; this.value = ''; if(f) handleReceipt(f); };
+  document.getElementById('rcpGo').onclick = buildReceiptEntries;
+  document.getElementById('rcpClose').onclick = function(){ document.getElementById('rcpModal').style.display = 'none'; _rcp = null; };
   document.getElementById('btnCancelAdd').onclick = function(){
     var wasEdit = !!editId;
     if(!wasEdit && F && (F.desc || F.amt)){ if(!confirm('放棄這筆未儲存的記帳？')) return; }
@@ -3774,4 +3888,4 @@ try{
 </body>
 </html>
 
-<!-- T0720-01 deploy -->
+<!-- T0720-02 deploy -->
