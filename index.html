@@ -438,6 +438,7 @@ details.tsec>.tbody{padding:2px 1px 15px}
     <div id="customBox" style="margin-top:8px"></div>
     <div id="splitCollapse" style="font-size:12px;color:var(--acc);margin-top:10px;cursor:pointer">▲ 收起分攤</div>
     </div>
+    <div id="sharePrev" style="display:none;margin-top:10px;border-top:1px solid var(--line);padding-top:8px"></div>
     </div>
     <details class="advsec" id="privAdv" style="margin-top:10px"><summary>私人帳</summary>
     <label id="privRow" style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--tx2);margin-top:8px"><input type="checkbox" id="ePriv" style="width:16px;height:16px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>設為私人帳（只存這支手機、不同步、不進團體結算）</label>
@@ -566,8 +567,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 60;
-var VER = 'T0720-02';
+var CODE_VERSION = 61;
+var VER = 'T0720-03';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -1439,8 +1440,27 @@ function csHint(){
   var amt = Number(F.amt) || 0;
   el.textContent = '目前合計 ' + fmt2(sum) + ' / 總額 ' + fmt2(amt) + (Math.abs(sum-amt) < 0.5 ? ' ✔' : '（尚未相符）');
 }
+function _isIntCur(cur){ return ['JPY','KRW','TWD','VND','IDR','HUF','CLP','ISK'].indexOf(cur) >= 0; }
+function _fmtNat(n, cur){ return _isIntCur(cur) ? fmt(n) : fmt2(n); }
+function renderSharePrev(){
+  var el = document.getElementById('sharePrev'); if(!el) return;
+  var t = trip();
+  if(!t || !F || F.kind === 'loan' || F.priv || !(Number(F.amt) > 0) || !(F.split && F.split.length)){ el.style.display = 'none'; el.innerHTML = ''; return; }
+  var f = factor({ amt:F.amt, rate:F.rate, card:F.card, feePct:F.feePct }), sh = shares(F), home = (F.cur === t.home);
+  var rows = F.split.map(function(id){
+    var hv = sh[id] || 0, nat = f > 0 ? hv / f : 0;
+    var treated = (F.treat || []).indexOf(id) >= 0, right;
+    if(treated){ right = '<span style="color:var(--tx3)">被請客・0</span>'; }
+    else if(home){ right = '<b>' + fmt(hv) + '</b>'; }
+    else { right = '<b>' + F.cur + ' ' + _fmtNat(nat, F.cur) + '</b> <span style="color:var(--tx3)">≈ ' + t.home + ' ' + fmt(hv) + '</span>'; }
+    return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px">' + bdg(id, 18) + '<span style="flex:1;min-width:0">' + esc(mname(id)) + '</span><span style="white-space:nowrap">' + right + '</span></div>';
+  }).join('');
+  el.style.display = '';
+  el.innerHTML = '<div style="font-size:12.5px;font-weight:600;margin-bottom:3px">各人分攤（這筆）</div>' + rows;
+}
 function updateConv(){
   var t = trip(); if(!t) return;
+  renderSharePrev();
   var amt = Number(F.amt) || 0;
   var fn = document.getElementById('feeNote');
   if(F.card && amt > 0){
@@ -1948,14 +1968,17 @@ function unitsMeta(t){
   return units;
 }
 function calcOver(t, es){
-  var paid = {}, share = {};
-  t.members.forEach(function(m){ paid[m.id] = 0; share[m.id] = 0; });
+  var paid = {}, share = {}, shareCur = {};
+  t.members.forEach(function(m){ paid[m.id] = 0; share[m.id] = 0; shareCur[m.id] = {}; });
   es.forEach(function(e){
     if(e.payer === FUND) return;
     var h = homeAmt(e);
     if(paid[e.payer] != null) paid[e.payer] += h;
-    var sh = shares(e);
-    Object.keys(sh).forEach(function(id){ if(share[id] != null) share[id] += sh[id]; });
+    var sh = shares(e), f = factor(e);
+    Object.keys(sh).forEach(function(id){
+      if(share[id] != null) share[id] += sh[id];
+      if(shareCur[id] && f > 0){ shareCur[id][e.cur] = (shareCur[id][e.cur] || 0) + sh[id] / f; }
+    });
   });
   var units = unitsMeta(t);
   var ub = {};
@@ -1963,7 +1986,21 @@ function calcOver(t, es){
     var u = unitId(t, m);
     ub[u] = (ub[u] || 0) + (paid[m.id] || 0) - (share[m.id] || 0);
   });
-  return { paid: paid, share: share, transfers: greedyTf(ub), units: units, ub: ub };
+  return { paid: paid, share: share, shareCur: shareCur, transfers: greedyTf(ub), units: units, ub: ub };
+}
+function shareCurHtml(t, share, shareCur){
+  var h = '';
+  t.members.forEach(function(m){
+    var s = share[m.id] || 0, cur = shareCur[m.id] || {};
+    var keys = Object.keys(cur).filter(function(c){ return Math.abs(cur[c]) >= 0.005; });
+    if(s < 0.5 && !keys.length) return;
+    var natTxt = keys.map(function(c){ return c + ' ' + _fmtNat(cur[c], c); }).join(' · ') || '—';
+    h += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:0.5px solid var(--line);font-size:13px">' +
+      bdg(m.id, 18) +
+      '<span style="flex:1;min-width:0"><div>' + esc(m.name || '?') + '</div><div style="font-size:11px;color:var(--tx3)">' + natTxt + '</div></span>' +
+      '<span style="font-weight:600;white-space:nowrap">' + t.home + ' ' + fmt(s) + '</span></div>';
+  });
+  return h || '<div class="hint" style="padding:6px 0">還沒有分攤資料</div>';
 }
 function greedyTf(ub){
   var cred = [], debt = [];
@@ -2295,6 +2332,9 @@ function renderSettle(){
     memberStatHtml(t, M.overall.paid, M.overall.share, { weight: true, skipZero: !_ovAll }) +
     (_ovZero ? '<div style="margin-top:8px"><span data-ovall="1" style="font-size:12.5px;color:var(--acc);cursor:pointer">' + (_ovAll ? '收起沒帳的成員' : '顯示全部成員（' + _ovZero + ' 位沒帳）') + '</span></div>' : '') +
     '</div>';
+  html += '<div class="card"><details class="advsec"><summary style="font-weight:600;color:var(--tx)">每人分攤總額（原幣）</summary><div style="margin-top:8px">' +
+    shareCurHtml(t, M.overall.share, M.overall.shareCur) +
+    '<div class="hint" style="margin-top:8px">各幣別原幣小計＋台幣合計，不含借款與私人帳。</div></div></details></div>';
   if(t.legs && t.legs.length){ html += '<div class="seg" style="margin:2px 4px 8px"><span data-div="ym"' + (S.divMode !== 'leg' ? ' class="on"' : '') + '>年月</span><span data-div="leg"' + (S.divMode === 'leg' ? ' class="on"' : '') + '>所在地</span></div>'; }
   var tday = todayISO();
   var useLegS = S.divMode === 'leg' && t.legs && t.legs.length;
@@ -3888,4 +3928,4 @@ try{
 </body>
 </html>
 
-<!-- T0720-02 deploy -->
+<!-- T0720-03 deploy -->
