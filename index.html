@@ -532,6 +532,17 @@ details.tsec>.tbody{padding:2px 1px 15px}
   <div class="hint" id="rcpSum" style="margin-top:8px;min-height:18px"></div>
   <div class="row" style="margin-top:10px"><button class="btn mini" id="rcpGo" style="flex:1">建立</button><button class="btn sub mini" id="rcpClose" style="flex:1">取消</button></div>
 </div></div>
+<div class="modal" id="setlModal"><div class="mbox" style="max-width:440px">
+  <div style="font-size:16px;font-weight:600;margin-bottom:2px">提前結清成員</div>
+  <div class="hint" style="margin-bottom:8px">有人要先走，選他們＋一位經手人（代收代付）。結清後最後總結算不再算他們，由經手人跟大家一起算。</div>
+  <div class="lbl">要先結的人（可複選）</div>
+  <div class="chips" id="setlPick" style="margin-bottom:10px"></div>
+  <div class="lbl">經手人（代收代付）</div>
+  <div class="chips" id="setlVia" style="margin-bottom:8px"></div>
+  <div id="setlPreview" style="border-top:1px solid var(--line);padding-top:8px;font-size:13px;min-height:20px"></div>
+  <div id="setlDone" style="margin-top:6px"></div>
+  <div class="row" style="margin-top:10px"><button class="btn mini" id="setlGo" style="flex:1">結清勾選的人</button><button class="btn sub mini" id="setlClose" style="flex:1">關閉</button></div>
+</div></div>
 <div id="updBar" style="display:none;position:fixed;bottom:64px;left:50%;transform:translateX(-50%);z-index:40;background:var(--acc);color:var(--accOn);border-radius:20px;padding:9px 18px;font-size:14px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.3);cursor:pointer"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v6h-6"/></svg>有新版本，點此更新</div>
 <div class="modal" id="acctModal"><div class="mbox">
   <div id="amTitle" style="font-size:16px;font-weight:600;margin-bottom:6px"></div>
@@ -567,8 +578,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 61;
-var VER = 'T0720-03';
+var CODE_VERSION = 62;
+var VER = 'T0720-04';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -689,6 +700,7 @@ function trip(){
     if(!t.families) t.families = [];
     if(!t.tfDone) t.tfDone = {};
     if(!t.legs) t.legs = [];
+    if(!t.settled) t.settled = {};
     if(!t.mt) t.mt = {};
     if(t.startDate == null) t.startDate = '';
     if(t.endDate == null) t.endDate = '';
@@ -1162,7 +1174,7 @@ function blankF(){
     amt:'', rate: (lk.on && lk.rate) ? lk.rate : '',
     card:false, feePct: (t && t.feePct != null) ? t.feePct : 1.5,
     payer: me() || ((t && t.members.length) ? t.members[0].id : null),
-    split: t ? t.members.filter(function(m){ return !m.casual; }).map(function(m){ return m.id; }) : [],
+    split: t ? t.members.filter(function(m){ return !m.casual && !isSettled(t, m.id); }).map(function(m){ return m.id; }) : [],
     treat: [], treatBy: {}, mode:'avg', custom:{}, priv:false, kind:'exp', rsrc:'hi3' };
 }
 function guessCur(t){
@@ -1953,6 +1965,15 @@ function bindSwipeRow(el){
 
 /* ───── 結算（按日）───── */
 function unitId(t, m){ return (m.famId && famName(t, m.famId)) ? 'f' + m.famId : 'm' + m.id; }
+function isSettled(t, id){ return !!(t && t.settled && t.settled[id]); }
+function settledOf(t, id){
+  var s = t && t.settled && t.settled[id];
+  if(!s) return null;
+  var h = s.via;
+  if(!h || h === id || !member(h)) return null;
+  if(t.settled && t.settled[h]) return null;
+  return h;
+}
 function unitsMeta(t){
   var units = {};
   t.members.forEach(function(m){
@@ -1981,10 +2002,16 @@ function calcOver(t, es){
     });
   });
   var units = unitsMeta(t);
+  var memBal = {};
+  t.members.forEach(function(m){ memBal[m.id] = (paid[m.id] || 0) - (share[m.id] || 0); });
+  t.members.forEach(function(m){
+    var h = settledOf(t, m.id);
+    if(h && memBal[h] != null){ memBal[h] += memBal[m.id]; memBal[m.id] = 0; }
+  });
   var ub = {};
   t.members.forEach(function(m){
     var u = unitId(t, m);
-    ub[u] = (ub[u] || 0) + (paid[m.id] || 0) - (share[m.id] || 0);
+    ub[u] = (ub[u] || 0) + memBal[m.id];
   });
   return { paid: paid, share: share, shareCur: shareCur, transfers: greedyTf(ub), units: units, ub: ub };
 }
@@ -2290,10 +2317,10 @@ function memberStatHtml(t, paid, share, opts){
     t.members.forEach(function(m){
       var p = paid[m.id] || 0, s = share[m.id] || 0;
       if(opts.skipZero && p < 0.5 && s < 0.5) return;
-      var b = bals[m.id] || 0, settled = (b === 0);
-      h += '<div class="mclean' + (settled && p < 0.5 ? ' zero' : '') + '">' + bdg(m.id, 18) +
-        '<div><div class="cn">' + esc(m.name || '?') + '</div><div class="cs">已付 ' + fmt(p) + '｜應付 ' + fmt(s) + '</div></div>' +
-        '<span class="cv ' + (b > 0 ? 'pos' : (b < 0 ? 'neg' : '')) + '"' + (settled ? ' style="color:var(--tx3);font-size:13px"' : '') + '>' + (settled ? '結清' : (b > 0 ? '+' : '') + fmt(b)) + '</span></div>';
+      var b = bals[m.id] || 0, settled = (b === 0), sm = isSettled(t, m.id);
+      h += '<div class="mclean' + ((settled || sm) && p < 0.5 ? ' zero' : '') + '">' + bdg(m.id, 18) +
+        '<div><div class="cn">' + esc(m.name || '?') + (sm ? ' <span style="font-size:10px;color:var(--tx3);border:1px solid var(--inBd);border-radius:8px;padding:0 5px">已先結</span>' : '') + '</div><div class="cs">已付 ' + fmt(p) + '｜應付 ' + fmt(s) + '</div></div>' +
+        '<span class="cv ' + (sm ? '' : (b > 0 ? 'pos' : (b < 0 ? 'neg' : ''))) + '"' + ((settled || sm) ? ' style="color:var(--tx3);font-size:13px"' : '') + '>' + (sm ? '已先結' : (settled ? '結清' : (b > 0 ? '+' : '') + fmt(b))) + '</span></div>';
     });
     return h;
   }
@@ -2301,12 +2328,82 @@ function memberStatHtml(t, paid, share, opts){
   t.members.forEach(function(m){
     var p = paid[m.id] || 0, s = share[m.id] || 0;
     if(opts.skipZero && p < 0.5 && s < 0.5) return;
-    var b = bals[m.id] || 0, cls = b > 0 ? 'pos' : (b < 0 ? 'neg' : ''), sign = b > 0 ? '+' : '';
-    h2 += '<tr><td>' + bdg(m.id, 18) + '</td>' +
+    var b = bals[m.id] || 0, cls = b > 0 ? 'pos' : (b < 0 ? 'neg' : ''), sign = b > 0 ? '+' : '', sm = isSettled(t, m.id);
+    h2 += '<tr><td>' + bdg(m.id, 18) + (sm ? ' <span style="font-size:10px;color:var(--tx3)">已先結</span>' : '') + '</td>' +
       (opts.weight ? '<td>' + weightOf(t, m.id) + '</td>' : '') +
-      '<td>' + fmt(p) + '</td><td>' + fmt(s) + '</td><td class="' + cls + '">' + sign + fmt(b) + '</td></tr>';
+      '<td>' + fmt(p) + '</td><td>' + fmt(s) + '</td><td class="' + (sm ? '' : cls) + '">' + (sm ? '<span style="color:var(--tx3)">已先結</span>' : (sign + fmt(b))) + '</td></tr>';
   });
   return h2 + '</table>';
+}
+var _setl = null;
+function openSettleMem(){
+  var t = trip(); if(!t || !t.members.length) return;
+  var via = (me() && !isSettled(t, me())) ? me() : null;
+  if(!via){ var fm = t.members.filter(function(m){ return !isSettled(t, m.id); })[0]; via = fm ? fm.id : null; }
+  _setl = { pick: [], via: via };
+  document.getElementById('setlModal').style.display = 'flex';
+  renderSettleMem();
+}
+function _setlBadge(id, on, dashed){
+  var col = bcolor(id);
+  var st = on ? glossStyle(col) : ('background:transparent;color:var(--tx3);border:2px ' + (dashed ? 'dashed' : 'solid') + ' var(--inBd)');
+  return '<span class="bdg b34" data-sm="' + id + '" style="' + st + bshape(id) + '" title="' + esc(mname(id)) + '">' + esc(bchar(id)) + (on ? '<span class="pbmark">✓</span>' : '') + '</span>';
+}
+function renderSettleMem(){
+  var t = trip(); if(!t || !_setl) return;
+  var C = calcOver(t, t.expenses.filter(function(e){ return !e._del; }));
+  var pick = document.getElementById('setlPick');
+  pick.innerHTML = t.members.map(function(m){
+    if(isSettled(t, m.id)) return '';
+    return _setlBadge(m.id, _setl.pick.indexOf(m.id) >= 0, true);
+  }).join('') || '<span class="hint">沒有可結清的成員</span>';
+  pick.querySelectorAll('[data-sm]').forEach(function(el){ el.onclick = function(){
+    var id = el.dataset.sm, k = _setl.pick.indexOf(id);
+    if(k >= 0) _setl.pick.splice(k, 1); else { _setl.pick.push(id); if(_setl.via === id) _setl.via = null; }
+    renderSettleMem();
+  }; });
+  var via = document.getElementById('setlVia');
+  via.innerHTML = t.members.map(function(m){
+    if(isSettled(t, m.id) || _setl.pick.indexOf(m.id) >= 0) return '';
+    return _setlBadge(m.id, _setl.via === m.id, false);
+  }).join('') || '<span class="hint">請先留一位當經手人</span>';
+  via.querySelectorAll('[data-sm]').forEach(function(el){ el.onclick = function(){ _setl.via = el.dataset.sm; renderSettleMem(); }; });
+  var pv = document.getElementById('setlPreview');
+  if(!_setl.pick.length){ pv.innerHTML = '<span class="hint">選要先結的人，會顯示每人應收／應付</span>'; }
+  else {
+    var vname = _setl.via ? mname(_setl.via) : '（未選經手人）';
+    pv.innerHTML = _setl.pick.map(function(id){
+      var b = Math.round((C.paid[id]||0) - (C.share[id]||0));
+      var txt = b > 0 ? ('<span style="color:var(--okTx,#0f6e56)">應收 ' + t.home + ' ' + fmt(b) + '</span>（' + vname + ' 付他）')
+        : (b < 0 ? ('<span style="color:var(--dangerTx,#c0392b)">應付 ' + t.home + ' ' + fmt(-b) + '</span>（他付 ' + vname + '）') : '已結清 0');
+      return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0">' + bdg(id, 18) + '<span style="flex:1">' + esc(mname(id)) + '</span><span>' + txt + '</span></div>';
+    }).join('');
+  }
+  var done = Object.keys(t.settled || {}).filter(function(id){ return member(id); });
+  var dn = document.getElementById('setlDone');
+  dn.innerHTML = done.length ? ('<div class="hint" style="margin-bottom:4px;border-top:1px solid var(--line);padding-top:6px">已先結（點可取消）</div>' + done.map(function(id){
+    return '<span class="bdg b18" data-unsm="' + id + '" style="background:var(--tx3);color:#fff;cursor:pointer;margin:2px" title="取消結清 ' + esc(mname(id)) + '">' + esc(bchar(id)) + ' ✕</span>';
+  }).join('')) : '';
+  dn.querySelectorAll('[data-unsm]').forEach(function(el){ el.onclick = function(){
+    var id = el.dataset.unsm; if(!confirm('取消「' + mname(id) + '」的提前結清？')) return;
+    delete t.settled[id]; bumpMeta('members'); save(); renderSettleMem();
+    toast('已取消結清');
+  }; });
+}
+function confirmSettleMem(){
+  var t = trip(); if(!t || !_setl) return;
+  if(!_setl.pick.length){ toast('請選要先結的人'); return; }
+  if(!_setl.via){ toast('請選經手人'); return; }
+  if(_setl.pick.indexOf(_setl.via) >= 0){ toast('經手人不能是要結清的人'); return; }
+  var now = Date.now(), C = calcOver(t, t.expenses.filter(function(e){ return !e._del; }));
+  _setl.pick.forEach(function(id){
+    var b = Math.round((C.paid[id]||0) - (C.share[id]||0));
+    t.settled[id] = { via: _setl.via, at: now, date: todayISO(), amt: b };
+  });
+  bumpMeta('members'); save();
+  document.getElementById('setlModal').style.display = 'none';
+  renderSettle();
+  toast('已結清 ' + _setl.pick.length + ' 位');
 }
 function renderSettle(){
   var t = trip();
@@ -2335,6 +2432,8 @@ function renderSettle(){
   html += '<div class="card"><details class="advsec"><summary style="font-weight:600;color:var(--tx)">每人分攤總額（原幣）</summary><div style="margin-top:8px">' +
     shareCurHtml(t, M.overall.share, M.overall.shareCur) +
     '<div class="hint" style="margin-top:8px">各幣別原幣小計＋台幣合計，不含借款與私人帳。</div></div></details></div>';
+  var _nSet = Object.keys(t.settled || {}).filter(function(id){ return member(id); }).length;
+  html += '<div style="margin:0 4px 10px"><button class="btn sub mini" style="width:100%" onclick="openSettleMem()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M10 12h10"/><path d="M17 9l3 3-3 3"/></svg>提前結清成員（有人要先走）' + (_nSet ? '　·　已先結 ' + _nSet + ' 位' : '') + '</button></div>';
   if(t.legs && t.legs.length){ html += '<div class="seg" style="margin:2px 4px 8px"><span data-div="ym"' + (S.divMode !== 'leg' ? ' class="on"' : '') + '>年月</span><span data-div="leg"' + (S.divMode === 'leg' ? ' class="on"' : '') + '>所在地</span></div>'; }
   var tday = todayISO();
   var useLegS = S.divMode === 'leg' && t.legs && t.legs.length;
@@ -3608,7 +3707,7 @@ function createTrip(){
   var code = genCode();
   while(S.trips[code]) code = genCode();
   var now0 = Date.now();
-  S.trips[code] = { code: code, name: name, home: 'TWD', feePct: 1.5, members: [], expenses: [], templates: [], budget: { total:0, daily:0 }, fund: [], families: [], tfDone: {}, legs: [], startDate: '', endDate: '', domestic: false, fundKeeper: '', archived: false, metaMt: now0, mt: { info: now0, members: now0, fund: now0, templates: now0, tfDone: now0 }, createdAt: now0 };
+  S.trips[code] = { code: code, name: name, home: 'TWD', feePct: 1.5, members: [], expenses: [], templates: [], budget: { total:0, daily:0 }, fund: [], families: [], tfDone: {}, legs: [], settled: {}, startDate: '', endDate: '', domestic: false, fundKeeper: '', archived: false, metaMt: now0, mt: { info: now0, members: now0, fund: now0, templates: now0, tfDone: now0 }, createdAt: now0 };
   S.cur = code; F = null; editId = null; _convCur = null;
   S.tsec = S.tsec || {}; S.tsec.set = 1; S.tsec.mem = 1;
   startListen(); save();
@@ -3660,7 +3759,7 @@ function demoTrip(){
       { id:'f2', mid:'d2', amt:1000, date:'2026-04-30', _mt:n+2 },
       { id:'f3', mid:'d3', amt:1000, date:'2026-04-30', _mt:n+3 }
     ],
-    families: [], tfDone: {}, legs: [],
+    families: [], tfDone: {}, legs: [], settled: {},
     metaMt: n, mt: { info:n, members:n, fund:n, templates:n, tfDone:n }, createdAt: n, _demo: true };
 }
 function loadDemo(){
@@ -3709,7 +3808,7 @@ function applyRemote(code, remote){
       local.legs = remote.legs || [];
       setMt('info');
     }
-    if(grpNewer('members')){ local.members = remote.members || []; local.families = remote.families || []; setMt('members'); }
+    if(grpNewer('members')){ local.members = remote.members || []; local.families = remote.families || []; local.settled = remote.settled || {}; setMt('members'); }
     if(grpNewer('fund')){ local.fund = remote.fund || []; setMt('fund'); }
     if(grpNewer('templates')){ local.templates = remote.templates || []; setMt('templates'); }
     if(grpNewer('tfDone')){ local.tfDone = remote.tfDone || {}; setMt('tfDone'); }
@@ -3806,6 +3905,8 @@ function closestActiveTripCode(){
   document.getElementById('receiptFile').onchange = function(){ var f = this.files && this.files[0]; this.value = ''; if(f) handleReceipt(f); };
   document.getElementById('rcpGo').onclick = buildReceiptEntries;
   document.getElementById('rcpClose').onclick = function(){ document.getElementById('rcpModal').style.display = 'none'; _rcp = null; };
+  document.getElementById('setlGo').onclick = confirmSettleMem;
+  document.getElementById('setlClose').onclick = function(){ document.getElementById('setlModal').style.display = 'none'; _setl = null; };
   document.getElementById('btnCancelAdd').onclick = function(){
     var wasEdit = !!editId;
     if(!wasEdit && F && (F.desc || F.amt)){ if(!confirm('放棄這筆未儲存的記帳？')) return; }
@@ -3928,4 +4029,4 @@ try{
 </body>
 </html>
 
-<!-- T0720-03 deploy -->
+<!-- T0720-04 deploy -->
