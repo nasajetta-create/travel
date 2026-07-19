@@ -387,6 +387,14 @@ details.tsec>.tbody{padding:2px 1px 15px}
 </section>
 
 <section id="v-add">
+  <div class="card" id="receiptCard" style="padding:10px 12px">
+    <button id="btnReceipt" class="btn sub" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;border-style:dashed;border-color:var(--acc);color:var(--acc)">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2l1.5-2h5L18 4h2a2 2 0 0 1 2 2v2"/><rect x="2" y="8" width="20" height="13" rx="2"/><circle cx="12" cy="14.5" r="3.5"/></svg>
+      拍收據自動填入
+    </button>
+    <input type="file" id="receiptFile" accept="image/*" capture="environment" style="display:none">
+    <div id="receiptStatus" style="display:none;margin-top:8px;font-size:13px;line-height:1.5"></div>
+  </div>
   <div class="card">
     <div id="kindSeg" style="display:flex;align-items:center;gap:8px;margin-bottom:10px"></div>
     <div class="fld3" style="position:relative"><span class="fld3-cur" id="eDateCell" style="position:relative;flex:0 0 auto;display:flex;align-items:center;padding:0 12px;font-size:14px;cursor:pointer"><span id="eDateDisp"></span><input type="date" id="eDate" style="position:absolute;inset:0;opacity:0;border:none;width:100%;height:100%;padding:0;cursor:pointer"></span><input type="text" id="eDesc" class="fld3-amt" placeholder="項目名稱，或點選常用" autocomplete="off"><div id="tplDrop" class="tpldrop" style="display:none"></div></div>
@@ -547,11 +555,12 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 58;
-var VER = 'T0712-18';
+var CODE_VERSION = 59;
+var VER = 'T0720-01';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
+var RECEIPT_API = 'https://receipt-ocr.nasa-jetta.workers.dev';
 var LANDMARKS = [['東京','🗼'],['大阪','🏯'],['京都','⛩️'],['奈良','🦌'],['北海道','⛄'],['沖繩','🏖️'],['九州','♨️'],['福岡','🍜'],['名古屋','🏯'],['日本','🗻'],['首爾','🇰🇷'],['釜山','🌉'],['韓國','🇰🇷'],['曼谷','🛕'],['泰國','🐘'],['新加坡','🦁'],['越南','🍜'],['香港','🎡'],['澳門','🎰'],['上海','🏙️'],['北京','🏯'],['巴黎','🗼'],['倫敦','🎡'],['紐約','🗽'],['夏威夷','🌺'],['峇里','🏝️'],['關島','🌴'],['澎湖','🐚'],['金門','🏮'],['綠島','🐠'],['蘭嶼','🛶'],['台南','🏮'],['台東','🌾'],['花蓮','⛰️'],['墾丁','🏄'],['宜蘭','🦆'],['阿里山','🌲'],['日月潭','🚤'],['台北','🏙️'],['台中','🎡'],['高雄','🚢']];
 function landmark(name){
   for(var i=0;i<LANDMARKS.length;i++){ if(String(name||'').indexOf(LANDMARKS[i][0]) >= 0) return LANDMARKS[i][1]; }
@@ -850,6 +859,8 @@ function goAdd(){
   if(!t.members.length){ toast('請先在「旅程」新增成員'); go('trip'); return; }
   if(!F){ F = blankF(); }
   _splitOpen = false;
+  _receiptBusy = false;
+  var _rs = document.getElementById('receiptStatus'); if(_rs){ _rs.style.display = 'none'; _rs.innerHTML = ''; }
   go('add');
 }
 function tripCD(t){
@@ -972,6 +983,64 @@ function renderHelp(){
 }
 
 /* ───── 記一筆 ───── */
+var _receiptBusy = false;
+function _receiptSt(color, html){
+  var st = document.getElementById('receiptStatus'); if(!st) return;
+  st.style.display = ''; st.style.color = color; st.innerHTML = html;
+}
+function _compressImg(file, maxDim, q){
+  return new Promise(function(resolve, reject){
+    var rd = new FileReader();
+    rd.onload = function(){
+      var img = new Image();
+      img.onload = function(){
+        var w = img.width, h = img.height, sc = Math.min(1, maxDim / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * sc)), ch = Math.max(1, Math.round(h * sc));
+        var cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+        var ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cw, ch);
+        ctx.drawImage(img, 0, 0, cw, ch);
+        resolve(cv.toDataURL('image/jpeg', q));
+      };
+      img.onerror = function(){ reject(new Error('圖片讀取失敗')); };
+      img.src = rd.result;
+    };
+    rd.onerror = function(){ reject(new Error('檔案讀取失敗')); };
+    rd.readAsDataURL(file);
+  });
+}
+function handleReceipt(file){
+  if(!file || _receiptBusy) return;
+  if(!F) F = blankF();
+  _receiptBusy = true;
+  _receiptSt('var(--acc)', '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px"><path d="M12 3a9 9 0 1 0 9 9"/></svg>辨識中…（把收據交給 AI，約數秒）');
+  _compressImg(file, 1100, 0.72).then(function(dataURL){
+    F._receiptImg = dataURL;
+    return fetch(RECEIPT_API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ image: dataURL, mime:'image/jpeg' }) });
+  }).then(function(r){ return r.json(); }).then(function(j){
+    if(!j || !j.ok || !j.result) throw new Error((j && (j.error || (j.detail ? String(j.detail).slice(0,60) : ''))) || '辨識失敗');
+    var R = j.result, filled = [];
+    if(R.date && /^\d{4}-\d{2}-\d{2}$/.test(R.date)){ F.date = R.date; filled.push('日期'); }
+    var desc = String(R.store || R.note || '').trim();
+    if(desc){ F.desc = desc.slice(0, 30); filled.push('項目'); }
+    if(R.currency && /^[A-Za-z]{3}$/.test(R.currency)){ F.cur = R.currency.toUpperCase(); F.rate = ''; filled.push('幣別'); }
+    if(R.amount != null && !isNaN(Number(R.amount)) && Number(R.amount) > 0){ F.amt = String(Number(R.amount)); filled.push('金額'); }
+    if(R.category && catInfo(R.category)[0] === R.category){ F.cat = R.category; filled.push('類別'); }
+    _receiptBusy = false;
+    renderAdd();
+    autoRate(false);
+    if(filled.length){
+      _receiptSt('var(--warnTx)', '<b>AI 已填：' + filled.join('、') + '</b>，請核對金額與幣別再儲存（付款人與分攤仍要自己選）');
+      toast('已辨識，請確認後儲存');
+    } else {
+      _receiptSt('var(--tx2)', '辨識不到清楚欄位，請手動輸入');
+      toast('沒抓到欄位，改用手動');
+    }
+  }).catch(function(e){
+    _receiptBusy = false;
+    _receiptSt('#c0392b', '⚠️ 辨識失敗，請手動輸入（' + String(e && e.message || e).slice(0, 50) + '）');
+    toast('收據辨識失敗，改用手動');
+  });
+}
 function blankF(){
   var t = trip(); var lk = lockObj();
   var _lg = t ? legOf(t, todayISO()) : null;
@@ -3581,6 +3650,8 @@ function closestActiveTripCode(){
     F.priv = this.checked; renderAdd();
   };
   document.getElementById('btnSave').onclick = saveExpense;
+  document.getElementById('btnReceipt').onclick = function(){ document.getElementById('receiptFile').click(); };
+  document.getElementById('receiptFile').onchange = function(){ var f = this.files && this.files[0]; this.value = ''; if(f) handleReceipt(f); };
   document.getElementById('btnCancelAdd').onclick = function(){
     var wasEdit = !!editId;
     if(!wasEdit && F && (F.desc || F.amt)){ if(!confirm('放棄這筆未儲存的記帳？')) return; }
@@ -3702,4 +3773,5 @@ try{
 </script>
 </body>
 </html>
-<!-- T0712-18 deploy -->
+
+<!-- T0720-01 deploy -->
