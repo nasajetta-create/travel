@@ -388,11 +388,13 @@ details.tsec>.tbody{padding:2px 1px 15px}
 
 <section id="v-add">
   <div class="card" id="receiptCard" style="padding:10px 12px">
-    <button id="btnReceipt" class="btn sub" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;border-style:dashed;border-color:var(--acc);color:var(--acc)">
-      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2l1.5-2h5L18 4h2a2 2 0 0 1 2 2v2"/><rect x="2" y="8" width="20" height="13" rx="2"/><circle cx="12" cy="14.5" r="3.5"/></svg>
-      拍收據自動填入
-    </button>
-    <input type="file" id="receiptFile" accept="image/*" style="display:none">
+    <div style="font-size:12.5px;color:var(--acc);font-weight:500;margin-bottom:7px;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2l1.5-2h5L18 4h2a2 2 0 0 1 2 2v2"/><rect x="2" y="8" width="20" height="13" rx="2"/><circle cx="12" cy="14.5" r="3.5"/></svg>拍收據自動填入</div>
+    <div class="row" style="gap:8px">
+      <button id="btnReceiptCam" class="btn sub" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;border-style:dashed;border-color:var(--acc);color:var(--acc)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2l1.5-2h5L18 4h2a2 2 0 0 1 2 2v2"/><rect x="2" y="8" width="20" height="13" rx="2"/><circle cx="12" cy="14.5" r="3.5"/></svg>拍照</button>
+      <button id="btnReceiptLib" class="btn sub" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;border-style:dashed;border-color:var(--acc);color:var(--acc)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>相簿</button>
+    </div>
+    <input type="file" id="receiptCam" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="receiptLib" accept="image/*" style="display:none">
     <div id="receiptStatus" style="display:none;margin-top:8px;font-size:13px;line-height:1.5"></div>
   </div>
   <div class="card">
@@ -578,8 +580,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 62;
-var VER = 'T0720-04';
+var CODE_VERSION = 63;
+var VER = 'T0720-05';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -1044,13 +1046,14 @@ function handleReceipt(file){
     if(!j || !j.ok || !j.result) throw new Error((j && (j.error || (j.detail ? String(j.detail).slice(0,60) : ''))) || '辨識失敗');
     var R = j.result, filled = [];
     if(R.date && /^\d{4}-\d{2}-\d{2}$/.test(R.date)){ F.date = R.date; filled.push('日期'); }
-    var desc = String(R.store || R.note || '').trim();
+    var desc = String(R.store_zh || R.store || R.note || '').trim();
     if(desc){ F.desc = desc.slice(0, 30); filled.push('項目'); }
     if(R.currency && /^[A-Za-z]{3}$/.test(R.currency)){ F.cur = R.currency.toUpperCase(); F.rate = ''; filled.push('幣別'); }
     if(R.amount != null && !isNaN(Number(R.amount)) && Number(R.amount) > 0){ F.amt = String(Number(R.amount)); filled.push('金額'); }
     if(R.category && catInfo(R.category)[0] === R.category){ F.cat = R.category; filled.push('類別'); }
     var rit = (R.items || []).filter(function(it){ return it && it.name && Number(it.amount) > 0; }).map(function(it){
-      return { name: String(it.name).slice(0, 20), amt: Number(it.amount), cat: (it.category && catInfo(it.category)[0] === it.category) ? it.category : F.cat };
+      var zh = String(it.name_zh || '').trim(), orig = String(it.name || '').trim(), disp = zh || orig;
+      return { name: disp.slice(0, 20), orig: (zh && orig && orig !== zh) ? orig.slice(0, 24) : '', amt: Number(it.amount), cat: (it.category && catInfo(it.category)[0] === it.category) ? it.category : F.cat };
     });
     F._rcpItems = rit;
     _receiptBusy = false;
@@ -1074,7 +1077,7 @@ function openReceiptItems(){
     payer: (F.payer && F.payer !== FUND) ? F.payer : (me() || (t.members[0] && t.members[0].id) || null),
     def: (F.split && F.split.length) ? F.split.slice() : t.members.filter(function(m){ return !m.casual; }).map(function(m){ return m.id; }),
     cur: F.cur, date: F.date || todayISO(),
-    items: F._rcpItems.map(function(it){ return { name: it.name, amt: it.amt, cat: it.cat, on: true, ov: null }; }),
+    items: F._rcpItems.map(function(it){ return { name: it.name, orig: it.orig || '', amt: it.amt, cat: it.cat, on: true, ov: null }; }),
     exp: -1
   };
   document.getElementById('rcpModal').style.display = 'flex';
@@ -1115,6 +1118,7 @@ function renderRcpItems(){
         '<input type="number" inputmode="decimal" data-rcpamt="' + i + '" value="' + it.amt + '" style="width:72px;font-size:13px;padding:5px 6px;text-align:right">' +
         '<select data-rcpcat="' + i + '" style="width:66px;font-size:12px;padding:4px"></select>' +
       '</div>' +
+      (it.orig ? '<div style="font-size:11px;color:var(--tx3);margin-top:2px;padding-left:26px">原文：' + esc(it.orig) + '</div>' : '') +
       '<div style="margin-top:5px;font-size:12px"><a data-rcptog="' + i + '" style="color:var(--acc);cursor:pointer">分攤：' + splTxt + ' ▾</a></div>' +
       chips +
     '</div>';
@@ -3901,8 +3905,10 @@ function closestActiveTripCode(){
     F.priv = this.checked; renderAdd();
   };
   document.getElementById('btnSave').onclick = saveExpense;
-  document.getElementById('btnReceipt').onclick = function(){ document.getElementById('receiptFile').click(); };
-  document.getElementById('receiptFile').onchange = function(){ var f = this.files && this.files[0]; this.value = ''; if(f) handleReceipt(f); };
+  document.getElementById('btnReceiptCam').onclick = function(){ document.getElementById('receiptCam').click(); };
+  document.getElementById('btnReceiptLib').onclick = function(){ document.getElementById('receiptLib').click(); };
+  document.getElementById('receiptCam').onchange = function(){ var f = this.files && this.files[0]; this.value = ''; if(f) handleReceipt(f); };
+  document.getElementById('receiptLib').onchange = function(){ var f = this.files && this.files[0]; this.value = ''; if(f) handleReceipt(f); };
   document.getElementById('rcpGo').onclick = buildReceiptEntries;
   document.getElementById('rcpClose').onclick = function(){ document.getElementById('rcpModal').style.display = 'none'; _rcp = null; };
   document.getElementById('setlGo').onclick = confirmSettleMem;
@@ -4029,4 +4035,4 @@ try{
 </body>
 </html>
 
-<!-- T0720-04 deploy -->
+<!-- T0720-05 deploy -->
