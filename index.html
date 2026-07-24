@@ -185,15 +185,16 @@ input[type=date]{-webkit-appearance:none;appearance:none;height:47px;display:fle
 .catlab.on{color:var(--tx);font-weight:600}
 .splitsum{display:flex;align-items:center;justify-content:space-between;background:var(--ro);border-radius:9px;padding:10px 12px;margin-top:6px;cursor:pointer;font-size:13.5px}
 .splitsum .adj{font-size:12px;color:var(--acc)}
-.advsec>summary{list-style:none;cursor:pointer;font-size:13px;color:var(--acc);padding:4px 0;user-select:none}
+.advsec>summary{list-style:none;cursor:pointer;font-size:14px;color:var(--acc);padding:9px 0;user-select:none}
 .advsec>summary::-webkit-details-marker{display:none}
-.advsec>summary::before{content:'▸ ';font-size:18px;vertical-align:-1px}
+.advsec>summary::before{content:'▸ ';font-size:22px;vertical-align:-2px}
 .advsec[open]>summary::before{content:'▾ '}
 .pbmark{position:absolute;right:-3px;bottom:-3px;width:19px;height:19px;border-radius:50%;background:#0f6e56;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid var(--card);font-weight:700}
 .chip.pay{background:var(--acc);border-color:var(--acc);color:var(--accOn);font-weight:600}
 .bdg{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;position:relative;user-select:none;flex:0 0 auto}
 .b18{width:20px;height:20px;font-size:11px}
 .b34{width:36px;height:36px;font-size:15px;cursor:pointer}
+.bdgC{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-weight:700;font-size:13px;flex:0 0 auto;box-sizing:border-box}
 .bdg .gift{position:absolute;top:-6px;right:-6px;font-size:11px}
 .fnote{font-size:11px;color:var(--warnTx);margin:3px 0 0}
 .seg{display:flex;border:1px solid var(--inBd);border-radius:10px;overflow:hidden;font-size:12.5px;text-align:center}
@@ -252,7 +253,7 @@ table.st td{text-align:right;padding:5px 2px;border-bottom:1px solid var(--line)
 details.day{background:var(--card);border:1px solid var(--cardBd);border-radius:14px;margin-bottom:8px;box-shadow:var(--shadow)}
 details.day>summary{list-style:none;cursor:pointer;padding:11px 12px;display:flex;justify-content:space-between;align-items:center;font-size:13.5px;font-weight:600}
 details.day>summary::-webkit-details-marker{display:none}
-details.day>summary .arr{color:var(--tx2);margin-right:6px;font-size:18px}
+details.day>summary .arr{color:var(--tx2);margin-right:6px;font-size:22px}
 details.day[open]>summary .arr{transform:rotate(90deg);display:inline-block}
 details.day .dbody{padding:0 12px 11px}
 nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
@@ -275,7 +276,7 @@ nav button.on{color:var(--acc);font-weight:500}
 details.tsec{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:0 14px;margin-bottom:10px;box-shadow:var(--shadow,none)}
 details.tsec>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:14px 1px;cursor:pointer;font-weight:700;font-size:15.5px;color:var(--tx);-webkit-tap-highlight-color:transparent}
 details.tsec>summary::-webkit-details-marker{display:none}
-details.tsec>summary .car{color:var(--tx2);font-size:18px;transition:transform .15s;flex:0 0 auto}
+details.tsec>summary .car{color:var(--tx2);font-size:22px;transition:transform .15s;flex:0 0 auto}
 details.tsec[open]>summary .car{transform:rotate(90deg)}
 details.tsec>summary .tsx{margin-left:auto;font-size:12px;font-weight:400;color:var(--tx3);text-align:right;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 details.tsec>.tbody{padding:2px 1px 15px}
@@ -403,7 +404,8 @@ details.tsec>.tbody{padding:2px 1px 15px}
     <div id="catBlock" style="margin-top:10px"><div class="catrow" id="catChips"></div></div>
   </div>
   <div class="card">
-    <div class="lbl">消費幣別／金額</div>
+    <div class="lbl" style="display:flex;align-items:center;gap:6px">消費幣別／金額<span id="curHelp" role="button" tabindex="0" aria-label="匯率說明" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--acc);color:var(--acc);font-size:12px;font-weight:700;cursor:pointer;line-height:1">!</span></div>
+    <div id="curHelpBox" class="hint" style="display:none;margin:2px 0 4px">信用卡請款會延遲、實際匯率常較高，預設先多估，帳單來後用「💳 帳單補正」修正。</div>
     <div class="fld3"><select id="eCur" class="fld3-cur"></select><input type="number" id="eAmt" inputmode="decimal" placeholder="金額" class="fld3-amt"><label class="fld3-card" id="eCardWrap"><input type="checkbox" id="eCard">刷卡</label></div>
     <div class="fnote" id="feeNote" style="display:none"></div>
     <div id="rateWrap" style="margin-top:10px"><div class="lbl">匯率 <span style="color:var(--tx3);font-weight:400">（預設為 3 日內高值）</span></div>
@@ -580,8 +582,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 64;
-var VER = 'T0720-06';
+var CODE_VERSION = 65;
+var VER = 'T0724-01';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -739,6 +741,11 @@ function bshape(id){
 function bdg(id, size, extra){
   if(id === FUND) return '<span class="tag" style="font-size:' + (size===34?'13px':'10px') + '">' + svgi(IC_BANK, 14) + '基金</span>';
   return '<span class="bdg b' + (size===34?'34':'18') + '" style="background:' + bcolor(id) + ';color:#fff' + bshape(id) + '" title="' + esc(mname(id)) + '">' + esc(bchar(id)) + (extra||'') + '</span>';
+}
+function bdgC(id){
+  if(id === FUND) return bdg(id, 18);
+  var c = bcolor(id), rad = isFam(id) ? '8px' : '50%';
+  return '<span class="bdgC" style="background:' + lighten(c, .8) + ';border:1.5px solid ' + c + ';color:' + darken(c, .2) + ';border-radius:' + rad + '" title="' + esc(mname(id)) + '">' + esc(bchar(id)) + '</span>';
 }
 function weightOf(t, id){ for(var i=0;i<t.members.length;i++){ if(t.members[i].id===id){ var w = Number(t.members[i].weight); return isNaN(w) ? 1 : w; } } return 1; }
 function famName(t, fid){ for(var i=0;i<t.families.length;i++){ if(t.families[i].id===fid) return t.families[i].name; } return null; }
@@ -1219,9 +1226,11 @@ function renderAdd(){
   document.getElementById('eConvCur').value = _convCur || t.home;
   var loan = F.kind === 'loan';
   var ks = document.getElementById('kindSeg');
-  ks.innerHTML = '<span style="font-size:15px;font-weight:600">' + (loan ? '💸 記一筆借款' : '🧾 記一筆消費') + '</span>' +
-    '<button id="kindDel" title="刪除／放棄這筆" style="margin-left:6px;border:none;background:transparent;font-size:17px;cursor:pointer;padding:2px 4px">🗑️</button>' +
+  ks.innerHTML = '<span style="font-size:15px;font-weight:600;display:inline-flex;align-items:center;gap:5px">' + (loan ? svgi('<circle cx="8" cy="12" r="6"/><path d="M14 6.5a6 6 0 0 1 0 11"/>', 18) + '記一筆借款' : svgi('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6"/><path d="M9 12h6"/>', 18) + '記一筆消費') + '</span>' +
+    '<button id="kindDel" title="刪除／放棄這筆" style="margin-left:6px;border:none;background:transparent;color:var(--tx2);cursor:pointer;padding:2px 4px;display:inline-flex;align-items:center">' + svgi(IC.trash, 18) + '</button>' +
     '<span id="kindSwap" style="margin-left:auto;font-size:12.5px;color:var(--acc);cursor:pointer">' + (loan ? '改記消費 ›' : '改記借款 ›') + '</span>';
+  var _cH = document.getElementById('curHelp'), _cB = document.getElementById('curHelpBox');
+  if(_cH && _cB){ _cH.onclick = function(){ _cB.style.display = (_cB.style.display === 'none' ? 'block' : 'none'); }; }
   document.getElementById('kindSwap').onclick = function(){
     F.kind = loan ? 'exp' : 'loan';
     if(F.kind === 'loan'){ F.priv = false; F.treat = []; F.treatBy = {}; F.mode = 'avg'; F.cat = 'misc'; F.split = []; }
@@ -1553,7 +1562,7 @@ function autoRate(showErr){
   var lab3 = dk.slice(5).replace('-','/') + '～' + addDays(dk, 2).slice(5).replace('-','/');
   function infoTxt(r){
     return src === 'hi3'
-      ? '📈 取 ' + lab3 + ' 三日內最高 ' + r + '。信用卡請款會延遲、實際匯率常較高，預設先多估，帳單來後用「💳 帳單補正」修正。'
+      ? '📈 取 ' + lab3 + ' 三日內最高 ' + r
       : ((dk === todayISO()) ? '今日' : dk + ' 當日') + '均價 1 ' + F.cur + ' ≈ ' + r + ' ' + t.home + '（可手動改）';
   }
   if(S.rateCache[key]){ F.rate = S.rateCache[key]; document.getElementById('eRate').value = F.rate; info.textContent = infoTxt(F.rate); updateConv(); return; }
@@ -2184,8 +2193,8 @@ function buildPayCard(t, M, onLedger){
   active.forEach(function(it){ if(tfState(t, it.key) === 0) pendSum += it.amt; else waitSum += it.amt; });
   var open = !!S.pvOpen;
   var html = '<div class="card" style="border:2px solid var(--warnBd)">' +
-    '<div data-pvtog="1" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;cursor:pointer">' +
-    '<span class="arr" style="display:inline-block;font-size:18px;color:var(--tx2)' + (open ? ';transform:rotate(90deg)' : '') + '">▶</span>' +
+    '<div data-pvtog="1" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;cursor:pointer;padding:4px 0">' +
+    '<span class="arr" style="display:inline-block;font-size:22px;color:var(--tx2)' + (open ? ';transform:rotate(90deg)' : '') + '">▶</span>' +
     (mu && scope === 'me' ? bdg(me(), 18) : '👥') +
     '<span style="font-size:14.5px;font-weight:600">' + (scope === 'me' ? '你的待付' : '全團待付') + '</span>' +
     '<span data-nettog="1" style="display:inline-flex;align-items:center;gap:5px;margin-left:6px;font-size:12px;color:var(--tx2)">互沖帳' +
@@ -2333,7 +2342,7 @@ function memberStatHtml(t, paid, share, opts){
     var p = paid[m.id] || 0, s = share[m.id] || 0;
     if(opts.skipZero && p < 0.5 && s < 0.5) return;
     var b = bals[m.id] || 0, cls = b > 0 ? 'pos' : (b < 0 ? 'neg' : ''), sign = b > 0 ? '+' : '', sm = isSettled(t, m.id);
-    h2 += '<tr><td>' + bdg(m.id, 18) + (sm ? ' <span style="font-size:10px;color:var(--tx3)">已先結</span>' : '') + '</td>' +
+    h2 += '<tr><td>' + bdgC(m.id) + (sm ? ' <span style="font-size:10px;color:var(--tx3)">已先結</span>' : '') + '</td>' +
       (opts.weight ? '<td>' + weightOf(t, m.id) + '</td>' : '') +
       '<td>' + fmt(p) + '</td><td>' + fmt(s) + '</td><td class="' + (sm ? '' : cls) + '">' + (sm ? '<span style="color:var(--tx3)">已先結</span>' : (sign + fmt(b))) + '</td></tr>';
   });
@@ -3028,8 +3037,10 @@ function renderTrip(){
       }).join('') +
       '<button class="btn sub mini" id="btnAddLeg">' + btnIco(IC.plus) + '新增分段</button>';
     pop('set', secIcon('set') + '旅程設定', '<span style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap">' +
-      '<span id="secInvite" style="display:inline-flex;align-items:center;gap:4px;background:var(--accBg);border:1px solid var(--acc);border-radius:999px;padding:4px 10px;font-size:13px;color:var(--accTx);cursor:pointer">🔗<span>加入連結</span></span>' +
-      '<span id="secCode" style="display:inline-flex;align-items:center;gap:4px;background:var(--accBg);border:1px solid var(--acc);border-radius:999px;padding:4px 10px;font-size:13px;color:var(--accTx);cursor:pointer">📋<span>複製代碼</span></span>' +
+      '<span style="display:inline-flex;align-items:stretch;border:1px solid var(--acc);border-radius:999px;overflow:hidden;font-size:13px">' +
+        '<span id="secInvite" style="display:inline-flex;align-items:center;gap:4px;background:var(--accBg);padding:5px 12px;color:var(--accTx);cursor:pointer;border-right:1px solid var(--acc)">🔗<span>加入連結</span></span>' +
+        '<span id="secCode" style="display:inline-flex;align-items:center;gap:4px;background:var(--accBg);padding:5px 12px;color:var(--accTx);cursor:pointer">📋<span>複製代碼</span></span>' +
+      '</span>' +
       '</span>', !t.startDate);
     cap();
     html += '<div class="hint" style="margin-bottom:6px">名單要含<b>你自己</b>與整團所有人（含小孩）。人頭數：大人 1、小孩 0.5、不分攤 0。</div><div id="memberBox">';
@@ -3098,7 +3109,7 @@ function renderTrip(){
           '<span style="color:var(--tx3);font-size:14px">✏️</span></div></div>';
       }
     });
-    html += '</div><div class="sbtns"><button id="btnAddM">' + btnIco(IC.uplus) + '新增成員</button><button id="btnFriM">' + btnIco(IC.star) + '好朋友</button><button id="btnImpM">' + btnIco(IC.dl) + '舊旅程</button></div>' +
+    html += '</div><div class="sbtns" style="margin-left:16px"><button id="btnAddM">' + btnIco(IC.uplus) + '新增成員</button><button id="btnFriM">' + btnIco(IC.star) + '好朋友</button><button id="btnImpM">' + btnIco(IC.dl) + '舊旅程</button></div>' +
       '<div class="hint" style="margin-top:6px">帳戶給結算轉帳用、旅伴看得到；同一戶結算時合併轉帳。好朋友清單存這支手機。</div>' +
       '<div class="lbl" style="margin-top:12px;font-weight:600;color:var(--tx)">我是誰（這支手機的使用者）</div>' +
       ((me() && !_meChange)
@@ -3170,7 +3181,7 @@ function renderTrip(){
       act.map(function(c){ return '<span class="chip' + (S.cur === c ? ' on' : '') + '" data-sw="' + c + '">' + esc(S.trips[c].name) + (S.trips[c].startDate ? ' <span style="font-size:10px;color:var(--tx3)">' + S.trips[c].startDate.slice(5).replace('-','/') + '</span>' : '') + '</span>'; }).join('') + '</div>';
   }
   if(arc.length){
-    lh += '<details style="margin-top:10px"><summary style="font-size:12.5px;color:var(--tx2);cursor:pointer">📦 已結束旅程（' + arc.length + '）</summary><div class="chips" style="margin-top:6px">' +
+    lh += '<details style="margin-top:10px"><summary style="font-size:15px;color:var(--tx2);cursor:pointer;padding:10px 4px">📦 已結束旅程（' + arc.length + '）</summary><div class="chips" style="margin-top:6px">' +
       arc.map(function(c){ return '<span class="chip" style="opacity:.7" data-sw="' + c + '">' + esc(S.trips[c].name) + '</span>'; }).join('') +
       '</div><div class="hint" style="margin-top:4px">點一下開啟；要還原到進行中，開啟後在旅程頁按「還原」。</div></details>';
   }
@@ -3185,8 +3196,10 @@ function renderTrip(){
       '<span style="font-size:30px;line-height:1;flex:0 0 auto">' + tripIcon(t) + '</span>' +
       '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(t.name) + '</div>' +
       '<div class="hint" style="margin:0">進行中 ' + act.length + (arc.length ? ' · 已結束 ' + arc.length : '') + '</div></div>' +
-      '<button class="btn sub mini" id="btnSwTrip">' + btnIco(IC.swap) + '切換</button>' +
-      '<button class="btn sub mini" id="btnNewTrip2">' + btnIco(IC.plus) + '新增</button></div>' +
+      '<div style="display:inline-flex;align-items:stretch;border:1px solid var(--inBd);border-radius:10px;overflow:hidden;flex:0 0 auto">' +
+        '<button class="btn sub mini" id="btnSwTrip" style="border:none;border-radius:0;border-right:1px solid var(--inBd)">' + btnIco(IC.swap) + '切換</button>' +
+        '<button class="btn sub mini" id="btnNewTrip2" style="border:none;border-radius:0">' + btnIco(IC.plus) + '新增</button>' +
+      '</div></div>' +
       (tripCD(t) && tripCD(t).state === 'nodate' ? '<div class="card" style="text-align:center;padding:10px"><span data-cdnodate="1" style="color:var(--warnTx);font-size:13px;cursor:pointer">⚠️ 未設日期 › 點我去設定</span></div>' : '');
   } else {
     tripBar = '<div class="card" style="text-align:center;padding:22px 16px 16px">' +
@@ -4035,4 +4048,4 @@ try{
 </body>
 </html>
 
-<!-- T0720-06 deploy -->
+<!-- T0724-01 deploy -->
