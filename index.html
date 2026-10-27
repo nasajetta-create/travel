@@ -219,6 +219,17 @@ input[type=date]{-webkit-appearance:none;appearance:none;height:47px;display:fle
 .lrow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:.5px solid var(--line);cursor:pointer;touch-action:pan-y;position:relative}
 .lrow .delhint{position:absolute;right:12px;top:0;bottom:0;display:flex;align-items:center;color:var(--danger);font-size:14px;font-weight:600;opacity:0;pointer-events:none}
 .lrow:last-child{border-bottom:none}
+.fbx{border:1.5px solid var(--inBd);border-color:color-mix(in srgb,var(--acc) 45%,transparent);border-radius:10px;overflow:hidden;margin:7px 0}
+.fbx.solo{border-color:var(--inBd)}
+.fbxh{font-size:12.5px;font-weight:600;color:var(--acc);background:var(--accBg);padding:4px 9px}
+.fbx table.st td{border-bottom:none;border-top:1px solid var(--line)}
+.fbx table.st tr:first-child td{border-top:none}
+table.st.fbxtb{table-layout:fixed}
+table.st.fbxtb th{border-bottom:none}
+table.st.fbxtb th:first-child,table.st.fbxtb td:first-child{padding-left:10px}
+table.st.fbxtb th:last-child,table.st.fbxtb td:last-child{padding-right:10px}
+.fbx tr.fbxsum td{background:var(--accBg);font-weight:600}
+.fbx.solo tr.fbxsum td{background:var(--ro)}
 .lmhead{font-size:13px;font-weight:600;color:var(--tx2);padding:7px 2px 4px;margin-top:6px;border-bottom:.5px solid var(--line)}
 .lmhead:first-child{margin-top:0}
 .ldate{flex:0 0 auto;width:34px;text-align:center;line-height:1.15}
@@ -582,8 +593,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 66;
-var VER = 'T1027-01';
+var CODE_VERSION = 67;
+var VER = 'T1027-02';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -2322,32 +2333,62 @@ function balMap(t, paid, share, opts){
   }
   return bals;
 }
+function famOrder(t){
+  var gs = [], byU = {};
+  orderedMembers(t).forEach(function(m){
+    var fam = !!(m.famId && famName(t, m.famId)), u = unitId(t, m);
+    if(!byU[u]){ byU[u] = { id: u, fam: fam, name: fam ? famName(t, m.famId) : (m.name || '?'), ms: [] }; gs.push(byU[u]); }
+    byU[u].ms.push(m);
+  });
+  return gs;
+}
+function fbxOpen(g, label){
+  return '<div class="fbx' + (g.fam ? '' : ' solo') + '">' + (label ? '<div class="fbxh">' + label + '</div>' : '');
+}
 function memberStatHtml(t, paid, share, opts){
   opts = opts || {};
   var bals = balMap(t, paid, share, opts);
+  var hasFam = t.members.some(function(m){ return m.famId && famName(t, m.famId); });
+  var groups = hasFam ? famOrder(t) : [{ fam: false, name: '', ms: t.members, flat: true }];
+  var vis = function(m){ var p = paid[m.id] || 0, s = share[m.id] || 0; return !(opts.skipZero && p < 0.5 && s < 0.5); };
   if(S.tblView === 'clean'){
     var h = '';
-    t.members.forEach(function(m){
-      var p = paid[m.id] || 0, s = share[m.id] || 0;
-      if(opts.skipZero && p < 0.5 && s < 0.5) return;
-      var b = bals[m.id] || 0, settled = (b === 0), sm = isSettled(t, m.id);
-      h += '<div class="mclean' + ((settled || sm) && p < 0.5 ? ' zero' : '') + '">' + bdg(m.id, 18) +
-        '<div><div class="cn">' + esc(m.name || '?') + (sm ? ' <span style="font-size:10px;color:var(--tx3);border:1px solid var(--inBd);border-radius:8px;padding:0 5px">已先結</span>' : '') + '</div><div class="cs">已付 ' + fmt(p) + '｜應付 ' + fmt(s) + '</div></div>' +
-        '<span class="cv ' + (sm ? '' : (b > 0 ? 'pos' : (b < 0 ? 'neg' : ''))) + '"' + ((settled || sm) ? ' style="color:var(--tx3);font-size:13px"' : '') + '>' + (sm ? '已先結' : (settled ? '結清' : (b > 0 ? '+' : '') + fmt(b))) + '</span></div>';
+    groups.forEach(function(g){
+      var ms = g.ms.filter(vis); if(!ms.length) return;
+      var inner = '';
+      ms.forEach(function(m){
+        var p = paid[m.id] || 0, s = share[m.id] || 0;
+        var b = bals[m.id] || 0, settled = (b === 0), sm = isSettled(t, m.id);
+        inner += '<div class="mclean' + ((settled || sm) && p < 0.5 ? ' zero' : '') + '">' + bdg(m.id, 18) +
+          '<div><div class="cn">' + esc(m.name || '?') + (sm ? ' <span style="font-size:10px;color:var(--tx3);border:1px solid var(--inBd);border-radius:8px;padding:0 5px">已先結</span>' : '') + '</div><div class="cs">已付 ' + fmt(p) + '｜應付 ' + fmt(s) + '</div></div>' +
+          '<span class="cv ' + (sm ? '' : (b > 0 ? 'pos' : (b < 0 ? 'neg' : ''))) + '"' + ((settled || sm) ? ' style="color:var(--tx3);font-size:13px"' : '') + '>' + (sm ? '已先結' : (settled ? '結清' : (b > 0 ? '+' : '') + fmt(b))) + '</span></div>';
+      });
+      h += g.flat ? inner : fbxOpen(g, g.fam ? esc(g.name) : '') + '<div style="padding:0 8px">' + inner + '</div></div>';
     });
     return h;
   }
-  var h2 = '<table class="st grid"><tr><th>成員</th>' + (opts.weight ? '<th>人頭</th>' : '') + '<th>已付</th><th>應付</th><th>差額</th></tr>';
-  t.members.forEach(function(m){
-    var p = paid[m.id] || 0, s = share[m.id] || 0;
-    if(opts.skipZero && p < 0.5 && s < 0.5) return;
-    var b = bals[m.id] || 0, cls = b > 0 ? 'pos' : (b < 0 ? 'neg' : ''), sign = b > 0 ? '+' : '', sm = isSettled(t, m.id);
-    h2 += '<tr><td>' + bdgC(m.id) + (sm ? ' <span style="font-size:10px;color:var(--tx3)">已先結</span>' : '') + '</td>' +
-      (opts.weight ? '<td>' + weightOf(t, m.id) + '</td>' : '') +
-      '<td>' + fmt(p) + '</td><td>' + fmt(s) + '</td><td class="' + (sm ? '' : cls) + '">' + (sm ? '<span style="color:var(--tx3)">已先結</span>' : (sign + fmt(b))) + '</td></tr>';
+  var cg = '<colgroup><col style="width:' + (opts.weight ? '30%' : '34%') + '">' + (opts.weight ? '<col style="width:12%">' : '') + '<col><col><col></colgroup>';
+  var head = '<tr><th>成員</th>' + (opts.weight ? '<th>人頭</th>' : '') + '<th>已付</th><th>應付</th><th>差額</th></tr>';
+  var rowsOf = function(ms){
+    var r = '';
+    ms.forEach(function(m){
+      var p = paid[m.id] || 0, s = share[m.id] || 0;
+      var b = bals[m.id] || 0, cls = b > 0 ? 'pos' : (b < 0 ? 'neg' : ''), sign = b > 0 ? '+' : '', sm = isSettled(t, m.id);
+      r += '<tr><td>' + bdgC(m.id) + (sm ? ' <span style="font-size:10px;color:var(--tx3)">已先結</span>' : '') + '</td>' +
+        (opts.weight ? '<td>' + weightOf(t, m.id) + '</td>' : '') +
+        '<td>' + fmt(p) + '</td><td>' + fmt(s) + '</td><td class="' + (sm ? '' : cls) + '">' + (sm ? '<span style="color:var(--tx3)">已先結</span>' : (sign + fmt(b))) + '</td></tr>';
+    });
+    return r;
+  };
+  if(!hasFam) return '<table class="st grid">' + head + rowsOf(t.members.filter(vis)) + '</table>';
+  var h2 = '<table class="st grid fbxtb">' + cg + head + '</table>';
+  groups.forEach(function(g){
+    var ms = g.ms.filter(vis); if(!ms.length) return;
+    h2 += fbxOpen(g, g.fam ? esc(g.name) : '') + '<table class="st grid fbxtb">' + cg + rowsOf(ms) + '</table></div>';
   });
-  return h2 + '</table>';
+  return h2;
 }
+
 var _setl = null;
 function openSettleMem(){
   var t = trip(); if(!t || !t.members.length) return;
@@ -2438,23 +2479,26 @@ function memberFamHtml(t, paid, share){
   var gs = famGroups(t, paid, share);
   var sg = function(b){ return (b > 0 ? '+' : '') + fmt(b); };
   var cl = function(b){ return b > 0 ? 'pos' : (b < 0 ? 'neg' : ''); };
-  var h = '<table class="st"><tr><th>成員</th><th>已付</th><th>應付</th><th>差額</th></tr>';
+  var cg = '<colgroup><col style="width:34%"><col><col><col></colgroup>';
+  var h = '<table class="st fbxtb">' + cg + '<tr><th>成員</th><th>已付</th><th>應付</th><th>差額</th></tr></table>';
   gs.forEach(function(g){
     if(!g.fam){
       g.rows.forEach(function(r){
         if(r.p < 0.5 && r.s < 0.5) return;
-        h += '<tr style="background:var(--ro)"><td style="font-weight:600">' + esc(r.m.name || '?') + '<span style="font-weight:400;color:var(--tx3);font-size:12px">（個人）</span></td><td style="font-weight:600">' + fmt(r.p) + '</td><td style="font-weight:600">' + fmt(r.s) + '</td><td class="' + cl(r.b) + '" style="font-weight:600">' + sg(r.b) + '</td></tr>';
+        h += '<div class="fbx solo"><table class="st fbxtb">' + cg + '<tr class="fbxsum"><td>' + esc(r.m.name || '?') + '<span style="font-weight:400;color:var(--tx3);font-size:12px">（個人）</span></td><td>' + fmt(r.p) + '</td><td>' + fmt(r.s) + '</td><td class="' + cl(r.b) + '">' + sg(r.b) + '</td></tr></table></div>';
       });
       return;
     }
-    h += '<tr style="background:var(--ro)"><td style="font-weight:600">' + esc(g.name) + '</td><td style="font-weight:600">' + fmt(g.p) + '</td><td style="font-weight:600">' + fmt(g.s) + '</td><td class="' + cl(g.b) + '" style="font-weight:600">' + sg(g.b) + '</td></tr>';
+    h += '<div class="fbx"><table class="st fbxtb">' + cg + '<tr class="fbxsum"><td>' + esc(g.name) + '</td><td>' + fmt(g.p) + '</td><td>' + fmt(g.s) + '</td><td class="' + cl(g.b) + '">' + sg(g.b) + '</td></tr>';
     g.rows.forEach(function(r){
       h += '<tr><td style="padding-left:16px">' + esc(r.m.name || '?') + '</td><td>' + fmt(r.p) + '</td><td>' + fmt(r.s) + '</td><td class="' + cl(r.b) + '">' + sg(r.b) + '</td></tr>';
     });
     if(g.idle.length) h += '<tr><td colspan="4" style="text-align:left;padding-left:16px;color:var(--tx3);font-size:12.5px">' + esc(g.idle.map(function(m){ return m.name || '?'; }).join('、')) + '（不分攤）</td></tr>';
+    h += '</table></div>';
   });
-  return h + '</table>';
+  return h;
 }
+
 function unitMemNames(t, u){
   if(!u || u.solo) return '';
   return u.mids.map(function(id){ return mname(id); }).join('、');
@@ -2807,17 +2851,19 @@ function settleImage(t, M){
   var members = t.members;
   var tf = finalTf(t, M);
   var headH = 100, tblHead = 42, rowH = 48, idleH = 40;
-  var IR = [];
+  var IR = [], gi = 0, GAP = 10;
   famGroups(t, M.overall.paid, M.overall.share).forEach(function(gp){
     if(!gp.fam){
-      gp.rows.forEach(function(r){ if(r.p < 0.5 && r.s < 0.5) return; IR.push({ k: 'solo', n: r.m.name || '?', p: r.p, s: r.s, b: r.b }); });
+      gp.rows.forEach(function(r){ if(r.p < 0.5 && r.s < 0.5) return; IR.push({ k: 'solo', g: gi++, n: r.m.name || '?', p: r.p, s: r.s, b: r.b }); });
       return;
     }
-    IR.push({ k: 'fam', n: gp.name, p: gp.p, s: gp.s, b: gp.b });
-    gp.rows.forEach(function(r){ IR.push({ k: 'mem', n: r.m.name || '?', p: r.p, s: r.s, b: r.b }); });
-    if(gp.idle.length) IR.push({ k: 'idle', n: gp.idle.map(function(m){ return m.name || '?'; }).join('、') + '（不分攤）' });
+    IR.push({ k: 'fam', g: gi, n: gp.name, p: gp.p, s: gp.s, b: gp.b });
+    gp.rows.forEach(function(r){ IR.push({ k: 'mem', g: gi, n: r.m.name || '?', p: r.p, s: r.s, b: r.b }); });
+    if(gp.idle.length) IR.push({ k: 'idle', g: gi, n: gp.idle.map(function(m){ return m.name || '?'; }).join('、') + '（不分攤）' });
+    gi++;
   });
-  var tblH = 0; IR.forEach(function(r){ tblH += r.k === 'idle' ? idleH : rowH; });
+  var hasFamI = IR.some(function(x){ return x.k === 'fam'; });
+  var tblH = 0; IR.forEach(function(r, i){ tblH += r.k === 'idle' ? idleH : rowH; if(hasFamI && i > 0 && IR[i-1].g !== r.g) tblH += GAP; });
   var tfRowH = function(f){ return 50 + (unitMemNames(t, f.from) || unitMemNames(t, f.to) ? 26 : 0) + (showAcct && f.to.bank ? 26 : 0); };
   var trH = 52;
   if(tf.length){ trH = 44 + 8; tf.forEach(function(f){ trH += tfRowH(f); }); }
@@ -2836,21 +2882,34 @@ function settleImage(t, M){
   var nEx = t.expenses.filter(function(e){ return !e._del; }).length;
   var sub = (d1 ? d1.replace(/-/g,'/').slice(5) + '–' + (d2 || '').replace(/-/g,'/').slice(5) + (days ? ' · ' + days + '天' : '') + ' · ' : '') + nEx + '筆 · ' + members.length + '人';
   g.fillStyle = 'rgba(255,255,255,.82)'; g.font = '19px sans-serif'; g.fillText(sub, PAD, 80);
-  var colN = PAD, colBal = W - PAD, colShare = W - PAD - 140, colPaid = W - PAD - 290;
+  var IP = hasFamI ? 14 : 0; var colN = PAD + IP, colBal = W - PAD - IP, colShare = W - PAD - IP - 140, colPaid = W - PAD - IP - 290;
   var y = headH + 28;
   g.fillStyle = '#8a8a8a'; g.font = '16px sans-serif';
   g.textAlign = 'left'; g.fillText('成員', colN, y);
   g.textAlign = 'right'; g.fillText('已付', colPaid, y); g.fillText('應付', colShare, y); g.fillText('差額', colBal, y);
   y = headH + tblHead + 30;
-  IR.forEach(function(r){
+  var gTop = null;
+  var boxEnd = function(i){
+    if(!hasFamI || gTop === null) return;
+    var solo = IR[i].k === 'solo';
+    g.strokeStyle = solo ? '#cfd6e0' : '#9fb6d8'; g.lineWidth = 1.5;
+    roundRect(g, PAD, gTop, W - PAD * 2, (y - 31) - gTop, 10); g.stroke();
+  };
+  IR.forEach(function(r, i){
     var hh = r.k === 'idle' ? idleH : rowH;
     var hl = r.k === 'fam' || r.k === 'solo';
-    if(hl){ g.fillStyle = '#eef2f7'; g.fillRect(PAD, y - 31, W - PAD * 2, hh); }
-    g.strokeStyle = '#eeeeee'; g.lineWidth = 1; g.beginPath(); g.moveTo(PAD, y - 31); g.lineTo(W - PAD, y - 31); g.stroke();
+    var first = i === 0 || IR[i-1].g !== r.g;
+    if(hasFamI && first){ if(i > 0) y += GAP; gTop = y - 31; }
+    if(hl){
+      g.save(); roundRect(g, PAD, y - 31, W - PAD * 2, hh, hasFamI ? 10 : 0); g.clip();
+      g.fillStyle = r.k === 'solo' ? '#f3f5f8' : '#eef3fb'; g.fillRect(PAD, y - 31, W - PAD * 2, hh + 12); g.restore();
+      if(hasFamI && r.k === 'fam'){ g.fillStyle = '#eef3fb'; g.fillRect(PAD, y - 31 + hh - 12, W - PAD * 2, 12); }
+    }
+    if(!(hasFamI && first)){ g.strokeStyle = '#eeeeee'; g.lineWidth = 1; g.beginPath(); g.moveTo(PAD + (hasFamI ? 1 : 0), y - 31); g.lineTo(W - PAD - (hasFamI ? 1 : 0), y - 31); g.stroke(); }
     if(r.k === 'idle'){
       g.fillStyle = '#9a9a9a'; g.font = '18px sans-serif'; g.textAlign = 'left';
       g.fillText(r.n, colN + 24, y - 4);
-      y += hh; return;
+      y += hh; if(i === IR.length - 1 || IR[i+1].g !== r.g) boxEnd(i); return;
     }
     g.fillStyle = '#111111'; g.font = (hl ? '600 23px' : '22px') + ' sans-serif'; g.textAlign = 'left';
     g.fillText(r.n, colN + (r.k === 'mem' && IR.some(function(x){ return x.k === 'fam'; }) ? 24 : 0), y);
@@ -2860,6 +2919,7 @@ function settleImage(t, M){
     g.fillStyle = r.b > 0.5 ? acc : (r.b < -0.5 ? '#c02626' : '#888888'); g.font = (hl ? '700 22px' : '600 21px') + ' sans-serif';
     g.fillText((r.b > 0.5 ? '+' : '') + fmt(r.b), colBal, y);
     y += hh;
+    if(i === IR.length - 1 || IR[i+1].g !== r.g) boxEnd(i);
   });
   y += 8;
   if(tf.length){
@@ -4157,4 +4217,4 @@ try{
 </body>
 </html>
 
-<!-- T1027-01 deploy -->
+<!-- T1027-02 deploy -->
