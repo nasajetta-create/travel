@@ -598,8 +598,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 69;
-var VER = 'T1027-04';
+var CODE_VERSION = 70;
+var VER = 'T1027-05';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -2524,19 +2524,29 @@ function finalCardHtml(t, M){
     grp[f.to].sum += f.amt; grp[f.to].rows.push(f);
   });
   order.sort(function(a, b){ return b.sum - a.sum; });
+  var pc = {}, pi = {};
+  M.finalCalc.transfers.forEach(function(f){ pc[f.from] = (pc[f.from] || 0) + 1; });
   var h = '<div class="card" style="border:2px solid var(--acc)"><div class="lbl" style="font-weight:600;color:var(--tx)">總結算（未結清部分合併）</div>';
   order.forEach(function(gp){
     var toU = units[gp.to];
     gp.rows.sort(function(a, b){ return b.amt - a.amt; });
     h += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:8px 2px 2px"><span style="font-size:14.5px;font-weight:600"><span ' + saTag(toU.name, toU.bankc, toU.acct) + '>' + uLabel(toU) + '</span>　應收</span><span style="font-size:15px;font-weight:600;color:var(--acc)">' + money(t.home, gp.sum) + '</span></div>';
-    if(toU.bank) h += '<div class="bank" style="margin:0 2px 4px">收款：' + esc(toU.bank) + '</div>';
+    if(toU.bank) h += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 2px 6px;font-size:15px;font-weight:600">收款：' + esc(toU.bank) + ' <button class="btn sub mini" data-cpa="' + encodeURIComponent(toU.acct || toU.bankc) + '" style="padding:3px 10px;font-size:12.5px">' + btnIco(IC.copy) + '複製帳號</button></div>';
     gp.rows.forEach(function(f){
       var fromU = units[f.from], nm = unitMemNames(t, fromU);
       var key = 'NET|' + f.from + '>' + f.to, st = tfState(t, key);
-      h += '<div class="tf' + (st === 2 ? ' done' : '') + '"><input type="checkbox" data-tfk="' + key + '"' + (st ? ' checked' : '') + '><div style="flex:1"><div class="who">' + uLabel(fromU) + ' →</div>' + (nm ? '<div class="bank">' + esc(nm) + '</div>' : '') +
+      var ktag = '';
+      if(pc[f.from] > 1){ pi[f.from] = (pi[f.from] || 0) + 1; ktag = ' <span style="font-size:11.5px;font-weight:600;color:#b45309;border:1.5px solid #f2b866;background:#fff7e8;border-radius:6px;padding:0 5px">第 ' + pi[f.from] + '/' + pc[f.from] + ' 筆</span>'; }
+      h += '<div class="tf' + (st === 2 ? ' done' : '') + '"><input type="checkbox" data-tfk="' + key + '"' + (st ? ' checked' : '') + '><div style="flex:1"><div class="who">' + uLabel(fromU) + ' →' + ktag + '</div>' + (nm ? '<div class="bank">' + esc(nm) + '</div>' : '') +
         (st ? '<div style="margin-top:2px">' + tfStLab(st) + tfBtns(t, key, f.to) + '</div>' : '') + '</div><div class="amt">' + money(t.home, f.amt) + '</div></div>';
     });
   });
+  var mu = Object.keys(pc).filter(function(k){ return pc[k] > 1; });
+  if(mu.length){
+    h += '<div style="background:#fff7e8;border:1.5px solid #f2b866;border-radius:10px;padding:7px 10px;margin-top:8px;font-size:13.5px;color:#7c3d06"><b style="color:#b45309">付款提醒</b>　' +
+      mu.map(function(k){ var fs = M.finalCalc.transfers.filter(function(f){ return f.from === k; }), tot = 0; fs.forEach(function(f){ tot += f.amt; });
+        return esc(units[k].name) + ' 要轉 ' + fs.length + ' 筆，共 ' + fmt(tot) + '（' + fs.map(function(f){ return esc(units[f.to].name) + ' ' + fmt(f.amt); }).join('、') + '）'; }).join('；') + '</div>';
+  }
   var loans = [];
   M.days.forEach(function(dy){ if(!dy.done) dy.es.forEach(function(e){ if(e.kind === 'loan') loans.push(e); }); });
   if(loans.length){
@@ -2947,9 +2957,19 @@ function settleImage(t, M){
   });
   var hasFamI = IR.some(function(x){ return x.k === 'fam'; });
   var tblH = 0; IR.forEach(function(r, i){ tblH += r.k === 'idle' ? idleH : rowH; if(hasFamI && i > 0 && IR[i-1].g !== r.g) tblH += GAP; });
-  var tfRowH = function(f){ return 50 + (unitMemNames(t, f.from) || unitMemNames(t, f.to) ? 26 : 0) + (showAcct && f.to.bank ? 26 : 0); };
+  var TG = [], tgBy = {}, payCnt = {}, payIdx = {};
+  tf.forEach(function(f){
+    if(!tgBy[f.to.id]){ tgBy[f.to.id] = { to: f.to, sum: 0, rows: [] }; TG.push(tgBy[f.to.id]); }
+    tgBy[f.to.id].sum += f.amt; tgBy[f.to.id].rows.push(f);
+    payCnt[f.from.id] = (payCnt[f.from.id] || 0) + 1;
+  });
+  TG.sort(function(a, b){ return b.sum - a.sum; });
+  TG.forEach(function(gp){ gp.rows.sort(function(a, b){ return b.amt - a.amt; }); gp.rows.forEach(function(f){ payIdx[f.from.id] = (payIdx[f.from.id] || 0) + 1; f._k = payIdx[f.from.id]; }); });
+  var multi = Object.keys(payCnt).filter(function(k){ return payCnt[k] > 1; });
+  var grpH = function(gp){ return 52 + (showAcct && gp.to.bank ? 34 : 0) + gp.rows.length * 44 + 10; };
+  var remH = multi.length ? (44 + multi.length * 32 + 12) : 0;
   var trH = 52;
-  if(tf.length){ trH = 44 + 8; tf.forEach(function(f){ trH += tfRowH(f); }); }
+  if(tf.length){ trH = 46; TG.forEach(function(gp){ trH += grpH(gp) + 12; }); trH += remH + (remH ? 24 : 8); }
   var footH = 44, qrB = t._demo ? 0 : QR_H;
   var H = headH + tblHead + tblH + 20 + trH + qrB + footH;
   var cv = document.createElement('canvas');
@@ -3007,25 +3027,55 @@ function settleImage(t, M){
   y += 8;
   if(tf.length){
     g.fillStyle = '#f4f6f5'; roundRect(g, PAD, y, W - PAD * 2, trH - 8, 12); g.fill();
-    g.fillStyle = acc; g.font = '600 18px sans-serif'; g.textAlign = 'left';
-    g.fillText('應轉帳（最少筆數）', PAD + 16, y + 30);
-    var ty = y + 60;
-    tf.forEach(function(f){
-      g.fillStyle = '#111111'; g.font = '500 22px sans-serif'; g.textAlign = 'left';
-      g.fillText(f.from.name + '  →  ' + f.to.name, PAD + 16, ty);
-      g.fillStyle = acc; g.font = '600 24px sans-serif'; g.textAlign = 'right';
-      g.fillText(t.home + ' ' + fmt(f.amt), W - PAD - 16, ty);
-      var sy = ty, nf = unitMemNames(t, f.from) || f.from.name, nt = unitMemNames(t, f.to) || f.to.name;
-      if(unitMemNames(t, f.from) || unitMemNames(t, f.to)){
-        sy += 26; g.fillStyle = '#777777'; g.font = '17px sans-serif'; g.textAlign = 'left';
-        g.fillText(nf + ' → ' + nt, PAD + 16, sy);
+    g.fillStyle = acc; g.font = '600 19px sans-serif'; g.textAlign = 'left';
+    g.fillText('應轉帳（依收款人）', PAD + 16, y + 30);
+    var gy = y + 46, bx = PAD + 12, bw = W - PAD * 2 - 24;
+    TG.forEach(function(gp){
+      var gh = grpH(gp);
+      g.fillStyle = '#ffffff'; roundRect(g, bx, gy, bw, gh, 10); g.fill();
+      g.strokeStyle = '#9fb6d8'; g.lineWidth = 1.5; roundRect(g, bx, gy, bw, gh, 10); g.stroke();
+      var tn = gp.to.name + ' 收';
+      g.textAlign = 'left'; g.fillStyle = '#111111'; g.font = '700 24px sans-serif'; g.fillText(tn, bx + 14, gy + 36);
+      var tnw = g.measureText(tn).width, tm = unitMemNames(t, gp.to);
+      if(tm){ g.fillStyle = '#888888'; g.font = '16px sans-serif'; g.fillText(tm, bx + 14 + tnw + 10, gy + 36); }
+      g.textAlign = 'right'; g.fillStyle = acc; g.font = '700 27px sans-serif'; g.fillText(t.home + ' ' + fmt(gp.sum), bx + bw - 14, gy + 37);
+      var ry = gy + 52;
+      g.strokeStyle = '#e5e7eb'; g.lineWidth = 1; g.beginPath(); g.moveTo(bx + 14, ry); g.lineTo(bx + bw - 14, ry); g.stroke();
+      if(showAcct && gp.to.bank){
+        g.textAlign = 'left'; g.fillStyle = '#333333'; g.font = '600 21px sans-serif'; g.fillText('收款 ' + gp.to.bank, bx + 14, ry + 28);
+        ry += 34;
       }
-      if(showAcct && f.to.bank){
-        sy += 26; g.fillStyle = '#777777'; g.font = '17px sans-serif'; g.textAlign = 'left';
-        g.fillText('收款 ' + f.to.bank, PAD + 16, sy);
-      }
-      ty += tfRowH(f);
+      gp.rows.forEach(function(f){
+        var cy = ry + 30, fn = f.from.name, fm = unitMemNames(t, f.from);
+        g.textAlign = 'left'; g.fillStyle = '#222222'; g.font = '20px sans-serif'; g.fillText(fn, bx + 14, cy);
+        var cx = bx + 14 + g.measureText(fn).width + 10;
+        if(fm){ g.fillStyle = '#888888'; g.font = '15px sans-serif'; g.fillText(fm, cx, cy); cx += g.measureText(fm).width + 10; }
+        if(payCnt[f.from.id] > 1){
+          var tg = '第 ' + f._k + '/' + payCnt[f.from.id] + ' 筆';
+          g.font = '600 14px sans-serif'; var tw = g.measureText(tg).width + 14;
+          g.fillStyle = '#fff7e8'; roundRect(g, cx, cy - 18, tw, 24, 6); g.fill();
+          g.strokeStyle = '#f2b866'; g.lineWidth = 1.5; roundRect(g, cx, cy - 18, tw, 24, 6); g.stroke();
+          g.fillStyle = '#b45309'; g.fillText(tg, cx + 7, cy - 1);
+        }
+        g.textAlign = 'right'; g.fillStyle = '#222222'; g.font = '500 21px sans-serif'; g.fillText(fmt(f.amt), bx + bw - 14, cy);
+        ry += 44;
+      });
+      gy += gh + 12;
     });
+    if(multi.length){
+      g.fillStyle = '#fff7e8'; roundRect(g, bx, gy, bw, remH, 10); g.fill();
+      g.strokeStyle = '#f2b866'; g.lineWidth = 1.5; roundRect(g, bx, gy, bw, remH, 10); g.stroke();
+      g.textAlign = 'left'; g.fillStyle = '#b45309'; g.font = '600 18px sans-serif'; g.fillText('付款提醒', bx + 14, gy + 30);
+      var my = gy + 62;
+      multi.forEach(function(uid){
+        var fs = tf.filter(function(f){ return f.from.id === uid; }), tot = 0; fs.forEach(function(f){ tot += f.amt; });
+        g.textAlign = 'left'; g.fillStyle = '#222222'; g.font = '19px sans-serif';
+        g.fillText(fs[0].from.name + ' 要轉 ' + fs.length + ' 筆，共 ' + fmt(tot), bx + 14, my);
+        g.textAlign = 'right'; g.fillStyle = '#777777'; g.font = '15px sans-serif';
+        g.fillText(fs.map(function(f){ return f.to.name + ' ' + fmt(f.amt); }).join('、'), bx + bw - 14, my);
+        my += 32;
+      });
+    }
   } else {
     g.fillStyle = acc; g.font = '600 24px sans-serif'; g.textAlign = 'center';
     g.fillText('全部已結清 ✅', W / 2, y + 34);
@@ -4301,4 +4351,4 @@ try{
 </body>
 </html>
 
-<!-- T1027-04 deploy -->
+<!-- T1027-05 deploy -->
