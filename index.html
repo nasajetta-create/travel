@@ -582,8 +582,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 65;
-var VER = 'T0724-01';
+var CODE_VERSION = 66;
+var VER = 'T1027-01';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -2418,6 +2418,74 @@ function confirmSettleMem(){
   renderSettle();
   toast('已結清 ' + _setl.pick.length + ' 位');
 }
+function loanWho(t, e){
+  var to = (e.split || []).map(function(id){ return mname(id); }).join('、');
+  return mname(e.payer) + ' 借給 ' + (to || '?');
+}
+function famGroups(t, paid, share){
+  var bals = balMap(t, paid, share, { skipZero: true });
+  var gs = [], byU = {};
+  orderedMembers(t).forEach(function(m){
+    var u = unitId(t, m);
+    if(!byU[u]){ byU[u] = { id: u, fam: !!(m.famId && famName(t, m.famId)), name: (m.famId && famName(t, m.famId)) || m.name || '?', p: 0, s: 0, b: 0, rows: [], idle: [] }; gs.push(byU[u]); }
+    var g = byU[u], p = paid[m.id] || 0, s = share[m.id] || 0;
+    g.p += p; g.s += s; g.raw = (g.raw || 0) + p - s; g.b = Math.round(g.raw);
+    if(p < 0.5 && s < 0.5 && g.fam) g.idle.push(m); else g.rows.push({ m: m, p: p, s: s, b: bals[m.id] || 0 });
+  });
+  return gs;
+}
+function memberFamHtml(t, paid, share){
+  var gs = famGroups(t, paid, share);
+  var sg = function(b){ return (b > 0 ? '+' : '') + fmt(b); };
+  var cl = function(b){ return b > 0 ? 'pos' : (b < 0 ? 'neg' : ''); };
+  var h = '<table class="st"><tr><th>成員</th><th>已付</th><th>應付</th><th>差額</th></tr>';
+  gs.forEach(function(g){
+    if(!g.fam){
+      g.rows.forEach(function(r){
+        if(r.p < 0.5 && r.s < 0.5) return;
+        h += '<tr style="background:var(--ro)"><td style="font-weight:600">' + esc(r.m.name || '?') + '<span style="font-weight:400;color:var(--tx3);font-size:12px">（個人）</span></td><td style="font-weight:600">' + fmt(r.p) + '</td><td style="font-weight:600">' + fmt(r.s) + '</td><td class="' + cl(r.b) + '" style="font-weight:600">' + sg(r.b) + '</td></tr>';
+      });
+      return;
+    }
+    h += '<tr style="background:var(--ro)"><td style="font-weight:600">' + esc(g.name) + '</td><td style="font-weight:600">' + fmt(g.p) + '</td><td style="font-weight:600">' + fmt(g.s) + '</td><td class="' + cl(g.b) + '" style="font-weight:600">' + sg(g.b) + '</td></tr>';
+    g.rows.forEach(function(r){
+      h += '<tr><td style="padding-left:16px">' + esc(r.m.name || '?') + '</td><td>' + fmt(r.p) + '</td><td>' + fmt(r.s) + '</td><td class="' + cl(r.b) + '">' + sg(r.b) + '</td></tr>';
+    });
+    if(g.idle.length) h += '<tr><td colspan="4" style="text-align:left;padding-left:16px;color:var(--tx3);font-size:12.5px">' + esc(g.idle.map(function(m){ return m.name || '?'; }).join('、')) + '（不分攤）</td></tr>';
+  });
+  return h + '</table>';
+}
+function unitMemNames(t, u){
+  if(!u || u.solo) return '';
+  return u.mids.map(function(id){ return mname(id); }).join('、');
+}
+function finalCardHtml(t, M){
+  var units = M.finalCalc.units, grp = {}, order = [];
+  M.finalCalc.transfers.forEach(function(f){
+    if(!grp[f.to]){ grp[f.to] = { to: f.to, sum: 0, rows: [] }; order.push(grp[f.to]); }
+    grp[f.to].sum += f.amt; grp[f.to].rows.push(f);
+  });
+  order.sort(function(a, b){ return b.sum - a.sum; });
+  var h = '<div class="card" style="border:2px solid var(--acc)"><div class="lbl" style="font-weight:600;color:var(--tx)">總結算（未結清部分合併）</div>';
+  order.forEach(function(gp){
+    var toU = units[gp.to];
+    gp.rows.sort(function(a, b){ return b.amt - a.amt; });
+    h += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:8px 2px 2px"><span style="font-size:14.5px;font-weight:600"><span ' + saTag(toU.name, toU.bankc, toU.acct) + '>' + uLabel(toU) + '</span>　應收</span><span style="font-size:15px;font-weight:600;color:var(--acc)">' + money(t.home, gp.sum) + '</span></div>';
+    if(toU.bank) h += '<div class="bank" style="margin:0 2px 4px">收款：' + esc(toU.bank) + '</div>';
+    gp.rows.forEach(function(f){
+      var fromU = units[f.from], nm = unitMemNames(t, fromU);
+      h += '<div class="tf"><div style="flex:1"><div class="who">' + uLabel(fromU) + ' →</div>' + (nm ? '<div class="bank">' + esc(nm) + '</div>' : '') + '</div><div class="amt">' + money(t.home, f.amt) + '</div></div>';
+    });
+  });
+  var loans = [];
+  M.days.forEach(function(dy){ if(!dy.done) dy.es.forEach(function(e){ if(e.kind === 'loan') loans.push(e); }); });
+  if(loans.length){
+    h += '<div style="border-top:1px solid var(--line);margin-top:8px;padding-top:6px;font-size:13px;color:var(--tx2)">已沖抵借款：' +
+      loans.map(function(e){ return esc(mname(e.payer)) + ' → ' + esc((e.split || []).map(function(id){ return mname(id); }).join('、')) + ' ' + fmt(homeAmt(e)); }).join('｜') + '</div>';
+  }
+  h += '<div class="hint" style="margin-top:4px">這是把所有未結清日子合併後的最少轉帳；各日結清後這裡會自動歸零。</div></div>';
+  return h;
+}
 function renderSettle(){
   var t = trip();
   var box = document.getElementById('settleBox');
@@ -2437,21 +2505,30 @@ function renderSettle(){
     html += '<div class="card" style="border:2px solid var(--warnBd)"><div class="hint">⚠️ 尚未設定「我是誰」，看不到你的個人待付與提醒。</div>' +
       '<button class="btn sub mini" id="btnGoMe" style="margin-top:6px">去旅程頁設定我是誰 →</button></div>';
   }
+  var _loanPend = M.days.some(function(dy){ return !dy.done && dy.es.some(function(e){ return e.kind === 'loan'; }); });
+  if(M.finalCalc.transfers.length && (M.unsettled > 0.5 || _loanPend)){
+    html += finalCardHtml(t, M);
+  }
+  var _hasFam = t.members.some(function(m){ return m.famId && famName(t, m.famId); });
+  var _famV = _hasFam && S.ovFam;
   var _ovZero = t.members.filter(function(m){ return (M.overall.paid[m.id]||0) < 0.5 && (M.overall.share[m.id]||0) < 0.5; }).length;
-  html += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span class="lbl" style="margin:0;font-weight:600;color:var(--tx)">成員總覽（全程）<span data-ovhelp="1" style="cursor:pointer;color:var(--tx3);font-weight:400;margin-left:5px">❓</span></span>' + tbvSeg() + '</div>' +
-    memberStatHtml(t, M.overall.paid, M.overall.share, { weight: true, skipZero: !_ovAll }) +
-    (_ovZero ? '<div style="margin-top:8px"><span data-ovall="1" style="font-size:12.5px;color:var(--acc);cursor:pointer">' + (_ovAll ? '收起沒帳的成員' : '顯示全部成員（' + _ovZero + ' 位沒帳）') + '</span></div>' : '') +
+  html += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><span class="lbl" style="margin:0;font-weight:600;color:var(--tx)">成員總覽（全程）<span data-ovhelp="1" style="cursor:pointer;color:var(--tx3);font-weight:400;margin-left:5px">❓</span></span>' +
+    '<span style="display:inline-flex;gap:6px">' + (_hasFam ? '<span class="cseg"><span data-ovf="0"' + (!_famV ? ' class="on"' : '') + '>每人</span><span data-ovf="1"' + (_famV ? ' class="on"' : '') + '>按戶</span></span>' : '') + (_famV ? '' : tbvSeg()) + '</span></div>' +
+    (_famV ? memberFamHtml(t, M.overall.paid, M.overall.share) : memberStatHtml(t, M.overall.paid, M.overall.share, { weight: true, skipZero: !_ovAll })) +
+    (_ovZero && !_famV ? '<div style="margin-top:8px"><span data-ovall="1" style="font-size:12.5px;color:var(--acc);cursor:pointer">' + (_ovAll ? '收起沒帳的成員' : '顯示全部成員（' + _ovZero + ' 位沒帳）') + '</span></div>' : '') +
     '</div>';
   html += '<div class="card"><details class="advsec"><summary style="font-weight:600;color:var(--tx)">每人分攤總額（原幣）</summary><div style="margin-top:8px">' +
     shareCurHtml(t, M.overall.share, M.overall.shareCur) +
     '<div class="hint" style="margin-top:8px">各幣別原幣小計＋台幣合計，不含借款與私人帳。</div></div></details></div>';
   var _nSet = Object.keys(t.settled || {}).filter(function(id){ return member(id); }).length;
-  html += '<div style="margin:0 4px 10px"><button class="btn sub mini" style="width:100%" onclick="openSettleMem()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M10 12h10"/><path d="M17 9l3 3-3 3"/></svg>提前結清成員（有人要先走）' + (_nSet ? '　·　已先結 ' + _nSet + ' 位' : '') + '</button></div>';
+  html += '<div style="margin:0 0 10px"><button class="btn sub mini" style="width:100%;box-sizing:border-box" onclick="openSettleMem()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M10 12h10"/><path d="M17 9l3 3-3 3"/></svg>提前結清成員（有人要先走）' + (_nSet ? '　·　已先結 ' + _nSet + ' 位' : '') + '</button></div>';
   if(t.legs && t.legs.length){ html += '<div class="seg" style="margin:2px 4px 8px"><span data-div="ym"' + (S.divMode !== 'leg' ? ' class="on"' : '') + '>年月</span><span data-div="leg"' + (S.divMode === 'leg' ? ' class="on"' : '') + '>所在地</span></div>'; }
   var tday = todayISO();
   var useLegS = S.divMode === 'leg' && t.legs && t.legs.length;
   var prevKeyS = null;
+  var loanDays = [];
   M.days.forEach(function(dy, di){
+    if(dy.es.length && dy.es.every(function(e){ return e.kind === 'loan'; })){ loanDays.push(dy); return; }
     var _ks, _labs;
     if(useLegS){ var _gs = legOf(t, dy.date); _ks = _gs ? _gs.id : '_none'; _labs = _gs ? legLabel(_gs) : '未分段'; }
     else { _ks = dy.date.slice(0,7); _labs = dy.date.slice(0,4) + '/' + dy.date.slice(5,7); }
@@ -2470,15 +2547,18 @@ function renderSettle(){
     }
     html += '</div></details>';
   });
-  if(M.unsettled > 0.5 && M.finalCalc.transfers.length){
-    html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">總結算（未結清部分合併）</div>';
-    M.finalCalc.transfers.forEach(function(f){
-      var toU = M.finalCalc.units[f.to], fromU = M.finalCalc.units[f.from];
-      html += '<div class="tf"><div style="flex:1"><div class="who">' + uLabel(fromU) + ' → <span ' + saTag(toU.name, toU.bankc, toU.acct) + '>' + uLabel(toU) + '</span></div>' +
-        (toU.bank ? '<div class="bank">收款：' + esc(toU.bank) + '</div>' : '') +
-        '</div><div class="amt">' + money(t.home, f.amt) + '</div></div>';
+  if(loanDays.length){
+    var _lnDone = loanDays.every(function(dy){ return dy.done; });
+    html += '<details class="day"><summary><span><span class="arr">▶</span>借款（' + loanDays.length + ' 天）</span>' +
+      (_lnDone ? '<span class="pos">✅ 已結清</span>' : '<span style="color:var(--tx2)">併入總結算沖抵</span>') + '</summary><div class="dbody">';
+    loanDays.forEach(function(dy){
+      dy.es.forEach(function(e){
+        html += '<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:5px 2px;border-bottom:1px solid var(--line)"><span>' + dy.date.slice(5).replace('-','/') + '　' + esc(loanWho(t, e)) + (e.desc ? '<span style="color:var(--tx3)">（' + esc(e.desc) + '）</span>' : '') + '</span><span>' + fmt(homeAmt(e)) + '</span></div>';
+      });
     });
-    html += '<div class="hint" style="margin-top:4px">這是把所有未結清日子合併後的最少轉帳；各日結清後這裡會自動歸零。</div></div>';
+    html += '<div class="hint" style="margin-top:6px">借款不算消費，已併入上方總結算互相抵掉。</div>';
+    loanDays.forEach(function(dy){ dy.calc.transfers.forEach(function(f, i){ html += tfRow(t, dy.calc.units, f, dy.keys[i], false); }); });
+    html += '</div></details>';
   }
   if(M.ft.fin > 0){
     html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">' + btnIco(IC_BANK) + '基金結算</div>' +
@@ -2515,6 +2595,7 @@ function renderSettle(){
   });
   box.querySelectorAll('[data-ovhelp]').forEach(function(el){ el.onclick = function(){ toast(OV_HELP); }; });
   box.querySelectorAll('[data-ovall]').forEach(function(el){ el.onclick = function(){ _ovAll = !_ovAll; renderSettle(); }; });
+  box.querySelectorAll('[data-ovf]').forEach(function(el){ el.onclick = function(){ S.ovFam = el.dataset.ovf === '1'; saveLocal(); renderSettle(); }; });
   box.querySelectorAll('[data-div]').forEach(function(el){ el.onclick = function(){ S.divMode = el.dataset.div; saveLocal(); renderSettle(); }; });
   bindPay(box, renderSettle);
   var gm = document.getElementById('btnGoMe');
@@ -2679,7 +2760,8 @@ function dispW(s){ s = String(s); var n = 0; for(var i = 0; i < s.length; i++){ 
 function padR(s, w){ s = String(s); while(dispW(s) < w) s += ' '; return s; }
 function padL(s, w){ s = String(s); while(dispW(s) < w) s = ' ' + s; return s; }
 function finalTf(t, M){
-  return (M.unsettled > 0.5 && M.finalCalc.transfers.length)
+  var lp = M.days.some(function(dy){ return !dy.done && dy.es.some(function(e){ return e.kind === 'loan'; }); });
+  return ((M.unsettled > 0.5 || lp) && M.finalCalc.transfers.length)
     ? M.finalCalc.transfers.map(function(f){ return { from: M.finalCalc.units[f.from], to: M.finalCalc.units[f.to], amt: f.amt }; })
     : [];
 }
@@ -2724,10 +2806,23 @@ function settleImage(t, M){
   var acc = skinAcc();
   var members = t.members;
   var tf = finalTf(t, M);
-  var headH = 100, tblHead = 42, rowH = 48;
-  var trH = tf.length ? (44 + tf.length * (showAcct ? 76 : 50) + 8) : 52;
+  var headH = 100, tblHead = 42, rowH = 48, idleH = 40;
+  var IR = [];
+  famGroups(t, M.overall.paid, M.overall.share).forEach(function(gp){
+    if(!gp.fam){
+      gp.rows.forEach(function(r){ if(r.p < 0.5 && r.s < 0.5) return; IR.push({ k: 'solo', n: r.m.name || '?', p: r.p, s: r.s, b: r.b }); });
+      return;
+    }
+    IR.push({ k: 'fam', n: gp.name, p: gp.p, s: gp.s, b: gp.b });
+    gp.rows.forEach(function(r){ IR.push({ k: 'mem', n: r.m.name || '?', p: r.p, s: r.s, b: r.b }); });
+    if(gp.idle.length) IR.push({ k: 'idle', n: gp.idle.map(function(m){ return m.name || '?'; }).join('、') + '（不分攤）' });
+  });
+  var tblH = 0; IR.forEach(function(r){ tblH += r.k === 'idle' ? idleH : rowH; });
+  var tfRowH = function(f){ return 50 + (unitMemNames(t, f.from) || unitMemNames(t, f.to) ? 26 : 0) + (showAcct && f.to.bank ? 26 : 0); };
+  var trH = 52;
+  if(tf.length){ trH = 44 + 8; tf.forEach(function(f){ trH += tfRowH(f); }); }
   var footH = 44;
-  var H = headH + tblHead + members.length * rowH + 20 + trH + footH;
+  var H = headH + tblHead + tblH + 20 + trH + footH;
   var cv = document.createElement('canvas');
   cv.width = W * sc; cv.height = H * sc;
   var g = cv.getContext('2d'); g.scale(sc, sc);
@@ -2747,16 +2842,24 @@ function settleImage(t, M){
   g.textAlign = 'left'; g.fillText('成員', colN, y);
   g.textAlign = 'right'; g.fillText('已付', colPaid, y); g.fillText('應付', colShare, y); g.fillText('差額', colBal, y);
   y = headH + tblHead + 30;
-  members.forEach(function(m){
-    var p = M.overall.paid[m.id] || 0, s = M.overall.share[m.id] || 0, b = p - s;
-    g.strokeStyle = '#eeeeee'; g.lineWidth = 1; g.beginPath(); g.moveTo(PAD, y - 30); g.lineTo(W - PAD, y - 30); g.stroke();
-    g.fillStyle = '#111111'; g.font = '500 23px sans-serif'; g.textAlign = 'left';
-    g.fillText(m.name || '?', colN, y);
-    g.font = '21px sans-serif'; g.textAlign = 'right'; g.fillStyle = '#333333';
-    g.fillText(fmt(p), colPaid, y); g.fillText(fmt(s), colShare, y);
-    g.fillStyle = b > 0.5 ? acc : (b < -0.5 ? '#c02626' : '#888888'); g.font = '600 22px sans-serif';
-    g.fillText((b > 0.5 ? '+' : '') + fmt(b), colBal, y);
-    y += rowH;
+  IR.forEach(function(r){
+    var hh = r.k === 'idle' ? idleH : rowH;
+    var hl = r.k === 'fam' || r.k === 'solo';
+    if(hl){ g.fillStyle = '#eef2f7'; g.fillRect(PAD, y - 31, W - PAD * 2, hh); }
+    g.strokeStyle = '#eeeeee'; g.lineWidth = 1; g.beginPath(); g.moveTo(PAD, y - 31); g.lineTo(W - PAD, y - 31); g.stroke();
+    if(r.k === 'idle'){
+      g.fillStyle = '#9a9a9a'; g.font = '18px sans-serif'; g.textAlign = 'left';
+      g.fillText(r.n, colN + 24, y - 4);
+      y += hh; return;
+    }
+    g.fillStyle = '#111111'; g.font = (hl ? '600 23px' : '22px') + ' sans-serif'; g.textAlign = 'left';
+    g.fillText(r.n, colN + (r.k === 'mem' && IR.some(function(x){ return x.k === 'fam'; }) ? 24 : 0), y);
+    if(r.k === 'solo' && IR.some(function(x){ return x.k === 'fam'; })){ var nw = g.measureText(r.n).width; g.fillStyle = '#8a8a8a'; g.font = '16px sans-serif'; g.fillText('（個人）', colN + nw + 4, y); }
+    g.font = (hl ? '600 21px' : '21px') + ' sans-serif'; g.textAlign = 'right'; g.fillStyle = '#333333';
+    g.fillText(fmt(r.p), colPaid, y); g.fillText(fmt(r.s), colShare, y);
+    g.fillStyle = r.b > 0.5 ? acc : (r.b < -0.5 ? '#c02626' : '#888888'); g.font = (hl ? '700 22px' : '600 21px') + ' sans-serif';
+    g.fillText((r.b > 0.5 ? '+' : '') + fmt(r.b), colBal, y);
+    y += hh;
   });
   y += 8;
   if(tf.length){
@@ -2769,11 +2872,16 @@ function settleImage(t, M){
       g.fillText(f.from.name + '  →  ' + f.to.name, PAD + 16, ty);
       g.fillStyle = acc; g.font = '600 24px sans-serif'; g.textAlign = 'right';
       g.fillText(t.home + ' ' + fmt(f.amt), W - PAD - 16, ty);
-      if(showAcct && f.to.bank){
-        g.fillStyle = '#777777'; g.font = '17px sans-serif'; g.textAlign = 'left';
-        g.fillText('收款 ' + f.to.bank, PAD + 16, ty + 26);
+      var sy = ty, nf = unitMemNames(t, f.from) || f.from.name, nt = unitMemNames(t, f.to) || f.to.name;
+      if(unitMemNames(t, f.from) || unitMemNames(t, f.to)){
+        sy += 26; g.fillStyle = '#777777'; g.font = '17px sans-serif'; g.textAlign = 'left';
+        g.fillText(nf + ' → ' + nt, PAD + 16, sy);
       }
-      ty += (showAcct ? 76 : 50);
+      if(showAcct && f.to.bank){
+        sy += 26; g.fillStyle = '#777777'; g.font = '17px sans-serif'; g.textAlign = 'left';
+        g.fillText('收款 ' + f.to.bank, PAD + 16, sy);
+      }
+      ty += tfRowH(f);
     });
   } else {
     g.fillStyle = acc; g.font = '600 24px sans-serif'; g.textAlign = 'center';
@@ -3869,6 +3977,7 @@ function closestActiveTripCode(){
   document.getElementById('demoExit').onclick = clearDemo;
   document.getElementById('eCur').innerHTML = CURS.map(function(c){ return '<option>' + c + '</option>'; }).join('');
   document.getElementById('eConvCur').innerHTML = CURS.map(function(c){ return '<option>' + c + '</option>'; }).join('');
+  document.getElementById('eDate').onclick = function(){ try{ if(this.showPicker) this.showPicker(); }catch(e){} };
   document.getElementById('eDate').onchange = function(){
     F.date = this.value;
     document.getElementById('eDateDisp').textContent = (F.date || '').replace(/-/g, '/');
@@ -4048,4 +4157,4 @@ try{
 </body>
 </html>
 
-<!-- T0724-01 deploy -->
+<!-- T1027-01 deploy -->
