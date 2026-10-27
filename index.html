@@ -598,8 +598,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 70;
-var VER = 'T1027-05';
+var CODE_VERSION = 71;
+var VER = 'T1027-06';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -2148,9 +2148,9 @@ function tfState(t, key){
   if(!ent) return 0;
   return ent.ok ? 2 : 1;
 }
-function tfStLab(st){
+function tfStLab(st, toName){
   if(st === 2) return '<span style="font-size:11.5px;color:#059669">✅ 已核銷</span>';
-  if(st === 1) return '<span style="font-size:11.5px;color:var(--warnTx)">🟡 已轉待確認</span>';
+  if(st === 1) return '<span style="font-size:11.5px;color:var(--warnTx)">🟡 已轉，待' + (toName ? esc(toName) : '收款人') + '確認</span>';
   return '';
 }
 function tfBtns(t, key, toUnit){
@@ -2165,7 +2165,7 @@ function tfRow(t, units, f, key, showBank){
   var toU = units[f.to], fromU = units[f.from];
   return '<div class="tf' + (st === 2 ? ' done' : '') + '"><input type="checkbox" data-tfk="' + key + '"' + (st ? ' checked' : '') + '>' +
     '<div style="flex:1"><div class="who">' + uLabel(fromU) + ' → <span ' + saTag(toU.name, toU.bankc, toU.acct) + '>' + uLabel(toU) + '</span></div>' +
-    (st ? '<div style="margin-top:2px">' + tfStLab(st) + tfBtns(t, key, f.to) + '</div>' : '') +
+    (st ? '<div style="margin-top:2px">' + tfStLab(st, toU.name) + tfBtns(t, key, f.to) + '</div>' : '') +
     (showBank && !st ? (toU.bank ? '<div class="bank">收款：' + esc(toU.bank) + ' <button class="btn sub mini" data-cpa="' + encodeURIComponent(toU.acct || toU.bankc) + '" style="padding:2px 8px;font-size:12px">複製帳號</button></div>'
                           : '<div class="bank">（' + esc(toU.name) + ' 尚未登記帳戶）</div>') : '') +
     '</div><div class="amt">' + money(t.home, f.amt) + '</div></div>';
@@ -2190,7 +2190,7 @@ function payRowHtml(t, it, showFrom){
     '<div style="flex:1"><div class="who">' + (it.date ? it.date.slice(5).replace('-','/') + '　' : '') +
     (showFrom ? uLabel(fromU) + ' → ' : '→ ') +
     '<span ' + saTag(toU.name, toU.bankc, toU.acct) + '>' + uLabel(toU) + '</span></div>' +
-    (st ? '<div style="margin-top:2px">' + tfStLab(st) + tfBtns(t, it.key, it.to) + '</div>'
+    (st ? '<div style="margin-top:2px">' + tfStLab(st, toU.name) + tfBtns(t, it.key, it.to) + '</div>'
         : (toU.bank ? '<div class="bank">收款：' + esc(toU.bank) + ' <button class="btn sub mini" data-cpa="' + encodeURIComponent(toU.acct || toU.bankc) + '" style="padding:2px 8px;font-size:12px">複製帳號</button></div>' : '')) +
     '</div><div class="amt">' + money(t.home, it.amt) + '</div></div>';
 }
@@ -2538,7 +2538,7 @@ function finalCardHtml(t, M){
       var ktag = '';
       if(pc[f.from] > 1){ pi[f.from] = (pi[f.from] || 0) + 1; ktag = ' <span style="font-size:11.5px;font-weight:600;color:#b45309;border:1.5px solid #f2b866;background:#fff7e8;border-radius:6px;padding:0 5px">第 ' + pi[f.from] + '/' + pc[f.from] + ' 筆</span>'; }
       h += '<div class="tf' + (st === 2 ? ' done' : '') + '"><input type="checkbox" data-tfk="' + key + '"' + (st ? ' checked' : '') + '><div style="flex:1"><div class="who">' + uLabel(fromU) + ' →' + ktag + '</div>' + (nm ? '<div class="bank">' + esc(nm) + '</div>' : '') +
-        (st ? '<div style="margin-top:2px">' + tfStLab(st) + tfBtns(t, key, f.to) + '</div>' : '') + '</div><div class="amt">' + money(t.home, f.amt) + '</div></div>';
+        (st ? '<div style="margin-top:2px">' + tfStLab(st, units[f.to].name) + tfBtns(t, key, f.to) + '</div>' : '') + '</div><div class="amt">' + money(t.home, f.amt) + '</div></div>';
     });
   });
   var mu = Object.keys(pc).filter(function(k){ return pc[k] > 1; });
@@ -2699,7 +2699,7 @@ function settleText(t, M){
     dy.calc.transfers.forEach(function(f, i){
       var toU = dy.calc.units[f.to];
       var st = tfState(t, dy.keys[i]);
-      var mark = st === 2 ? ' ✅已核銷' : (st === 1 ? ' 🟡已轉待確認' : '');
+      var mark = st === 2 ? ' ✅已核銷' : (st === 1 ? ' 🟡已轉，待' + toU.name + '確認' : '');
       L.push('　' + dy.calc.units[f.from].name + ' → ' + toU.name + ' ' + fmt(f.amt) + (toU.bank ? '（' + toU.bank + '）' : '') + mark);
     });
     if(!dy.calc.transfers.length) L.push('　無須轉帳');
@@ -4351,4 +4351,4 @@ try{
 </body>
 </html>
 
-<!-- T1027-05 deploy -->
+<!-- T1027-06 deploy -->
