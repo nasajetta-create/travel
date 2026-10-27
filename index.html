@@ -230,6 +230,21 @@ table.st.fbxtb th:first-child,table.st.fbxtb td:first-child{padding-left:10px}
 table.st.fbxtb th:last-child,table.st.fbxtb td:last-child{padding-right:10px}
 .fbx tr.fbxsum td{background:var(--accBg)!important;font-weight:600}
 .fbx.solo tr.fbxsum td{background:var(--ro)}
+.lkbar{display:flex;align-items:center;gap:10px;background:var(--warnBg);border:1px solid var(--warnBd);color:var(--warnTx);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:14px;line-height:1.45}
+.lkbar.off{background:var(--card);border-color:var(--line);color:var(--tx2)}
+.lkbar .lkt{flex:1;display:flex;align-items:flex-start;gap:7px;min-width:0}
+.lkbar .lkt svg{margin-top:2px}
+.lkbtn{flex:0 0 auto;border:1.5px solid var(--acc);color:var(--acc);background:var(--card);border-radius:9px;padding:6px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.actr{display:flex;align-items:baseline;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.45}
+.actr .at{color:var(--tx2);flex:0 0 auto;font-variant-numeric:tabular-nums}
+.actr .aw{flex:0 0 auto}
+.actr b{flex:0 0 auto;font-weight:600}
+.actr .al{flex:1;min-width:0;word-break:break-all}
+.actr .an{display:block;font-size:12.5px;color:var(--tx2)}
+.delr{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.delr .dt{font-size:14px;color:var(--tx3);text-decoration:line-through}
+.delr .dw{font-size:12.5px;color:var(--tx2);margin-top:2px}
+#eMeta{display:none;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--tx2);line-height:1.5}
 .lmhead{font-size:13px;font-weight:600;color:var(--tx2);padding:7px 2px 4px;margin-top:6px;border-bottom:.5px solid var(--line)}
 .lmhead:first-child{margin-top:0}
 .ldate{flex:0 0 auto;width:34px;text-align:center;line-height:1.15}
@@ -399,6 +414,7 @@ details.tsec>.tbody{padding:2px 1px 15px}
 </section>
 
 <section id="v-add">
+  <div id="addLockBar"></div>
   <div class="card" id="receiptCard" style="padding:11px 12px;background:var(--accBg);border:1px solid var(--acc)">
     <div style="font-size:12.5px;color:var(--acc);font-weight:500;margin-bottom:7px;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2l1.5-2h5L18 4h2a2 2 0 0 1 2 2v2"/><rect x="2" y="8" width="20" height="13" rx="2"/><circle cx="12" cy="14.5" r="3.5"/></svg>拍收據自動填入</div>
     <div style="display:flex;background:var(--card);border:1px solid var(--acc);border-radius:11px;overflow:hidden">
@@ -460,6 +476,7 @@ details.tsec>.tbody{padding:2px 1px 15px}
     </details>
   </div>
   <div class="row" style="gap:8px;margin-top:2px"><button class="btn sub" id="btnCancelAdd" style="flex:0 0 34%">取消</button><button class="btn" id="btnSave" style="flex:1">儲存</button></div>
+  <div id="eMeta"></div>
   <button class="btn sub" id="btnAdj" style="display:none;margin-top:8px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>帳單補正（輸入帳單實際金額）</button>
   <button class="btn sub" id="btnCopy" style="display:none;margin-top:8px">⧉ 複製成新帳（日期改今天）</button>
   <button class="btn danger" id="btnDel" style="display:none;margin-top:8px">刪除這筆</button>
@@ -598,8 +615,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 71;
-var VER = 'T1027-06';
+var CODE_VERSION = 72;
+var VER = 'T1027-07';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -813,6 +830,107 @@ function bumpMeta(field){
   var now = Date.now(); t.mt = t.mt || {};
   if(field) t.mt[field] = now; else META_GROUPS.forEach(function(g){ t.mt[g] = now; });
   t.metaMt = now;
+}
+/* ───── T1027-07 防誤刪：誰動的、最近異動、最近刪除、鎖帳 ───── */
+var DEL_KEEP = 30 * 86400000;
+function whoName(id){ if(!id) return '未設定'; var m = member(id); return m ? (m.name || '?') : '已移除成員'; }
+function tsLab(ms){ if(!ms) return ''; var d = new Date(ms); function p(n){ return (n < 10 ? '0' : '') + n; } return p(d.getMonth() + 1) + '/' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+function mdLab(iso){ return iso ? iso.slice(5,7) + '/' + iso.slice(8,10) : ''; }
+function isLocked(t){ return !!(t && t.locked && t.locked.at); }
+function lockedMsg(){ var t = trip(); toast('已鎖帳（' + whoName(t && t.locked ? t.locked.by : '') + ' ' + tsLab(t && t.locked ? t.locked.at : 0) + ' 鎖定），要先解鎖才能改'); }
+function expDiff(o, n){
+  if(!o || !n) return '';
+  var d = [];
+  function nm(id){ return id === FUND ? '基金' : mname(id); }
+  if(o.date !== n.date) d.push('日期 ' + mdLab(o.date) + '→' + mdLab(n.date));
+  if((o.desc || '') !== (n.desc || '')) d.push('項目 ' + (o.desc || '') + '→' + (n.desc || ''));
+  if(o.cur !== n.cur || Math.abs((Number(o.amt) || 0) - (Number(n.amt) || 0)) > 0.0001) d.push('金額 ' + (o.cur !== n.cur ? o.cur + ' ' : '') + fmt2(o.amt) + '→' + (o.cur !== n.cur ? n.cur + ' ' : '') + fmt2(n.amt));
+  else if(Math.abs((Number(o.rate) || 0) - (Number(n.rate) || 0)) > 0.00001) d.push('匯率 ' + o.rate + '→' + n.rate);
+  if(o.payer !== n.payer) d.push((n.kind === 'loan' ? '借出 ' : '付款人 ') + nm(o.payer) + '→' + nm(n.payer));
+  var os = (o.split || []).slice().sort().join(','), ns = (n.split || []).slice().sort().join(',');
+  if(os !== ns){
+    if((o.split || []).length !== (n.split || []).length) d.push('分攤 ' + (o.split || []).length + '→' + (n.split || []).length + ' 人');
+    else d.push('分攤名單');
+  }
+  if((o.treat || []).slice().sort().join(',') !== (n.treat || []).slice().sort().join(',')) d.push('請客');
+  if(o.cat !== n.cat) d.push('類別 ' + catInfo(o.cat)[2] + '→' + catInfo(n.cat)[2]);
+  if(!!o.card !== !!n.card) d.push(n.card ? '改刷卡' : '改現金');
+  if((o.mode || 'avg') !== (n.mode || 'avg') || JSON.stringify(o.custom || {}) !== JSON.stringify(n.custom || {})) d.push('分法');
+  return d.join('；');
+}
+function actList(t, lim){
+  var ev = [];
+  (t.expenses || []).forEach(function(e){
+    if(e.priv) return;
+    var lab = (e.desc || '') + ' ' + fmt(homeAmt(e));
+    if(e.at) ev.push({ ts: e.at, by: e.by, act: '新增', lab: lab });
+    if(e.eat) ev.push({ ts: e.eat, by: e.eby, act: '修改', lab: lab, note: e.ediff || '' });
+    if(e.dat) ev.push({ ts: e.dat, by: e.dby, act: e.mvPriv ? '改私人' : '刪除', lab: lab });
+    if(e.rat) ev.push({ ts: e.rat, by: e.rby, act: '還原', lab: lab });
+  });
+  (t.lockLog || []).forEach(function(x){ ev.push({ ts: x.at, by: x.by, act: x.a === 'lock' ? '鎖帳' : '解鎖', lab: '' }); });
+  ev.sort(function(a, b){ return b.ts - a.ts; });
+  return ev.slice(0, lim || 20);
+}
+function delList(t){
+  var now = Date.now();
+  return (t.expenses || []).filter(function(e){ return e._del && !e.priv && !e.mvPriv && (now - (e.dat || e._mt || 0)) <= DEL_KEEP; })
+    .sort(function(a, b){ return (b.dat || b._mt || 0) - (a.dat || a._mt || 0); });
+}
+function restoreExpense(id){
+  var t = trip(); if(!t) return;
+  if(isLocked(t)){ lockedMsg(); return; }
+  var e = null;
+  for(var i = 0; i < t.expenses.length; i++){ if(t.expenses[i].id === id){ e = t.expenses[i]; break; } }
+  if(!e || !e._del) return;
+  if(!resetDaysIfSettled(t, [e.date])) return;
+  var now = Date.now();
+  e._del = false; e.rby = me() || ''; e.rat = now; e._mt = now;
+  save(); toast('已還原「' + (e.desc || '') + '」，結算已重算');
+}
+function toggleLock(){
+  var t = trip(); if(!t) return;
+  var on = isLocked(t);
+  if(!confirm(on ? '確定解鎖？\n解鎖後大家又可以新增、修改、刪除帳。' : '確定鎖帳？\n鎖帳後不能新增、修改、刪除帳，也不能改入金；轉帳打勾與確認收到照常可用。\n任何成員都可以再解鎖。')) return;
+  var now = Date.now(), who = me() || '';
+  t.locked = on ? null : { by: who, at: now };
+  t.lockLog = (t.lockLog || []).concat([{ a: on ? 'unlock' : 'lock', by: who, at: now }]).slice(-20);
+  bumpMeta('info'); save();
+  toast(on ? '已解鎖' : '已鎖帳');
+}
+var LOCK_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+function lockBarHtml(t, offer){
+  if(isLocked(t)){
+    return '<div class="lkbar"><span class="lkt">' + LOCK_SVG + '<span><b>已鎖帳</b>　' + esc(whoName(t.locked.by)) + ' 於 ' + tsLab(t.locked.at) + ' 鎖定，不能新增、修改、刪除</span></span><button class="lkbtn" data-lockbtn="1">解鎖</button></div>';
+  }
+  if(!offer) return '';
+  return '<div class="lkbar off"><span class="lkt">' + LOCK_SVG + '<span>結算對完後可鎖帳，避免有人再改帳</span></span><button class="lkbtn" data-lockbtn="1">鎖帳</button></div>';
+}
+function actCardHtml(t){
+  var ev = actList(t, 20);
+  if(!ev.length) return '';
+  var rows = ev.map(function(x){
+    var c = x.act === '刪除' ? 'var(--danger)' : (x.act === '新增' || x.act === '還原' ? 'var(--acc)' : 'var(--tx)');
+    return '<div class="actr"><span class="at">' + tsLab(x.ts) + '</span><span class="aw">' + esc(whoName(x.by)) + '</span><b style="color:' + c + '">' + x.act + '</b><span class="al">' + esc(x.lab) + (x.note ? '<span class="an">' + esc(x.note) + '</span>' : '') + '</span></div>';
+  }).join('');
+  return '<details class="tsec" id="actSec"' + (S.actOpen ? ' open' : '') + '><summary><span class="car">▶</span><span>最近異動</span><span class="tsx">最近 ' + ev.length + ' 筆</span></summary><div class="tbody">' + rows + '</div></details>';
+}
+function delCardHtml(t){
+  var dl = delList(t);
+  if(!dl.length) return '';
+  var rows = dl.map(function(e){
+    return '<div class="delr"><div style="flex:1;min-width:0"><div class="dt">' + mdLab(e.date) + '　' + esc(e.desc || '') + '　' + fmt(homeAmt(e)) + '</div>' +
+      '<div class="dw">' + (e.dat ? esc(whoName(e.dby)) + ' 刪除於 ' + tsLab(e.dat) : '刪除者未記錄') + '</div></div>' +
+      '<button class="lkbtn" data-restore="' + e.id + '">還原</button></div>';
+  }).join('');
+  return '<details class="tsec" id="delSec"' + (S.delOpen ? ' open' : '') + '><summary><span class="car">▶</span><span>最近刪除（' + dl.length + ' 筆，保留 30 天）</span></summary><div class="tbody">' + rows +
+    '<div class="hint" style="margin-top:6px">按「還原」就回到帳本，結算自動重算。</div></div></details>';
+}
+function bindGuard(box){
+  box.querySelectorAll('[data-lockbtn]').forEach(function(el){ el.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); toggleLock(); }; });
+  box.querySelectorAll('[data-restore]').forEach(function(el){ el.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); restoreExpense(el.dataset.restore); }; });
+  var a = box.querySelector('#actSec'); if(a) a.ontoggle = function(){ S.actOpen = a.open; saveLocal(); };
+  var d = box.querySelector('#delSec'); if(d) d.ontoggle = function(){ S.delOpen = d.open; saveLocal(); };
 }
 function toast(m){ var el = document.getElementById('toast'); el.textContent = m; el.style.opacity = 1; clearTimeout(el._t); el._t = setTimeout(function(){ el.style.opacity = 0; }, 2200); }
 function copyText(s, msg){
@@ -1175,6 +1293,7 @@ function buildReceiptEntries(){
   if(!(rate > 0)){ toast('匯率還沒抓到，請關掉稍等一下再試'); return; }
   var sel = _rcp.items.filter(function(it){ return it.on && Number(it.amt) > 0; });
   if(!sel.length){ toast('沒有可建立的品項'); return; }
+  if(isLocked(t)){ lockedMsg(); return; }
   for(var i=0;i<sel.length;i++){
     var sp0 = (sel[i].ov && sel[i].ov.length) ? sel[i].ov : _rcp.def;
     if(!sp0.length){ toast('「' + sel[i].name + '」沒有分攤的人'); return; }
@@ -1186,7 +1305,7 @@ function buildReceiptEntries(){
     var ci = catInfo(it.cat);
     var e = { id: uid(), date: _rcp.date, kind: 'exp', cat: it.cat, desc: it.name || ci[2],
       cur: _rcp.cur, amt: Number(it.amt), rate: rate, card: false, feePct: 0,
-      payer: _rcp.payer, split: sp, treat: [], treatBy: {}, mode: 'avg', custom: {}, rsrc: F ? (F.rsrc || 'hi3') : 'hi3', _mt: Date.now() + made };
+      payer: _rcp.payer, split: sp, treat: [], treatBy: {}, mode: 'avg', custom: {}, rsrc: F ? (F.rsrc || 'hi3') : 'hi3', by: me() || '', at: Date.now(), _mt: Date.now() + made };
     t.expenses.push(e); made++;
   });
   document.getElementById('rcpModal').style.display = 'none';
@@ -1337,6 +1456,15 @@ function renderAdd(){
     };
   });
   document.getElementById('btnSave').textContent = editId ? '更新這筆' : '儲存';
+  var _alb = document.getElementById('addLockBar');
+  _alb.innerHTML = isLocked(t) ? lockBarHtml(t).replace('不能新增、修改、刪除', '不能儲存（私人帳除外）') : '';
+  bindGuard(_alb);
+  var _em = document.getElementById('eMeta'), _eo = editId ? findExpense(editId) : null;
+  if(_eo && !_eo.priv){
+    _em.style.display = 'block';
+    _em.innerHTML = '新增：' + (_eo.at ? esc(whoName(_eo.by)) + ' ' + tsLab(_eo.at) : '未記錄') + '｜最後修改：' + (_eo.eat ? esc(whoName(_eo.eby)) + ' ' + tsLab(_eo.eat) : '—') +
+      (_eo.eat && _eo.ediff ? '<div style="font-size:12px;color:var(--tx3)">' + esc(_eo.ediff) + '</div>' : '');
+  } else { _em.style.display = 'none'; _em.innerHTML = ''; }
   if(F.rate === '' && F.amt === ''){ autoRate(false); }
 }
 function renderTreatBy(){
@@ -1610,6 +1738,7 @@ function dupCheck(e){
 }
 function saveExpense(){
   var t = trip(); if(!t) return;
+  if(isLocked(t)){ var _oe = editId ? findExpense(editId) : null; if(!(F.priv && (!_oe || _oe.priv))){ lockedMsg(); return; } }
   var amt = Number(F.amt), rate = roundRate(F.rate);
   if(!(amt > 0)){ toast('請輸入消費金額'); return; }
   if(!(rate > 0)){ toast('請輸入匯率（可按「抓當日」）'); return; }
@@ -1648,6 +1777,12 @@ function saveExpense(){
   if(F.mode === 'custom' && !F.priv){ F.split.forEach(function(id){ e.custom[id] = Number(F.custom[id]) || 0; }); }
   if(F.priv){ e.priv = true; e.payer = me(); e.split = [me()]; e.treat = []; e.treatBy = {}; e.mode = 'avg'; e.custom = {}; }
   if(!editId && !dupCheck(e)) return;
+  var _now = Date.now(), _old = editId ? findExpense(editId) : null;
+  if(_old){
+    ['by','at','eby','eat','ediff','dby','dat','rby','rat'].forEach(function(k){ if(_old[k] !== undefined) e[k] = _old[k]; });
+    var _df = expDiff(_old, e);
+    if(_df || _old.priv !== !!e.priv){ e.eby = me() || ''; e.eat = _now; e.ediff = _df; }
+  } else { e.by = me() || ''; e.at = _now; }
   if(!e.priv){
     var affected = [e.date];
     if(editId){ var old = findExpense(editId); if(old && !old.priv && old.date !== e.date) affected.push(old.date); }
@@ -1658,7 +1793,7 @@ function saveExpense(){
   for(i=0;i<t.expenses.length;i++){ if(t.expenses[i].id === e.id){ gi = i; break; } }
   for(i=0;i<pl.length;i++){ if(pl[i].id === e.id){ pi = i; break; } }
   if(e.priv){
-    if(gi >= 0){ t.expenses[gi]._del = true; t.expenses[gi]._mt = Date.now(); }
+    if(gi >= 0){ t.expenses[gi]._del = true; t.expenses[gi].mvPriv = 1; t.expenses[gi].dby = me() || ''; t.expenses[gi].dat = Date.now(); t.expenses[gi]._mt = Date.now(); }
     if(pi >= 0) pl[pi] = e; else pl.push(e);
   } else {
     if(pi >= 0) pl.splice(pi, 1);
@@ -1691,12 +1826,13 @@ function findExpense(id){
 }
 function delExpenseById(id){
   var t = trip(); if(!t) return;
-  if(!confirm('確定刪除這筆？')) return;
   var tgt = findExpense(id);
+  if(tgt && !tgt.priv && isLocked(t)){ lockedMsg(); return; }
+  if(!confirm(tgt && !tgt.priv ? '確定刪除這筆？\n（30 天內可在帳本最下方「最近刪除」還原）' : '確定刪除這筆？')) return;
   if(tgt && !tgt.priv && !resetDaysIfSettled(t, [tgt.date])) return;
   var pl = privList(), done = false, i;
   for(i=0;i<pl.length;i++){ if(pl[i].id === id){ pl.splice(i,1); done = true; break; } }
-  if(!done){ for(i=0;i<t.expenses.length;i++){ if(t.expenses[i].id === id){ t.expenses[i]._del = true; t.expenses[i]._mt = Date.now(); break; } } }
+  if(!done){ for(i=0;i<t.expenses.length;i++){ if(t.expenses[i].id === id){ t.expenses[i]._del = true; t.expenses[i].dby = me() || ''; t.expenses[i].dat = Date.now(); t.expenses[i]._mt = Date.now(); break; } } }
   if(editId === id){ F = null; editId = null; }
   save(); toast('已刪除');
 }
@@ -1751,13 +1887,14 @@ function adjApply(){
   var p = adjPreview();
   if(!p){ toast('請輸入帳單金額'); return; }
   var t = trip();
+  if(isLocked(t)){ lockedMsg(); return; }
   if(Math.abs(p.diff) < 1){ toast('差額不到 1 元，不需補正'); document.getElementById('adjModal').classList.remove('on'); return; }
   var settled = dayKeysOf(t, p.e.date).length > 0;
   if(settled){
     var e2 = { id: uid(), date: todayISO(), kind: 'exp', cat: p.e.cat, desc: p.e.desc + ' 匯率補正', adj: true,
       cur: t.home, amt: p.diff, rate: 1, card: false, feePct: 0, rsrc: 'manual',
       payer: p.e.payer, split: (p.e.split || []).slice(), treat: (p.e.treat || []).slice(), treatBy: Object.assign({}, p.e.treatBy || {}),
-      mode: p.e.mode || 'avg', custom: Object.assign({}, p.e.custom || {}), _mt: Date.now() };
+      mode: p.e.mode || 'avg', custom: Object.assign({}, p.e.custom || {}), by: me() || '', at: Date.now(), _mt: Date.now() };
     if(e2.mode === 'custom'){
       var ratio = p.diff / (homeAmt(p.e) || 1);
       Object.keys(e2.custom).forEach(function(k){ e2.custom[k] = Math.round(e2.custom[k] * ratio * 100) / 100; });
@@ -1765,6 +1902,7 @@ function adjApply(){
     t.expenses.push(e2);
     toast('該日已結清，已新增補正帳 ' + (p.diff > 0 ? '+' : '') + fmt(p.diff));
   } else {
+    p.e.ediff = '帳單補正 匯率 ' + p.e.rate + '→' + roundRate(p.nr); p.e.eby = me() || ''; p.e.eat = Date.now();
     p.e.rate = p.nr; p.e.rsrc = 'manual'; p.e._mt = Date.now();
     toast('已補正，該筆改為帳單實際金額');
   }
@@ -1899,7 +2037,8 @@ function renderLedger(){
     myCard = buildPayCard(t, Ms, true);
   }
   var es = ges.concat(pes);
-  if(!es.length){ list.innerHTML = banner + myCard + '<div class="empty" style="padding:26px 14px"><svg viewBox="0 0 64 64" width="68" height="68" fill="none" stroke="var(--tx3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block"><path d="M16 8h24l8 8v40H16z"/><path d="M40 8v8h8"/><path d="M23 30h18M23 38h18M23 46h10"/></svg><div style="font-size:15px;font-weight:500;color:var(--tx);margin-bottom:3px">還沒有記帳</div><div style="font-size:13px;color:var(--tx2);margin-bottom:14px">按下面「＋ 記一筆」開始，回國自動算好誰轉誰</div><button class="btn" style="width:auto;padding:9px 20px" onclick="goAdd()">＋ 記一筆</button></div>'; return; }
+  var _top = lockBarHtml(t) + actCardHtml(t), _bot = delCardHtml(t);
+  if(!es.length){ list.innerHTML = banner + _top + myCard + '<div class="empty" style="padding:26px 14px"><svg viewBox="0 0 64 64" width="68" height="68" fill="none" stroke="var(--tx3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block"><path d="M16 8h24l8 8v40H16z"/><path d="M40 8v8h8"/><path d="M23 30h18M23 38h18M23 46h10"/></svg><div style="font-size:15px;font-weight:500;color:var(--tx);margin-bottom:3px">還沒有記帳</div><div style="font-size:13px;color:var(--tx2);margin-bottom:14px">按下面「＋ 記一筆」開始，回國自動算好誰轉誰</div><button class="btn" style="width:auto;padding:9px 20px" onclick="goAdd()">＋ 記一筆</button></div>' + _bot; bindGuard(list); return; }
   es.sort(function(a,b){ if(a.date !== b.date) return a.date > b.date ? -1 : 1; return (b._mt||0) - (a._mt||0); });
   var dayTot = {};
   es.forEach(function(e){ dayTot[e.date] = (dayTot[e.date] || 0) + homeAmt(e); });
@@ -1950,7 +2089,8 @@ function renderLedger(){
   });
   var html = rows ? '<div class="card" style="padding:2px 12px">' + rows + '</div>' : '';
   var divSeg = (t.legs && t.legs.length) ? '<div class="seg" style="margin:2px 4px 8px"><span data-div="ym"' + (S.divMode !== 'leg' ? ' class="on"' : '') + '>年月</span><span data-div="leg"' + (S.divMode === 'leg' ? ' class="on"' : '') + '>所在地</span></div>' : '';
-  list.innerHTML = banner + myCard + divSeg + '<div class="hint" style="margin:2px 4px 6px">點整列＝編輯｜👈 往左滑刪除</div>' + html;
+  list.innerHTML = banner + _top + myCard + divSeg + '<div class="hint" style="margin:2px 4px 6px">點整列＝編輯｜👈 往左滑刪除' + (isLocked(t) ? '（鎖帳中只能看）' : '') + '</div>' + html + _bot;
+  bindGuard(list);
   list.querySelectorAll('[data-div]').forEach(function(el){ el.onclick = function(){ S.divMode = el.dataset.div; saveLocal(); renderLedger(); }; });
   var ax = document.getElementById('a2hsX');
   if(ax) ax.onclick = function(){ S.dismiss['a2hs'] = true; saveLocal(); renderLedger(); };
@@ -2567,7 +2707,7 @@ function renderSettle(){
     '<div class="dcol"><p class="dl">未結清</p><p class="dv warn">' + money(t.home, M.unsettled) + '</p></div>'
   ];
   if(M.ft.fin > 0) cols.push('<div class="dcol"><p class="dl">' + btnIco(IC_BANK) + '基金餘額</p><p class="dv">' + money(t.home, M.ft.bal) + '</p></div>');
-  var html = '<div class="dash" style="padding:12px 4px 10px"><div style="display:flex">' + cols.join('<div class="divv"></div>') + '</div>' +
+  var html = lockBarHtml(t, true) + '<div class="dash" style="padding:12px 4px 10px"><div style="display:flex">' + cols.join('<div class="divv"></div>') + '</div>' +
     '<p class="dnote" style="margin:7px 10px 0;padding-top:6px;border-top:1px solid var(--dashBar);text-align:center">每天轉完帳打勾＝當日結清；總結算只算未結清的部分</p></div>';
   if(me()){
     html += buildPayCard(t, M);
@@ -2660,6 +2800,7 @@ function renderSettle(){
     '<div class="row"><button class="btn sub mini" id="btnReport" style="flex:1">' + btnIco(IC.copy) + '複製報告</button><button class="btn mini fix" id="btnRepImg">' + btnIco(IC.photo) + '存成圖片</button></div>' +
     '<div class="hint" style="margin-top:8px">CSV 明細在「旅程 → 備份與匯出」。</div></div>';
   box.innerHTML = html;
+  bindGuard(box);
   box.querySelectorAll('[data-tbv]').forEach(function(el){
     el.onclick = function(){ S.tblView = el.dataset.tbv; saveLocal(); renderSettle(); };
   });
@@ -3568,6 +3709,7 @@ function renderTrip(){
       if(nh === t.home) return;
       var es = t.expenses.filter(function(e){ return !e._del; }).concat(privList().filter(function(e){ return !e._del; }));
       if(!es.length){ t.home = nh; bumpMeta('info'); save(); toast('主幣別已改為 ' + nh); return; }
+      if(isLocked(t)){ lockedMsg(); renderTrip(); return; }
       if(!confirm('主幣別改為 ' + nh + '。\n要自動按各筆「記帳日期」的匯率重算全部 ' + es.length + ' 筆帳嗎？\n（手動改過的匯率也會被覆蓋；取消＝不變更主幣別）')){ renderTrip(); return; }
       t.home = nh; bumpMeta('info');
       recalcRates(t, es);
@@ -3735,11 +3877,13 @@ function renderTrip(){
       var amt = Number(document.getElementById('fcAmt').value);
       var d = document.getElementById('fcDate').value || todayISO();
       if(!(amt > 0)){ toast('請輸入入金金額'); return; }
+      if(isLocked(t)){ lockedMsg(); return; }
       t.fund.push({ id: uid(), mid: mid, amt: amt, date: d, _mt: Date.now() });
       bumpMeta('fund'); save(); toast('已入金 ' + fmt(amt));
     };
     tb.querySelectorAll('[data-fdel]').forEach(function(btn){
       btn.onclick = function(){
+        if(isLocked(t)){ lockedMsg(); return; }
         if(!confirm('刪除這筆入金？')) return;
         t.fund = t.fund.filter(function(c){ return c.id !== btn.dataset.fdel; });
         bumpMeta('fund'); save();
@@ -4125,6 +4269,7 @@ function applyRemote(code, remote){
       local.startDate = remote.startDate || ''; local.endDate = remote.endDate || '';
       local.domestic = !!remote.domestic; local.fundKeeper = remote.fundKeeper || ''; local.archived = !!remote.archived;
       local.legs = remote.legs || [];
+      local.locked = remote.locked || null; local.lockLog = remote.lockLog || [];
       setMt('info');
     }
     if(grpNewer('members')){ local.members = remote.members || []; local.families = remote.families || []; local.settled = remote.settled || {}; setMt('members'); }
@@ -4351,4 +4496,4 @@ try{
 </body>
 </html>
 
-<!-- T1027-06 deploy -->
+<!-- T1027-07 deploy -->
