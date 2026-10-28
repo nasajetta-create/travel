@@ -230,6 +230,12 @@ table.st.fbxtb th:first-child,table.st.fbxtb td:first-child{padding-left:10px}
 table.st.fbxtb th:last-child,table.st.fbxtb td:last-child{padding-right:10px}
 .fbx tr.fbxsum td{background:var(--accBg)!important;font-weight:600}
 .fbx.solo tr.fbxsum td{background:var(--ro)}
+.msortbar{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:0 0 8px 16px}
+.msortbar.on{background:var(--accBg);border:1px solid var(--acc);border-radius:12px;padding:8px 10px}
+.msortbar.on span{flex:1;font-size:13px;color:var(--accTx)}
+.msortbar .btn{width:auto;padding:7px 14px}
+.marr{display:flex;flex-direction:column;gap:4px}
+.marr button{width:44px;height:30px;border:1px solid var(--inBd);border-radius:8px;background:var(--card);color:var(--acc);font-size:14px;cursor:pointer}
 .perseg{margin:0 0 10px;overflow-x:auto;-webkit-overflow-scrolling:touch;font-size:14px}
 .perseg span{flex:1 0 auto;white-space:nowrap;padding:8px 12px}
 .rlrow{display:flex;align-items:center;gap:8px;padding:8px 2px;border-top:1px solid var(--line);font-size:15px}
@@ -635,8 +641,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 73;
-var VER = 'T1029-01';
+var CODE_VERSION = 74;
+var VER = 'T1029-02';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -3577,6 +3583,49 @@ var _hhShow = false;
 var _budMode = 'total';
 var _ovAll = false;
 var _memAdv = false;
+var _memSort = false;
+/* ───── T1029-02 成員排序 ───── */
+function memUnits(t){
+  var units = [], idx = {};
+  orderedMembers(t).forEach(function(m){
+    var k = (m.famId && famName(t, m.famId)) ? 'f' + m.famId : 'm' + m.id;
+    if(idx[k] === undefined){ idx[k] = units.length; units.push([]); }
+    units[idx[k]].push(m);
+  });
+  return units;
+}
+function memMove(id, dir){
+  var t = trip(); if(!t) return;
+  var U = memUnits(t), ui = -1, pi = -1;
+  U.forEach(function(u, i){ u.forEach(function(m, j){ if(m.id === id){ ui = i; pi = j; } }); });
+  if(ui < 0) return;
+  var u = U[ui], tmp;
+  if(dir < 0){
+    if(pi > 0){ tmp = u[pi - 1]; u[pi - 1] = u[pi]; u[pi] = tmp; }
+    else if(ui > 0){ tmp = U[ui - 1]; U[ui - 1] = U[ui]; U[ui] = tmp; }
+    else return;
+  } else {
+    if(pi < u.length - 1){ tmp = u[pi + 1]; u[pi + 1] = u[pi]; u[pi] = tmp; }
+    else if(ui < U.length - 1){ tmp = U[ui + 1]; U[ui + 1] = U[ui]; U[ui] = tmp; }
+    else return;
+  }
+  t.members = [].concat.apply([], U);
+  bumpMeta('members'); save();
+}
+var _nameColl = null;
+function nameCmp(a, b){
+  if(!_nameColl){ try{ _nameColl = new Intl.Collator('zh-Hant-TW-u-co-stroke'); }catch(e){ _nameColl = { compare: function(x, y){ return x.localeCompare(y); } }; } }
+  return _nameColl.compare(a || '', b || '');
+}
+function memSortByName(){
+  var t = trip(); if(!t) return;
+  if(!confirm('依姓名筆畫重新排列全部成員？\n同一戶仍排在一起。排好後還能用 ▲▼ 微調。')) return;
+  var U = memUnits(t);
+  U.forEach(function(u){ u.sort(function(a, b){ return nameCmp(a.name, b.name); }); });
+  U.sort(function(a, b){ return nameCmp(a[0].name, b[0].name); });
+  t.members = [].concat.apply([], U);
+  bumpMeta('members'); save(); toast('已依姓名排序');
+}
 var OV_HELP = '詳細＝完整欄位；清爽＝只看差額。基金入金與基金支付不列入個人已付/應付，於下方基金區塊單獨結算。';
 function famCleanup(t){ t.families = t.families.filter(function(f){ return t.members.some(function(m){ return m.famId === f.id; }); }); }
 function secBox(id, title, side, body, defOpen){
@@ -3699,7 +3748,13 @@ function renderTrip(){
       '</span>' +
       '</span>', !t.startDate);
     cap();
-    html += '<div class="hint" style="margin-bottom:6px">名單要含<b>你自己</b>與整團所有人（含小孩）。人頭數：大人 1、小孩 0.5、不分攤 0。</div><div id="memberBox">';
+    html += '<div class="hint" style="margin-bottom:6px">名單要含<b>你自己</b>與整團所有人（含小孩）。人頭數：大人 1、小孩 0.5、不分攤 0。</div>';
+    if(t.members.length > 1){
+      html += _memSort
+        ? '<div class="msortbar on"><span>點 ▲▼ 調整順序，同一戶會一起移動</span><button class="btn sub mini" id="btnMSortName">依姓名排</button><button class="btn mini" id="btnMSortDone">完成</button></div>'
+        : '<div class="msortbar"><button class="btn sub mini" id="btnMSort">' + svgi('<path d="M8 4v16"/><path d="M4 8l4-4 4 4"/><path d="M16 20V4"/><path d="M12 16l4 4 4-4"/>', 15) + ' 調整順序</button></div>';
+    }
+    html += '<div id="memberBox">';
     var _ord = orderedMembers(t);
     var _famList = {};
     _ord.forEach(function(m){ if(m.famId && famName(t, m.famId)){ (_famList[m.famId] = _famList[m.famId] || []).push(m.id); } });
@@ -3712,7 +3767,7 @@ function renderTrip(){
         var gbot = (gi < grp.length - 1) ? 'bottom:-8px' : 'bottom:0';
         gLine = '<i style="top:0;' + gbot + ';background:' + gcol + '"></i>';
       }
-      if(_memEdit === m.id){
+      if(_memEdit === m.id && !_memSort){
         var famMems = m.famId ? t.members.filter(function(x){ return x.famId === m.famId; }) : [];
         var hhOn = famMems.length > 0 || _hhShow;
         var w2e = weightOf(t, m.id);
@@ -3762,10 +3817,10 @@ function renderTrip(){
         if(m.casual) m2.push('部分參加');
         if(w2b !== 1) m2.push('計數 ' + w2b);
         if(m.offAt) m2.push('<span style="color:var(--warnTx)">' + (perOf(t, m.offAt) ? esc(perOf(t, m.offAt).name) : m.offAt.replace(/-/g, '/')) + ' 起停用</span>');
-        html += '<div class="mrw"><div class="mgut">' + gLine + '</div><div class="mcard2" data-medit="' + m.id + '">' + softBdg(m.id, 42) +
+        html += '<div class="mrw"><div class="mgut">' + gLine + '</div><div class="mcard2"' + (_memSort ? '' : ' data-medit="' + m.id + '"') + '>' + softBdg(m.id, 42) +
           '<div style="flex:1;min-width:0"><div class="mn1b">' + (m.name ? esc(m.name) + ' ' + acctTag : '<span style="color:var(--tx3)">未命名，點我編輯</span>') + '</div>' +
           (m2.length ? '<div class="mn2b">' + m2.join(' · ') + '</div>' : '') + '</div>' +
-          '<span style="color:var(--tx3);font-size:14px">✏️</span></div></div>';
+          (_memSort ? '<span class="marr"><button data-mup="' + m.id + '" aria-label="上移">▲</button><button data-mdn="' + m.id + '" aria-label="下移">▼</button></span>' : '<span style="color:var(--tx3);font-size:14px">✏️</span>') + '</div></div>';
       }
     });
     html += '</div><div class="sbtns" style="margin-left:16px"><button id="btnAddM">' + btnIco(IC.uplus) + '新增成員</button><button id="btnFriM">' + btnIco(IC.star) + '好朋友</button><button id="btnImpM">' + btnIco(IC.dl) + '舊旅程</button></div>' +
@@ -3971,6 +4026,14 @@ function renderTrip(){
     document.getElementById('btnImpM').onclick = openImpMembers;
     var bFri = document.getElementById('btnFriM');
     if(bFri) bFri.onclick = openFriends;
+    var _bMS = document.getElementById('btnMSort');
+    if(_bMS) _bMS.onclick = function(){ _memSort = true; _memEdit = null; renderTrip(); };
+    var _bMSD = document.getElementById('btnMSortDone');
+    if(_bMSD) _bMSD.onclick = function(){ _memSort = false; renderTrip(); };
+    var _bMSN = document.getElementById('btnMSortName');
+    if(_bMSN) _bMSN.onclick = memSortByName;
+    tb.querySelectorAll('[data-mup]').forEach(function(el){ el.onclick = function(ev){ ev.stopPropagation(); memMove(el.dataset.mup, -1); }; });
+    tb.querySelectorAll('[data-mdn]').forEach(function(el){ el.onclick = function(ev){ ev.stopPropagation(); memMove(el.dataset.mdn, 1); }; });
     tb.querySelectorAll('[data-medit]').forEach(function(el){
       el.onclick = function(){ _memEdit = el.dataset.medit; _hhShow = false; _memAdv = false; renderTrip(); };
     });
@@ -4744,4 +4807,4 @@ try{
 </body>
 </html>
 
-<!-- T1029-01 deploy -->
+<!-- T1029-02 deploy -->
