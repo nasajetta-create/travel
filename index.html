@@ -230,6 +230,11 @@ table.st.fbxtb th:first-child,table.st.fbxtb td:first-child{padding-left:10px}
 table.st.fbxtb th:last-child,table.st.fbxtb td:last-child{padding-right:10px}
 .fbx tr.fbxsum td{background:var(--accBg)!important;font-weight:600}
 .fbx.solo tr.fbxsum td{background:var(--ro)}
+.perseg{margin:0 0 10px;overflow-x:auto;-webkit-overflow-scrolling:touch;font-size:14px}
+.perseg span{flex:1 0 auto;white-space:nowrap;padding:8px 12px}
+.rlrow{display:flex;align-items:center;gap:8px;padding:8px 2px;border-top:1px solid var(--line);font-size:15px}
+.rlrow input{width:18px;height:18px}
+.rla{font-size:13.5px;color:var(--tx2)}
 .lkbar{display:flex;align-items:center;gap:10px;background:var(--warnBg);border:1px solid var(--warnBd);color:var(--warnTx);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:14px;line-height:1.45}
 .lkbar.off{background:var(--card);border-color:var(--line);color:var(--tx2)}
 .lkbar .lkt{flex:1;display:flex;align-items:flex-start;gap:7px;min-width:0}
@@ -527,6 +532,21 @@ details.tsec>.tbody{padding:2px 1px 15px}
   <div id="impList" style="max-height:300px;overflow-y:auto"></div>
   <div class="row" style="margin-top:12px"><button class="btn mini" id="impGo" style="flex:1">帶入勾選的成員</button><button class="btn sub mini" id="impClose" style="flex:1">取消</button></div>
 </div></div>
+<div class="modal" id="rollModal"><div class="mbox" style="max-height:88vh;overflow-y:auto">
+  <div style="font-size:16px;font-weight:600;margin-bottom:6px">結算並開下一季</div>
+  <div class="lbl">本季</div>
+  <div class="hint" id="rlCurHint" style="margin:0 0 4px"></div>
+  <input type="text" id="rlCurName" placeholder="本季名稱">
+  <div class="fld3" style="margin-top:6px"><input type="date" class="fld3-amt" id="rlCurStart"><span style="display:flex;align-items:center;padding:0 8px;color:var(--tx3)">～</span><input type="date" class="fld3-amt" id="rlCurEnd"></div>
+  <div class="lbl" style="margin-top:10px">下一季</div>
+  <input type="text" id="rlNxName" placeholder="下一季名稱">
+  <div class="fld3" style="margin-top:6px"><input type="date" class="fld3-amt" id="rlNxStart"><span style="display:flex;align-items:center;padding:0 8px;color:var(--tx3)">～</span><input type="date" class="fld3-amt" id="rlNxEnd"></div>
+  <div class="lbl" style="margin-top:10px">下一季成員（取消勾＝下一季停用）</div>
+  <div id="rlMems"></div>
+  <div class="hint" id="rlSum" style="margin-top:6px"></div>
+  <label style="display:flex;align-items:center;gap:7px;font-size:14px;margin-top:8px"><input type="checkbox" id="rlClose" style="width:18px;height:18px">本季鎖帳（這一季日期的帳不能再改）</label>
+  <div class="row" style="margin-top:12px"><button class="btn sub mini" id="rlCancel" style="flex:1">取消</button><button class="btn mini" id="rlGo" style="flex:1">確定</button></div>
+</div></div>
 <div class="modal" id="friModal"><div class="mbox">
   <div style="font-size:16px;font-weight:600;margin-bottom:4px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M12 4l2.3 4.7 5.2.8-3.8 3.7.9 5.2-4.6-2.4-4.6 2.4.9-5.2L4.5 9.5l5.2-.8z"/></svg>好朋友帶入</div>
   <div class="hint" style="margin-bottom:8px">好朋友清單存在這支手機，換手機不會跟著走。</div>
@@ -615,8 +635,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 72;
-var VER = 'T1027-07';
+var CODE_VERSION = 73;
+var VER = 'T1029-01';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -831,6 +851,170 @@ function bumpMeta(field){
   if(field) t.mt[field] = now; else META_GROUPS.forEach(function(g){ t.mt[g] = now; });
   t.metaMt = now;
 }
+/* ───── T1029-01 同代碼分季（periods） ───── */
+function perList(t){ return ((t && t.periods) || []).slice().sort(function(a, b){ return a.start < b.start ? -1 : (a.start > b.start ? 1 : 0); }); }
+function perById(t, id){ var a = (t && t.periods) || []; for(var i = 0; i < a.length; i++){ if(a[i].id === id) return a[i]; } return null; }
+function perOf(t, date){ var a = perList(t); for(var i = 0; i < a.length; i++){ if(a[i].start && a[i].end && date >= a[i].start && date <= a[i].end) return a[i]; } return null; }
+function perDefault(t){
+  var a = perList(t); if(!a.length) return null;
+  var td = todayISO(), p = perOf(t, td); if(p) return p;
+  var best = null; a.forEach(function(x){ if(x.start <= td) best = x; });
+  return best || a[0];
+}
+function selPer(t, forSettle){
+  if(!t || !perList(t).length) return null;
+  S.perSel = S.perSel || {};
+  var s = S.perSel[t.code];
+  if(s === 'all') return forSettle ? perDefault(t) : null;
+  return perById(t, s) || perDefault(t);
+}
+function isAllSel(t){ return !!(t && perList(t).length && S.perSel && S.perSel[t.code] === 'all'); }
+function inPer(p, date){ return !p || (!!date && date >= p.start && date <= p.end); }
+function perEs(t, forSettle){ var p = selPer(t, forSettle); return t.expenses.filter(function(e){ return !e._del && inPer(p, e.date); }); }
+function netKey(t, from, to){ var p = selPer(t, true); return 'NET|' + (p ? p.id + '|' : '') + from + '>' + to; }
+function fKeyFor(p, mid){ return 'F>' + (p ? p.id + '>' : '') + mid; }
+function fKey(t, mid){ return fKeyFor(selPer(t, true), mid); }
+function perClosedAt(t, date){ var p = date ? perOf(t, date) : null; return (p && p.closed && p.closed.at) ? p : null; }
+function dateLocked(t, date){ return isLocked(t) || !!perClosedAt(t, date); }
+function lockMsgFor(t, date){
+  if(isLocked(t)){ lockedMsg(); return; }
+  var p = perClosedAt(t, date);
+  toast('「' + (p ? p.name : '') + '」已結算鎖定（' + whoName(p && p.closed.by) + ' ' + tsLab(p && p.closed.at) + '），要先在結算頁解鎖該季');
+}
+function memOff(m, date){ return !!(m && m.offAt && (date || todayISO()) >= m.offAt); }
+function _p2(n){ return (n < 10 ? '0' : '') + n; }
+function qName(d){ return d.slice(0,4) + 'Q' + (Math.floor((Number(d.slice(5,7)) - 1) / 3) + 1); }
+function qRange(d){
+  var y = Number(d.slice(0,4)), q = Math.floor((Number(d.slice(5,7)) - 1) / 3), sm = q * 3 + 1, em = sm + 2;
+  return { start: y + '-' + _p2(sm) + '-01', end: y + '-' + _p2(em) + '-' + _p2(new Date(y, em, 0).getDate()) };
+}
+function addDay(d, n){ var x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() + n); return x.getFullYear() + '-' + _p2(x.getMonth() + 1) + '-' + _p2(x.getDate()); }
+function perSegHtml(t, forSettle){
+  var a = perList(t); if(!a.length) return '';
+  var p = selPer(t, forSettle), all = !forSettle && isAllSel(t), cur = perOf(t, todayISO());
+  return '<div class="seg perseg">' + a.map(function(x){
+    return '<span data-per="' + x.id + '"' + (!all && p && p.id === x.id ? ' class="on"' : '') + '>' + esc(x.name || '未命名') + (cur && cur.id === x.id ? ' 本季' : '') + (x.closed ? ' ' + svgi(IC.lock, 12) : '') + '</span>';
+  }).join('') + (forSettle ? '' : '<span data-per="all"' + (all ? ' class="on"' : '') + '>全部</span>') + '</div>';
+}
+function bindPerSeg(box, rerender){
+  box.querySelectorAll('[data-per]').forEach(function(el){ el.onclick = function(){ var t = trip(); if(!t) return; S.perSel = S.perSel || {}; S.perSel[t.code] = el.dataset.per; saveLocal(); rerender(); }; });
+  box.querySelectorAll('[data-perunlock]').forEach(function(el){ el.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); perUnlock(el.dataset.perunlock); }; });
+  box.querySelectorAll('[data-roll]').forEach(function(el){ el.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); openRoll(); }; });
+}
+function perLockBarHtml(t, p){
+  if(!p || !p.closed) return '';
+  return '<div class="lkbar"><span class="lkt">' + LOCK_SVG + '<span><b>' + esc(p.name) + ' 已結算鎖定</b>　' + esc(whoName(p.closed.by)) + ' 於 ' + tsLab(p.closed.at) + ' 鎖定，這一季的帳不能新增、修改、刪除</span></span><button class="lkbtn" data-perunlock="' + p.id + '">解鎖</button></div>';
+}
+function migrateKeys(t, p){
+  Object.keys(t.tfDone || {}).forEach(function(k){
+    var nk = null;
+    if(/^F>[^>]+$/.test(k)) nk = 'F>' + p.id + '>' + k.slice(2);
+    else if(k.indexOf('NET|') === 0 && k.indexOf('|', 4) < 0) nk = 'NET|' + p.id + '|' + k.slice(4);
+    if(nk && !t.tfDone[nk]){ t.tfDone[nk] = t.tfDone[k]; delete t.tfDone[k]; }
+  });
+  bumpMeta('tfDone');
+}
+function perUnlock(id){
+  var t = trip(); if(!t) return; var p = perById(t, id); if(!p || !p.closed) return;
+  if(!confirm('解鎖「' + p.name + '」？\n解鎖後這一季的帳又可以改。\n注意：已滾存到下一季的入金不會自動改，改了帳要自己核對下一季的滾存金額。')) return;
+  p.closed = null;
+  t.lockLog = (t.lockLog || []).concat([{ a: 'punlock', by: me() || '', at: Date.now(), name: p.name }]).slice(-20);
+  bumpMeta('info'); save(); toast('已解鎖 ' + p.name);
+}
+var _roll = null;
+function openRoll(){
+  var t = trip(); if(!t) return;
+  if(isLocked(t)){ lockedMsg(); return; }
+  var cur = selPer(t, true), isNew = !cur;
+  if(cur && cur.closed){ toast('這一季已結算鎖定'); return; }
+  if(isNew){
+    var ds = [];
+    t.expenses.forEach(function(e){ if(!e._del && e.date) ds.push(e.date); });
+    (t.fund || []).forEach(function(c){ if(!c._del && c.date) ds.push(c.date); });
+    if(t.startDate) ds.push(t.startDate);
+    ds.sort();
+    var st = ds.length ? ds[0] : qRange(todayISO()).start;
+    var en = qRange(todayISO()).end; if(ds.length && ds[ds.length - 1] > en) en = ds[ds.length - 1];
+    cur = { id: '', name: qName(en), start: st, end: en };
+  }
+  var nst = addDay(cur.end, 1);
+  _roll = { isNew: isNew, curId: cur.id, keep: {}, close: true };
+  t.members.forEach(function(m){ if(!memOff(m, nst)) _roll.keep[m.id] = true; });
+  document.getElementById('rlCurName').value = cur.name || '';
+  document.getElementById('rlCurStart').value = cur.start || '';
+  document.getElementById('rlCurEnd').value = cur.end || '';
+  ['rlCurName','rlCurStart','rlCurEnd'].forEach(function(id){ document.getElementById(id).disabled = !isNew; });
+  document.getElementById('rlCurHint').textContent = isNew ? '第一次分季：先把目前的帳設成一季（日期可改）' : '';
+  document.getElementById('rlNxName').value = qName(nst);
+  document.getElementById('rlNxStart').value = nst;
+  document.getElementById('rlNxEnd').value = qRange(nst).end;
+  document.getElementById('rlClose').checked = true;
+  renderRoll();
+  document.getElementById('rollModal').classList.add('on');
+}
+function renderRoll(){
+  var t = trip(); if(!t || !_roll) return;
+  var M = settleModel(t), rf = {};
+  M.refunds.forEach(function(f){ rf[f.mid] = f.amt; });
+  var box = document.getElementById('rlMems');
+  box.innerHTML = t.members.map(function(m){
+    var on = !!_roll.keep[m.id], r = rf[m.id] || 0;
+    return '<label class="rlrow"><input type="checkbox" data-rlk="' + m.id + '"' + (on ? ' checked' : '') + '>' + bdg(m.id, 22) + '<span style="flex:1">' + esc(m.name || '?') + '</span>' +
+      '<span class="rla">' + (r > 0.5 ? (on ? '滾存 ' : '退還 ') + fmt(r) : (on ? '' : '下季停用')) + '</span></label>';
+  }).join('');
+  box.querySelectorAll('[data-rlk]').forEach(function(el){ el.onchange = function(){ if(el.checked) _roll.keep[el.dataset.rlk] = true; else delete _roll.keep[el.dataset.rlk]; renderRoll(); }; });
+  var tot = 0; M.refunds.forEach(function(f){ if(_roll.keep[f.mid]) tot += f.amt; });
+  document.getElementById('rlSum').textContent = M.ft.fin > 0 ? '基金餘額 ' + fmt(M.ft.bal) + '，滾存到下一季 ' + fmt(tot) + '（取消勾的人：餘額照退、下一季停用）' : '這一季沒有基金；只建立下一季、帶成員。取消勾＝下一季停用。';
+}
+function doRoll(){
+  var t = trip(); if(!t || !_roll) return;
+  var g = function(id){ return document.getElementById(id).value.trim(); };
+  var cName = g('rlCurName'), cSt = g('rlCurStart'), cEn = g('rlCurEnd'), nName = g('rlNxName'), nSt = g('rlNxStart'), nEn = g('rlNxEnd');
+  if(!cName || !cSt || !cEn || cSt > cEn){ toast('本季名稱或日期有誤'); return; }
+  if(!nName || !nSt || !nEn || nSt > nEn){ toast('下一季名稱或日期有誤'); return; }
+  if(nSt <= cEn){ toast('下一季要從本季結束後開始'); return; }
+  var clash = perList(t).filter(function(x){ return x.id !== _roll.curId && !(nEn < x.start || nSt > x.end); });
+  if(clash.length){ toast('下一季日期和「' + clash[0].name + '」重疊'); return; }
+  if(_roll.isNew){
+    var clash2 = perList(t).filter(function(x){ return !(cEn < x.start || cSt > x.end); });
+    if(clash2.length){ toast('本季日期和「' + clash2[0].name + '」重疊'); return; }
+  }
+  if(!confirm('確定結算「' + cName + '」並開「' + nName + '」？')) return;
+  t.periods = t.periods || [];
+  var now = Date.now(), who = me() || '';
+  var cur = _roll.isNew ? null : perById(t, _roll.curId);
+  if(!cur){
+    var first = !perList(t).length;
+    cur = { id: uid(), name: cName, start: cSt, end: cEn, closed: null };
+    t.periods.push(cur);
+    if(first) migrateKeys(t, cur);
+  }
+  S.perSel = S.perSel || {}; S.perSel[t.code] = cur.id;
+  var M = settleModel(t);
+  var nx = { id: uid(), name: nName, start: nSt, end: nEn, closed: null };
+  t.periods.push(nx);
+  var rolls = M.refunds.filter(function(f){ return _roll.keep[f.mid]; });
+  if(rolls.length){
+    var target = 0; rolls.forEach(function(f){ target += f.amt; }); target = Math.round(target);
+    var amts = rolls.map(function(f){ return Math.round(f.amt); }), sum = 0; amts.forEach(function(a){ sum += a; });
+    if(sum !== target){ var bi = 0; rolls.forEach(function(f, i){ if(f.amt > rolls[bi].amt) bi = i; }); amts[bi] += target - sum; }
+    rolls.forEach(function(f, i){
+      if(amts[i] > 0) t.fund.push({ id: uid(), mid: f.mid, amt: amts[i], date: nx.start, carry: cur.id, _mt: now });
+      t.tfDone[fKeyFor(cur, f.mid)] = { ts: now, ok: now, roll: nx.id };
+    });
+  }
+  t.members.forEach(function(m){
+    if(_roll.keep[m.id]){ if(m.offAt) delete m.offAt; }
+    else if(!m.offAt || m.offAt > nx.start) m.offAt = nx.start;
+  });
+  if(document.getElementById('rlClose').checked) cur.closed = { by: who, at: now };
+  t.lockLog = (t.lockLog || []).concat([{ a: 'roll', by: who, at: now, name: cur.name + ' → ' + nx.name }]).slice(-20);
+  bumpMeta('info'); bumpMeta('members'); bumpMeta('fund'); bumpMeta('tfDone');
+  S.perSel[t.code] = nx.id;
+  document.getElementById('rollModal').classList.remove('on');
+  _roll = null;
+  save(); toast('已開「' + nx.name + '」' + (rolls.length ? '，餘額已滾存' : ''));
+}
 /* ───── T1027-07 防誤刪：誰動的、最近異動、最近刪除、鎖帳 ───── */
 var DEL_KEEP = 30 * 86400000;
 function whoName(id){ if(!id) return '未設定'; var m = member(id); return m ? (m.name || '?') : '已移除成員'; }
@@ -868,7 +1052,7 @@ function actList(t, lim){
     if(e.dat) ev.push({ ts: e.dat, by: e.dby, act: e.mvPriv ? '改私人' : '刪除', lab: lab });
     if(e.rat) ev.push({ ts: e.rat, by: e.rby, act: '還原', lab: lab });
   });
-  (t.lockLog || []).forEach(function(x){ ev.push({ ts: x.at, by: x.by, act: x.a === 'lock' ? '鎖帳' : '解鎖', lab: '' }); });
+  (t.lockLog || []).forEach(function(x){ ev.push({ ts: x.at, by: x.by, act: ({ lock: '鎖帳', unlock: '解鎖', roll: '滾存', punlock: '解鎖季' })[x.a] || x.a, lab: x.name || '' }); });
   ev.sort(function(a, b){ return b.ts - a.ts; });
   return ev.slice(0, lim || 20);
 }
@@ -879,10 +1063,10 @@ function delList(t){
 }
 function restoreExpense(id){
   var t = trip(); if(!t) return;
-  if(isLocked(t)){ lockedMsg(); return; }
   var e = null;
   for(var i = 0; i < t.expenses.length; i++){ if(t.expenses[i].id === id){ e = t.expenses[i]; break; } }
   if(!e || !e._del) return;
+  if(dateLocked(t, e.date)){ lockMsgFor(t, e.date); return; }
   if(!resetDaysIfSettled(t, [e.date])) return;
   var now = Date.now();
   e._del = false; e.rby = me() || ''; e.rat = now; e._mt = now;
@@ -992,10 +1176,10 @@ function shares(e){
   });
   return out;
 }
-function fundTotals(t){
+function fundTotals(t, p){
   var fin = 0, fout = 0;
-  (t.fund || []).forEach(function(c){ if(!c._del) fin += Number(c.amt) || 0; });
-  t.expenses.forEach(function(e){ if(!e._del && e.payer === FUND) fout += homeAmt(e); });
+  (t.fund || []).forEach(function(c){ if(c._del) return; if(p){ if(!inPer(p, c.date)) return; } else if(c.carry) return; fin += Number(c.amt) || 0; });
+  t.expenses.forEach(function(e){ if(!e._del && e.payer === FUND && inPer(p, e.date)) fout += homeAmt(e); });
   return { fin: fin, fout: fout, bal: fin - fout };
 }
 
@@ -1293,7 +1477,7 @@ function buildReceiptEntries(){
   if(!(rate > 0)){ toast('匯率還沒抓到，請關掉稍等一下再試'); return; }
   var sel = _rcp.items.filter(function(it){ return it.on && Number(it.amt) > 0; });
   if(!sel.length){ toast('沒有可建立的品項'); return; }
-  if(isLocked(t)){ lockedMsg(); return; }
+  if(dateLocked(t, _rcp.date)){ lockMsgFor(t, _rcp.date); return; }
   for(var i=0;i<sel.length;i++){
     var sp0 = (sel[i].ov && sel[i].ov.length) ? sel[i].ov : _rcp.def;
     if(!sp0.length){ toast('「' + sel[i].name + '」沒有分攤的人'); return; }
@@ -1320,7 +1504,7 @@ function blankF(){
     amt:'', rate: (lk.on && lk.rate) ? lk.rate : '',
     card:false, feePct: (t && t.feePct != null) ? t.feePct : 1.5,
     payer: me() || ((t && t.members.length) ? t.members[0].id : null),
-    split: t ? t.members.filter(function(m){ return !m.casual && !isSettled(t, m.id); }).map(function(m){ return m.id; }) : [],
+    split: t ? t.members.filter(function(m){ return !m.casual && !isSettled(t, m.id) && !memOff(m, todayISO()); }).map(function(m){ return m.id; }) : [],
     treat: [], treatBy: {}, mode:'avg', custom:{}, priv:false, kind:'exp', rsrc:'hi3' };
 }
 function guessCur(t){
@@ -1392,14 +1576,15 @@ function renderAdd(){
   }).join('');
   cc.querySelectorAll('.catitem').forEach(function(el){ el.onclick = function(){ F.cat = el.dataset.c; renderAdd(); }; });
   var pc = document.getElementById('payerChips');
-  var ph = t.members.map(function(m){ return payerBadge(m); }).join('');
+  var _vm = t.members.filter(function(m){ return !memOff(m, F.date) || F.split.indexOf(m.id) >= 0 || F.payer === m.id; });
+  var ph = _vm.map(function(m){ return payerBadge(m); }).join('');
   ph += fundPayerBadge();
   pc.innerHTML = ph;
   pc.querySelectorAll('[data-m]').forEach(function(el){ el.onclick = function(){
     F.payer = el.dataset.m;
     renderAdd(); }; });
   var sc = document.getElementById('splitChips');
-  sc.innerHTML = t.members.map(function(m){
+  sc.innerHTML = _vm.map(function(m){
     var inS = F.split.indexOf(m.id) >= 0, inT = F.treat.indexOf(m.id) >= 0;
     var st, gift = '';
     if(inT){ st = 'background:var(--warnBg);color:var(--warnTx);border:2px solid var(--warnBd)'; gift = '<span class="gift">' + btnIco(IC.gift) + '</span>'; }
@@ -1457,7 +1642,8 @@ function renderAdd(){
   });
   document.getElementById('btnSave').textContent = editId ? '更新這筆' : '儲存';
   var _alb = document.getElementById('addLockBar');
-  _alb.innerHTML = isLocked(t) ? lockBarHtml(t).replace('不能新增、修改、刪除', '不能儲存（私人帳除外）') : '';
+  _alb.innerHTML = isLocked(t) ? lockBarHtml(t).replace('不能新增、修改、刪除', '不能儲存（私人帳除外）') : (perClosedAt(t, F.date) ? perLockBarHtml(t, perClosedAt(t, F.date)) : '');
+  bindPerSeg(_alb, renderAdd);
   bindGuard(_alb);
   var _em = document.getElementById('eMeta'), _eo = editId ? findExpense(editId) : null;
   if(_eo && !_eo.priv){
@@ -1738,7 +1924,9 @@ function dupCheck(e){
 }
 function saveExpense(){
   var t = trip(); if(!t) return;
-  if(isLocked(t)){ var _oe = editId ? findExpense(editId) : null; if(!(F.priv && (!_oe || _oe.priv))){ lockedMsg(); return; } }
+  var _oe = editId ? findExpense(editId) : null;
+  var _lkd = dateLocked(t, F.date) ? (F.date || '') : ((_oe && !_oe.priv && dateLocked(t, _oe.date)) ? _oe.date : null);
+  if(_lkd !== null && !(F.priv && (!_oe || _oe.priv))){ lockMsgFor(t, _lkd); return; }
   var amt = Number(F.amt), rate = roundRate(F.rate);
   if(!(amt > 0)){ toast('請輸入消費金額'); return; }
   if(!(rate > 0)){ toast('請輸入匯率（可按「抓當日」）'); return; }
@@ -1827,7 +2015,7 @@ function findExpense(id){
 function delExpenseById(id){
   var t = trip(); if(!t) return;
   var tgt = findExpense(id);
-  if(tgt && !tgt.priv && isLocked(t)){ lockedMsg(); return; }
+  if(tgt && !tgt.priv && dateLocked(t, tgt.date)){ lockMsgFor(t, tgt.date); return; }
   if(!confirm(tgt && !tgt.priv ? '確定刪除這筆？\n（30 天內可在帳本最下方「最近刪除」還原）' : '確定刪除這筆？')) return;
   if(tgt && !tgt.priv && !resetDaysIfSettled(t, [tgt.date])) return;
   var pl = privList(), done = false, i;
@@ -1887,7 +2075,7 @@ function adjApply(){
   var p = adjPreview();
   if(!p){ toast('請輸入帳單金額'); return; }
   var t = trip();
-  if(isLocked(t)){ lockedMsg(); return; }
+  if(dateLocked(t, p.e.date)){ lockMsgFor(t, p.e.date); return; }
   if(Math.abs(p.diff) < 1){ toast('差額不到 1 元，不需補正'); document.getElementById('adjModal').classList.remove('on'); return; }
   var settled = dayKeysOf(t, p.e.date).length > 0;
   if(settled){
@@ -1955,12 +2143,13 @@ function renderLedger(){
   var t = trip();
   var sum = document.getElementById('ledgerSum'), list = document.getElementById('ledgerList');
   if(!t){ sum.innerHTML = '<div class="empty" style="color:var(--dashTx2)">還沒有旅程<br>到「🧳 旅程」建立或用代碼加入</div>'; list.innerHTML = ''; return; }
-  var ges = t.expenses.filter(function(e){ return !e._del; });
-  var pes = privList().filter(function(e){ return !e._del; });
+  var _lp = selPer(t, false);
+  var ges = perEs(t, false);
+  var pes = privList().filter(function(e){ return !e._del && inPer(_lp, e.date); });
   var total = 0, ptotal = 0, today = 0, tday = todayISO(), minD = null;
   ges.forEach(function(e){ if(e.kind === 'loan'){ if(!minD || e.date < minD) minD = e.date; return; } var h = homeAmt(e); total += h; if(e.date === tday) today += h; if(!minD || e.date < minD) minD = e.date; });
   pes.forEach(function(e){ var h = homeAmt(e); ptotal += h; if(!minD || e.date < minD) minD = e.date; });
-  var ft = fundTotals(t);
+  var ft = fundTotals(t, _lp);
   var dayN = '';
   var base = t.startDate || minD;
   if(t.endDate && tday > t.endDate){ dayN = '已結束'; }
@@ -1981,7 +2170,7 @@ function renderLedger(){
         (Ms.finalCalc.transfers || []).forEach(function(f){
           if(f.from !== MU) return;
           myAll++;
-          if(!t.tfDone['NET|' + f.from + '>' + f.to]) myUnpaid += f.amt;
+          if(!t.tfDone[netKey(t, f.from, f.to)]) myUnpaid += f.amt;
         });
       } else {
         Ms.days.forEach(function(dy){
@@ -2037,8 +2226,8 @@ function renderLedger(){
     myCard = buildPayCard(t, Ms, true);
   }
   var es = ges.concat(pes);
-  var _top = lockBarHtml(t) + actCardHtml(t), _bot = delCardHtml(t);
-  if(!es.length){ list.innerHTML = banner + _top + myCard + '<div class="empty" style="padding:26px 14px"><svg viewBox="0 0 64 64" width="68" height="68" fill="none" stroke="var(--tx3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block"><path d="M16 8h24l8 8v40H16z"/><path d="M40 8v8h8"/><path d="M23 30h18M23 38h18M23 46h10"/></svg><div style="font-size:15px;font-weight:500;color:var(--tx);margin-bottom:3px">還沒有記帳</div><div style="font-size:13px;color:var(--tx2);margin-bottom:14px">按下面「＋ 記一筆」開始，回國自動算好誰轉誰</div><button class="btn" style="width:auto;padding:9px 20px" onclick="goAdd()">＋ 記一筆</button></div>' + _bot; bindGuard(list); return; }
+  var _top = perSegHtml(t, false) + lockBarHtml(t) + perLockBarHtml(t, _lp) + actCardHtml(t), _bot = delCardHtml(t);
+  if(!es.length){ list.innerHTML = banner + _top + myCard + '<div class="empty" style="padding:26px 14px"><svg viewBox="0 0 64 64" width="68" height="68" fill="none" stroke="var(--tx3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block"><path d="M16 8h24l8 8v40H16z"/><path d="M40 8v8h8"/><path d="M23 30h18M23 38h18M23 46h10"/></svg><div style="font-size:15px;font-weight:500;color:var(--tx);margin-bottom:3px">還沒有記帳</div><div style="font-size:13px;color:var(--tx2);margin-bottom:14px">按下面「＋ 記一筆」開始，回國自動算好誰轉誰</div><button class="btn" style="width:auto;padding:9px 20px" onclick="goAdd()">＋ 記一筆</button></div>' + _bot; bindGuard(list); bindPerSeg(list, renderLedger); return; }
   es.sort(function(a,b){ if(a.date !== b.date) return a.date > b.date ? -1 : 1; return (b._mt||0) - (a._mt||0); });
   var dayTot = {};
   es.forEach(function(e){ dayTot[e.date] = (dayTot[e.date] || 0) + homeAmt(e); });
@@ -2090,7 +2279,7 @@ function renderLedger(){
   var html = rows ? '<div class="card" style="padding:2px 12px">' + rows + '</div>' : '';
   var divSeg = (t.legs && t.legs.length) ? '<div class="seg" style="margin:2px 4px 8px"><span data-div="ym"' + (S.divMode !== 'leg' ? ' class="on"' : '') + '>年月</span><span data-div="leg"' + (S.divMode === 'leg' ? ' class="on"' : '') + '>所在地</span></div>' : '';
   list.innerHTML = banner + _top + myCard + divSeg + '<div class="hint" style="margin:2px 4px 6px">點整列＝編輯｜👈 往左滑刪除' + (isLocked(t) ? '（鎖帳中只能看）' : '') + '</div>' + html + _bot;
-  bindGuard(list);
+  bindGuard(list); bindPerSeg(list, renderLedger);
   list.querySelectorAll('[data-div]').forEach(function(el){ el.onclick = function(){ S.divMode = el.dataset.div; saveLocal(); renderLedger(); }; });
   var ax = document.getElementById('a2hsX');
   if(ax) ax.onclick = function(){ S.dismiss['a2hs'] = true; saveLocal(); renderLedger(); };
@@ -2217,7 +2406,8 @@ function greedyTf(ub){
   return tf;
 }
 function settleModel(t){
-  var ges = t.expenses.filter(function(e){ return !e._del; });
+  var _sp = selPer(t, true);
+  var ges = perEs(t, true);
   var totalSpend = 0;
   var byDate = {};
   ges.forEach(function(e){ if(e.kind !== 'loan') totalSpend += homeAmt(e); (byDate[e.date] = byDate[e.date] || []).push(e); });
@@ -2247,9 +2437,9 @@ function settleModel(t){
     });
   });
   finalCalc.transfers = greedyTf(ub2);
-  var ft = fundTotals(t);
+  var ft = fundTotals(t, _sp);
   var contribBy = {};
-  (t.fund || []).forEach(function(c){ if(!c._del){ contribBy[c.mid] = (contribBy[c.mid] || 0) + (Number(c.amt) || 0); } });
+  (t.fund || []).forEach(function(c){ if(!c._del && inPer(_sp, c.date)){ contribBy[c.mid] = (contribBy[c.mid] || 0) + (Number(c.amt) || 0); } });
   var refunds = [];
   if(ft.bal > 0.5 && ft.fin > 0){
     Object.keys(contribBy).forEach(function(mid){
@@ -2258,7 +2448,7 @@ function settleModel(t){
     });
   }
   var overall = calcOver(t, ges);
-  return { totalSpend: totalSpend, settled: settled, unsettled: totalSpend - settled, days: days, finalCalc: finalCalc, ft: ft, refunds: refunds, overall: overall };
+  return { totalSpend: totalSpend, settled: settled, unsettled: totalSpend - settled, days: days, finalCalc: finalCalc, ft: ft, refunds: refunds, overall: overall, per: _sp };
 }
 function saTag(name, bankc, acct){
   return 'data-sa="' + encodeURIComponent(name) + '|' + encodeURIComponent(bankc || '') + '|' + encodeURIComponent(acct || '') + '" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px"';
@@ -2321,7 +2511,7 @@ function payItems(t, M){
 }
 function uLabel(u){ return u.solo ? bdg(u.solo, 18) : esc(u.name); }
 function netItems(t, M){
-  return (M.finalCalc.transfers || []).map(function(f){ return { key: 'NET|' + f.from + '>' + f.to, date: null, from: f.from, to: f.to, amt: f.amt, units: M.finalCalc.units }; });
+  return (M.finalCalc.transfers || []).map(function(f){ return { key: netKey(t, f.from, f.to), date: null, from: f.from, to: f.to, amt: f.amt, units: M.finalCalc.units }; });
 }
 function payRowHtml(t, it, showFrom){
   var st = tfState(t, it.key);
@@ -2559,7 +2749,7 @@ function _setlBadge(id, on, dashed){
 }
 function renderSettleMem(){
   var t = trip(); if(!t || !_setl) return;
-  var C = calcOver(t, t.expenses.filter(function(e){ return !e._del; }));
+  var C = calcOver(t, perEs(t, true));
   var pick = document.getElementById('setlPick');
   pick.innerHTML = t.members.map(function(m){
     if(isSettled(t, m.id)) return '';
@@ -2603,7 +2793,7 @@ function confirmSettleMem(){
   if(!_setl.pick.length){ toast('請選要先結的人'); return; }
   if(!_setl.via){ toast('請選經手人'); return; }
   if(_setl.pick.indexOf(_setl.via) >= 0){ toast('經手人不能是要結清的人'); return; }
-  var now = Date.now(), C = calcOver(t, t.expenses.filter(function(e){ return !e._del; }));
+  var now = Date.now(), C = calcOver(t, perEs(t, true));
   _setl.pick.forEach(function(id){
     var b = Math.round((C.paid[id]||0) - (C.share[id]||0));
     t.settled[id] = { via: _setl.via, at: now, date: todayISO(), amt: b };
@@ -2674,7 +2864,7 @@ function finalCardHtml(t, M){
     if(toU.bank) h += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 2px 6px;font-size:15px;font-weight:600">收款：' + esc(toU.bank) + ' <button class="btn sub mini" data-cpa="' + encodeURIComponent(toU.acct || toU.bankc) + '" style="padding:3px 10px;font-size:12.5px">' + btnIco(IC.copy) + '複製帳號</button></div>';
     gp.rows.forEach(function(f){
       var fromU = units[f.from], nm = unitMemNames(t, fromU);
-      var key = 'NET|' + f.from + '>' + f.to, st = tfState(t, key);
+      var key = netKey(t, f.from, f.to), st = tfState(t, key);
       var ktag = '';
       if(pc[f.from] > 1){ pi[f.from] = (pi[f.from] || 0) + 1; ktag = ' <span style="font-size:11.5px;font-weight:600;color:#b45309;border:1.5px solid #f2b866;background:#fff7e8;border-radius:6px;padding:0 5px">第 ' + pi[f.from] + '/' + pc[f.from] + ' 筆</span>'; }
       h += '<div class="tf' + (st === 2 ? ' done' : '') + '"><input type="checkbox" data-tfk="' + key + '"' + (st ? ' checked' : '') + '><div style="flex:1"><div class="who">' + uLabel(fromU) + ' →' + ktag + '</div>' + (nm ? '<div class="bank">' + esc(nm) + '</div>' : '') +
@@ -2707,7 +2897,7 @@ function renderSettle(){
     '<div class="dcol"><p class="dl">未結清</p><p class="dv warn">' + money(t.home, M.unsettled) + '</p></div>'
   ];
   if(M.ft.fin > 0) cols.push('<div class="dcol"><p class="dl">' + btnIco(IC_BANK) + '基金餘額</p><p class="dv">' + money(t.home, M.ft.bal) + '</p></div>');
-  var html = lockBarHtml(t, true) + '<div class="dash" style="padding:12px 4px 10px"><div style="display:flex">' + cols.join('<div class="divv"></div>') + '</div>' +
+  var html = perSegHtml(t, true) + lockBarHtml(t, !perList(t).length) + perLockBarHtml(t, M.per) + '<div class="dash" style="padding:12px 4px 10px"><div style="display:flex">' + cols.join('<div class="divv"></div>') + '</div>' +
     '<p class="dnote" style="margin:7px 10px 0;padding-top:6px;border-top:1px solid var(--dashBar);text-align:center">每天轉完帳打勾＝當日結清；總結算只算未結清的部分</p></div>';
   if(me()){
     html += buildPayCard(t, M);
@@ -2722,7 +2912,7 @@ function renderSettle(){
   var _hasFam = t.members.some(function(m){ return m.famId && famName(t, m.famId); });
   var _famV = _hasFam && S.ovFam;
   var _ovZero = t.members.filter(function(m){ return (M.overall.paid[m.id]||0) < 0.5 && (M.overall.share[m.id]||0) < 0.5; }).length;
-  html += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><span class="lbl" style="margin:0;font-weight:600;color:var(--tx)">成員總覽（全程）<span data-ovhelp="1" style="cursor:pointer;color:var(--tx3);font-weight:400;margin-left:5px">❓</span></span>' +
+  html += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><span class="lbl" style="margin:0;font-weight:600;color:var(--tx)">成員總覽（' + (M.per ? esc(M.per.name) : '全程') + '）<span data-ovhelp="1" style="cursor:pointer;color:var(--tx3);font-weight:400;margin-left:5px">❓</span></span>' +
     '<span style="display:inline-flex;gap:6px">' + (_hasFam ? '<span class="cseg"><span data-ovf="0"' + (!_famV ? ' class="on"' : '') + '>每人</span><span data-ovf="1"' + (_famV ? ' class="on"' : '') + '>按戶</span></span>' : '') + (_famV ? '' : tbvSeg()) + '</span></div>' +
     (_famV ? memberFamHtml(t, M.overall.paid, M.overall.share) : memberStatHtml(t, M.overall.paid, M.overall.share, { weight: true, skipZero: !_ovAll })) +
     (_ovZero && !_famV ? '<div style="margin-top:8px"><span data-ovall="1" style="font-size:12.5px;color:var(--acc);cursor:pointer">' + (_ovAll ? '收起沒帳的成員' : '顯示全部成員（' + _ovZero + ' 位沒帳）') + '</span></div>' : '') +
@@ -2776,15 +2966,24 @@ function renderSettle(){
     if(M.refunds.length){
       html += '<div class="lbl" style="margin-top:6px">餘額退還（依入金比例，勾＝已退）</div>';
       M.refunds.forEach(function(f){
-        var key = 'F>' + f.mid;
+        var key = fKey(t, f.mid);
         var done = !!t.tfDone[key];
         var rm = member(f.mid) || {};
+        if(done && t.tfDone[key].roll){
+          var _rp = perById(t, t.tfDone[key].roll);
+          html += '<div class="tf done"><div style="flex:1"><div class="who">' + svgi(IC_BANK, 16) + ' → ' + bdg(f.mid, 18) + ' ' + esc(mname(f.mid)) + '</div><div style="font-size:12.5px;color:var(--tx2)">已滾存至 ' + esc(_rp ? _rp.name : '下一季') + '</div></div>' +
+            '<div class="amt">' + money(t.home, f.amt) + '</div></div>';
+          return;
+        }
         html += '<div class="tf' + (done ? ' done' : '') + '"><input type="checkbox" data-tfk="' + key + '"' + (done ? ' checked' : '') + '>' +
           '<div style="flex:1"><div class="who">' + svgi(IC_BANK, 16) + ' → <span ' + saTag(mname(f.mid), rm.bank, rm.acct) + '>' + bdg(f.mid, 18) + ' ' + esc(mname(f.mid)) + '</span></div></div>' +
           '<div class="amt">' + money(t.home, f.amt) + '</div></div>';
       });
     }
+    if(!(M.per && M.per.closed)) html += '<button class="btn sub" data-roll="1" style="margin-top:10px">結算並滾存到下一季</button>';
     html += '</div>';
+  } else if(M.per && !M.per.closed){
+    html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">季末</div><button class="btn sub" data-roll="1">結算本季並開下一季</button></div>';
   }
   var fmtNow = S.setFmt || 'text';
   html += '<div class="card"><div class="lbl" style="margin:0 0 8px;font-weight:600;color:var(--tx)">📤 匯出／分享</div>' +
@@ -2800,7 +2999,7 @@ function renderSettle(){
     '<div class="row"><button class="btn sub mini" id="btnReport" style="flex:1">' + btnIco(IC.copy) + '複製報告</button><button class="btn mini fix" id="btnRepImg">' + btnIco(IC.photo) + '存成圖片</button></div>' +
     '<div class="hint" style="margin-top:8px">CSV 明細在「旅程 → 備份與匯出」。</div></div>';
   box.innerHTML = html;
-  bindGuard(box);
+  bindGuard(box); bindPerSeg(box, renderSettle);
   box.querySelectorAll('[data-tbv]').forEach(function(el){
     el.onclick = function(){ S.tblView = el.dataset.tbv; saveLocal(); renderSettle(); };
   });
@@ -2855,12 +3054,12 @@ function settleText(t, M){
   }
   if(M.ft.fin > 0){
     L.push('🏦基金：入 ' + fmt(M.ft.fin) + '｜支 ' + fmt(M.ft.fout) + '｜餘 ' + fmt(M.ft.bal));
-    M.refunds.forEach(function(f){ L.push('　退 ' + mname(f.mid) + ' ' + fmt(f.amt) + (t.tfDone['F>' + f.mid] ? ' ✅' : '')); });
+    M.refunds.forEach(function(f){ L.push('　退 ' + mname(f.mid) + ' ' + fmt(f.amt) + (t.tfDone[fKey(t, f.mid)] ? ' ✅' : '')); });
   }
   return L.join('\n');
 }
 function reportData(t, M){
-  var es = t.expenses.filter(function(e){ return !e._del && e.kind !== 'loan'; });
+  var es = perEs(t, true).filter(function(e){ return e.kind !== 'loan'; });
   var minD = null, maxD = null, byCat = {}, cash = 0, card = 0, fund = 0, top = null;
   es.forEach(function(e){
     var h = homeAmt(e);
@@ -3123,7 +3322,7 @@ function settleImage(t, M){
   g.fillText(t.name + ' 結算', PAD, 48);
   var d1 = t.startDate, d2 = t.endDate, days = 0;
   try{ if(d1 && d2) days = Math.floor((new Date(d2 + 'T00:00:00') - new Date(d1 + 'T00:00:00')) / 86400000) + 1; }catch(e){}
-  var nEx = t.expenses.filter(function(e){ return !e._del; }).length;
+  var nEx = perEs(t, true).length;
   var sub = (d1 ? d1.replace(/-/g,'/').slice(5) + '–' + (d2 || '').replace(/-/g,'/').slice(5) + (days ? ' · ' + days + '天' : '') + ' · ' : '') + nEx + '筆 · ' + members.length + '人';
   g.fillStyle = 'rgba(255,255,255,.82)'; g.font = '19px sans-serif'; g.fillText(sub, PAD, 80);
   var IP = hasFamI ? 14 : 0; var colN = PAD + IP, colBal = W - PAD - IP, colShare = W - PAD - IP - 140, colPaid = W - PAD - IP - 290;
@@ -3245,8 +3444,9 @@ function renderStats(){
   var t = trip();
   var box = document.getElementById('statsBox');
   if(!t){ box.innerHTML = '<div class="empty">還沒有旅程</div>'; return; }
-  var es = t.expenses.filter(function(e){ return !e._del && e.kind !== 'loan'; }).concat(privList().filter(function(e){ return !e._del; }));
-  if(!es.length){ box.innerHTML = '<div class="empty">還沒有帳可以統計</div>'; return; }
+  var _stp = selPer(t, false);
+  var es = perEs(t, false).filter(function(e){ return e.kind !== 'loan'; }).concat(privList().filter(function(e){ return !e._del && inPer(_stp, e.date); }));
+  if(!es.length){ box.innerHTML = perSegHtml(t, false) + '<div class="empty">還沒有帳可以統計</div>'; bindPerSeg(box, renderStats); return; }
   var total = 0, byCat = {}, byDay = {}, byDayCat = {}, byPayer = {}, cash = 0, card = 0, fund = 0;
   es.forEach(function(e){
     var h = homeAmt(e);
@@ -3357,7 +3557,8 @@ function renderStats(){
     html += '</div>';
   }
   html += '<div class="hint" style="text-align:center;padding:4px 0">金額皆為 ' + t.home + '，🔒 私人帳只算進你自己這台的統計</div>';
-  box.innerHTML = html;
+  box.innerHTML = perSegHtml(t, false) + html;
+  bindPerSeg(box, renderStats);
   box.querySelectorAll('[data-cv]').forEach(function(el){
     el.onclick = function(){ S.chartView = el.dataset.cv; saveLocal(); renderStats(); };
   });
@@ -3437,7 +3638,7 @@ function renderTrip(){
   function cap(){ _base = html; html = ''; }
   function pop(id, title, side, defOpen){ SEC[id] = secBox(id, title, side, html, defOpen); html = _base; }
   if(t){
-    var ft = fundTotals(t);
+    var ft = fundTotals(t, selPer(t, true));
     cap();
     var isEmptyTrip = !t.expenses.some(function(e){ return !e._del; }) && !(t.fund || []).some(function(c){ return !c._del; });
     html += '<div class="codebox" style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;color:var(--accTx)">旅程代碼</span><b>' + t.code + '</b>' +
@@ -3478,7 +3679,19 @@ function renderTrip(){
           '<button class="btn sub mini" data-lgdel="' + g.id + '" style="margin-top:6px;color:var(--danger)">' + btnIco(IC.trash) + '刪除此段</button>' +
         '</div>';
       }).join('') +
-      '<button class="btn sub mini" id="btnAddLeg">' + btnIco(IC.plus) + '新增分段</button>';
+      '<button class="btn sub mini" id="btnAddLeg">' + btnIco(IC.plus) + '新增分段</button>' +
+      '<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px"></div>' +
+      '<div class="lbl">季別（選填）</div>' +
+      '<div class="hint" style="margin:0 0 6px">固定聚會用：同一個代碼分季結算，帳依日期自動歸季。季末在結算頁按「結算並滾存到下一季」。</div>' +
+      perList(t).map(function(p){
+        return '<div class="card" style="padding:8px;margin-bottom:6px;background:var(--ro)">' +
+          '<div style="display:flex;gap:6px;align-items:center"><input data-pd="name" data-pid="' + p.id + '" value="' + esc(p.name) + '" placeholder="例：2027Q1" style="flex:1"' + (p.closed ? ' disabled' : '') + '>' +
+          (p.closed ? '<span class="pill" style="font-size:12px;color:var(--warnTx);border:1px solid var(--warnBd);border-radius:999px;padding:2px 9px;white-space:nowrap">已結算・鎖</span>' : '') + '</div>' +
+          '<div class="fld3" style="margin-top:6px"><input type="date" class="fld3-amt" data-pd="start" data-pid="' + p.id + '" value="' + esc(p.start) + '"' + (p.closed ? ' disabled' : '') + '><span style="display:flex;align-items:center;padding:0 8px;color:var(--tx3)">～</span><input type="date" class="fld3-amt" data-pd="end" data-pid="' + p.id + '" value="' + esc(p.end) + '"' + (p.closed ? ' disabled' : '') + '></div>' +
+          (p.closed ? '' : '<button class="btn sub mini" data-pddel="' + p.id + '" style="margin-top:6px;color:var(--danger)">' + btnIco(IC.trash) + '刪除此季</button>') +
+        '</div>';
+      }).join('') +
+      '<button class="btn sub mini" id="btnAddPer">' + btnIco(IC.plus) + '新增季別</button>';
     pop('set', secIcon('set') + '旅程設定', '<span style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap">' +
       '<span style="display:inline-flex;align-items:stretch;border:1px solid var(--acc);border-radius:999px;overflow:hidden;font-size:13px">' +
         '<span id="secInvite" style="display:inline-flex;align-items:center;gap:4px;background:var(--accBg);padding:5px 12px;color:var(--accTx);cursor:pointer;border-right:1px solid var(--acc)">🔗<span>加入連結</span></span>' +
@@ -3518,6 +3731,8 @@ function renderTrip(){
           '<input type="text" data-f="acct" data-m="' + m.id + '" value="' + esc(m.acct || '') + '" placeholder="帳號" inputmode="numeric" class="fld3-amt"></div>' +
           '<div style="font-size:13.5px;margin-top:10px"><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" data-cas="' + m.id + '"' + (m.casual ? ' checked' : '') + ' style="width:17px;height:17px">部分參加</label></div>' +
           '<div class="hint" style="margin-top:3px">只參與部分帳目時勾選；記帳時再逐筆勾他有沒有分攤。</div>' +
+          '<div style="font-size:13.5px;margin-top:10px"><label style="display:flex;align-items:center;gap:5px"><input type="checkbox" data-off="' + m.id + '"' + (m.offAt ? ' checked' : '') + ' style="width:17px;height:17px">暫停參加' + (m.offAt ? '（' + m.offAt.replace(/-/g, '/') + ' 起）' : '') + '</label></div>' +
+          '<div class="hint" style="margin-top:3px">停用後不出現在記一筆的名單；舊帳與結算照常。取消勾＝恢復。</div>' +
           '<div class="lbl" style="margin-top:10px">結算歸戶</div>' +
           '<label style="display:flex;align-items:center;gap:6px;font-size:13.5px"><input type="checkbox" data-hh="' + m.id + '"' + (hhOn ? ' checked' : '') + ' style="width:17px;height:17px">和家人一起算（合併轉帳）</label>' +
           '<div class="hint" style="margin-top:3px">同一戶的人結算時合併成一筆轉帳（例：夫妻、親子）。沒勾＝單獨結算。</div>';
@@ -3546,6 +3761,7 @@ function renderTrip(){
         if(fn2) m2.push(esc(fn2));
         if(m.casual) m2.push('部分參加');
         if(w2b !== 1) m2.push('計數 ' + w2b);
+        if(m.offAt) m2.push('<span style="color:var(--warnTx)">' + (perOf(t, m.offAt) ? esc(perOf(t, m.offAt).name) : m.offAt.replace(/-/g, '/')) + ' 起停用</span>');
         html += '<div class="mrw"><div class="mgut">' + gLine + '</div><div class="mcard2" data-medit="' + m.id + '">' + softBdg(m.id, 42) +
           '<div style="flex:1;min-width:0"><div class="mn1b">' + (m.name ? esc(m.name) + ' ' + acctTag : '<span style="color:var(--tx3)">未命名，點我編輯</span>') + '</div>' +
           (m2.length ? '<div class="mn2b">' + m2.join(' · ') + '</div>' : '') + '</div>' +
@@ -3575,7 +3791,9 @@ function renderTrip(){
       t.members.map(function(m){ return '<option value="' + m.id + '"' + (t.fundKeeper === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('') +
       '</select>';
     html += '<div class="hint" style="margin-bottom:4px">大家先出一筆公費，記帳時付款人選「🏦基金」就從這裡扣。保管人在右上角指定。</div>';
-    var contribs = (t.fund || []).filter(function(c){ return !c._del; });
+    var _fp = selPer(t, true);
+    var contribs = (t.fund || []).filter(function(c){ return !c._del && (_fp ? inPer(_fp, c.date) : !c.carry); });
+    if(_fp) html += '<div class="hint" style="margin-bottom:4px">目前顯示「' + esc(_fp.name) + '」的入金（含上季滾存）。</div>';
     if(contribs.length){
       var subBy = {};
       contribs.forEach(function(c){ subBy[c.mid] = (subBy[c.mid] || 0) + (Number(c.amt) || 0); });
@@ -3585,7 +3803,7 @@ function renderTrip(){
         }).join('') + '</div>';
       html += '<div class="lbl" style="margin-top:8px">入金明細</div>';
       contribs.forEach(function(c){
-        html += '<div class="frow"><span>' + bdg(c.mid, 18) + ' ' + esc(mname(c.mid)) + ' <span style="font-size:11px;color:var(--tx3)">' + (c.date || '') + '</span></span>' +
+        html += '<div class="frow"><span>' + bdg(c.mid, 18) + ' ' + esc(mname(c.mid)) + ' <span style="font-size:11px;color:var(--tx3)">' + (c.date || '') + (c.carry ? '　上季滾存' : '') + '</span></span>' +
           '<span><b>' + money(t.home, c.amt) + '</b> <button class="fx" data-fdel="' + c.id + '">✕</button></span></div>';
       });
       html += '<div class="sumrow" style="margin-top:6px;font-size:13px;color:var(--tx2)"><span>入金 ' + fmt(ft.fin) + '｜基金支出 ' + fmt(ft.fout) + '</span><span>餘額 <b style="color:' + (ft.bal < 0 ? 'var(--danger)' : 'var(--acc)') + '">' + fmt(ft.bal) + '</b></span></div>';
@@ -3709,7 +3927,7 @@ function renderTrip(){
       if(nh === t.home) return;
       var es = t.expenses.filter(function(e){ return !e._del; }).concat(privList().filter(function(e){ return !e._del; }));
       if(!es.length){ t.home = nh; bumpMeta('info'); save(); toast('主幣別已改為 ' + nh); return; }
-      if(isLocked(t)){ lockedMsg(); renderTrip(); return; }
+      if(isLocked(t) || perList(t).some(function(x){ return x.closed; })){ toast(isLocked(t) ? '已鎖帳，不能重算' : '有已結算鎖定的季別，不能整團重算匯率'); renderTrip(); return; }
       if(!confirm('主幣別改為 ' + nh + '。\n要自動按各筆「記帳日期」的匯率重算全部 ' + es.length + ' 筆帳嗎？\n（手動改過的匯率也會被覆蓋；取消＝不變更主幣別）')){ renderTrip(); return; }
       t.home = nh; bumpMeta('info');
       recalcRates(t, es);
@@ -3730,6 +3948,18 @@ function renderTrip(){
     if(_secInv){ _secInv.onmousedown = function(e){ e.stopPropagation(); }; _secInv.onclick = function(e){ e.preventDefault(); e.stopPropagation(); shareInvite(t); }; }
     tb.querySelectorAll('[data-lg]').forEach(function(el){ el.onchange = function(){ var g = legById(t, el.dataset.lid); if(g){ g[el.dataset.lg] = el.value; bumpMeta('info'); save(); } }; });
     tb.querySelectorAll('[data-lgdel]').forEach(function(el){ el.onclick = function(){ t.legs = (t.legs || []).filter(function(x){ return x.id !== el.dataset.lgdel; }); bumpMeta('info'); save(); renderTrip(); }; });
+    tb.querySelectorAll('[data-pd]').forEach(function(el){ el.onchange = function(){ var p = perById(t, el.dataset.pid); if(!p || p.closed) return; var v = el.value; if(el.dataset.pd !== 'name' && !v){ renderTrip(); return; } p[el.dataset.pd] = v; if(p.start > p.end){ toast('開始日不能晚於結束日'); } bumpMeta('info'); save(); }; });
+    tb.querySelectorAll('[data-pddel]').forEach(function(el){ el.onclick = function(){ var p = perById(t, el.dataset.pddel); if(!p) return; if(!confirm('刪除季別「' + p.name + '」？\n帳不會刪除，只是不再分到這一季。')) return; t.periods = t.periods.filter(function(x){ return x.id !== p.id; }); bumpMeta('info'); save(); renderTrip(); }; });
+    var _bAddPer = document.getElementById('btnAddPer');
+    if(_bAddPer) _bAddPer.onclick = function(){
+      t.periods = t.periods || [];
+      var a = perList(t), st = a.length ? addDay(a[a.length - 1].end, 1) : qRange(todayISO()).start;
+      var np = { id: uid(), name: qName(st), start: st, end: qRange(st).end, closed: null };
+      var first = !a.length;
+      t.periods.push(np);
+      if(first) migrateKeys(t, np);
+      bumpMeta('info'); save(); renderTrip();
+    };
     var _bAddLeg = document.getElementById('btnAddLeg');
     if(_bAddLeg) _bAddLeg.onclick = function(){ t.legs = t.legs || []; t.legs.push({ id: uid(), name: '', country: '', cur: '', start: t.startDate || '', end: t.endDate || '' }); bumpMeta('info'); save(); renderTrip(); };
     document.getElementById('btnAddM').onclick = function(){
@@ -3817,6 +4047,13 @@ function renderTrip(){
         toast(m.weight === 1 ? '計數 1（大人）' : (m.weight === 0.5 ? '計數 0.5（小孩）' : '計數 0（不分攤）'));
       };
     });
+    tb.querySelectorAll('input[data-off]').forEach(function(inp){
+      inp.onchange = function(){
+        var m = member(inp.dataset.off); if(!m) return;
+        if(inp.checked){ var _cp = perOf(t, todayISO()); m.offAt = _cp ? _cp.start : todayISO(); } else delete m.offAt;
+        bumpMeta('members'); save();
+      };
+    });
     tb.querySelectorAll('input[data-cas]').forEach(function(inp){
       inp.onchange = function(){
         var m = member(inp.dataset.cas);
@@ -3877,13 +4114,14 @@ function renderTrip(){
       var amt = Number(document.getElementById('fcAmt').value);
       var d = document.getElementById('fcDate').value || todayISO();
       if(!(amt > 0)){ toast('請輸入入金金額'); return; }
-      if(isLocked(t)){ lockedMsg(); return; }
+      if(dateLocked(t, d)){ lockMsgFor(t, d); return; }
       t.fund.push({ id: uid(), mid: mid, amt: amt, date: d, _mt: Date.now() });
       bumpMeta('fund'); save(); toast('已入金 ' + fmt(amt));
     };
     tb.querySelectorAll('[data-fdel]').forEach(function(btn){
       btn.onclick = function(){
-        if(isLocked(t)){ lockedMsg(); return; }
+        var _fc = (t.fund || []).filter(function(c){ return c.id === btn.dataset.fdel; })[0];
+        if(_fc && dateLocked(t, _fc.date)){ lockMsgFor(t, _fc.date); return; }
         if(!confirm('刪除這筆入金？')) return;
         t.fund = t.fund.filter(function(c){ return c.id !== btn.dataset.fdel; });
         bumpMeta('fund'); save();
@@ -4170,7 +4408,7 @@ function createTrip(){
   var code = genCode();
   while(S.trips[code]) code = genCode();
   var now0 = Date.now();
-  S.trips[code] = { code: code, name: name, home: 'TWD', feePct: 1.5, members: [], expenses: [], templates: [], budget: { total:0, daily:0 }, fund: [], families: [], tfDone: {}, legs: [], settled: {}, startDate: '', endDate: '', domestic: false, fundKeeper: '', archived: false, metaMt: now0, mt: { info: now0, members: now0, fund: now0, templates: now0, tfDone: now0 }, createdAt: now0 };
+  S.trips[code] = { code: code, name: name, home: 'TWD', feePct: 1.5, members: [], expenses: [], templates: [], budget: { total:0, daily:0 }, fund: [], families: [], tfDone: {}, legs: [], periods: [], settled: {}, startDate: '', endDate: '', domestic: false, fundKeeper: '', archived: false, metaMt: now0, mt: { info: now0, members: now0, fund: now0, templates: now0, tfDone: now0 }, createdAt: now0 };
   S.cur = code; F = null; editId = null; _convCur = null;
   S.tsec = S.tsec || {}; S.tsec.set = 1; S.tsec.mem = 1;
   startListen(); save();
@@ -4270,6 +4508,7 @@ function applyRemote(code, remote){
       local.domestic = !!remote.domestic; local.fundKeeper = remote.fundKeeper || ''; local.archived = !!remote.archived;
       local.legs = remote.legs || [];
       local.locked = remote.locked || null; local.lockLog = remote.lockLog || [];
+      local.periods = remote.periods || [];
       setMt('info');
     }
     if(grpNewer('members')){ local.members = remote.members || []; local.families = remote.families || []; local.settled = remote.settled || {}; setMt('members'); }
@@ -4322,6 +4561,13 @@ function closestActiveTripCode(){
     document.getElementById('eDateDisp').textContent = (F.date || '').replace(/-/g, '/');
     var lk = lockObj();
     if(!lk.on){ F.rate = ''; autoRate(false); }
+    var _t = trip();
+    if(_t && !editId && F.kind !== 'loan'){
+      var _bf = F.split.length;
+      F.split = F.split.filter(function(id){ return !memOff(member(id), F.date); });
+      if(F.payer && F.payer !== FUND && memOff(member(F.payer), F.date)) F.payer = null;
+      if(F.split.length !== _bf || !F.payer) renderAdd();
+    }
   };
   document.getElementById('eDesc').oninput = function(){ F.desc = this.value; if(F.kind !== 'loan') showTplDrop(); };
   document.getElementById('eDesc').onfocus = function(){ if(F && F.kind !== 'loan') showTplDrop(); };
@@ -4401,6 +4647,8 @@ function closestActiveTripCode(){
   document.getElementById('amCopy').onclick = function(){ copyText(_amBank, '已複製帳號'); };
   document.getElementById('acctModal').onclick = function(ev){ if(ev.target === this) this.classList.remove('on'); };
   document.getElementById('helpQ').oninput = renderHelp;
+  document.getElementById('rlCancel').onclick = function(){ document.getElementById('rollModal').classList.remove('on'); _roll = null; };
+  document.getElementById('rlGo').onclick = doRoll;
   document.getElementById('impClose').onclick = function(){ document.getElementById('impModal').classList.remove('on'); };
   document.getElementById('impGo').onclick = impMembersGo;
   document.getElementById('impModal').onclick = function(ev){ if(ev.target === this) this.classList.remove('on'); };
@@ -4496,4 +4744,4 @@ try{
 </body>
 </html>
 
-<!-- T1027-07 deploy -->
+<!-- T1029-01 deploy -->
