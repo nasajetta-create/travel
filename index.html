@@ -230,6 +230,13 @@ table.st.fbxtb th:first-child,table.st.fbxtb td:first-child{padding-left:10px}
 table.st.fbxtb th:last-child,table.st.fbxtb td:last-child{padding-right:10px}
 .fbx tr.fbxsum td{background:var(--accBg)!important;font-weight:600}
 .fbx.solo tr.fbxsum td{background:var(--ro)}
+.invbtn{display:inline-flex;align-items:center;gap:4px;border:1.5px solid var(--acc);background:var(--accBg);color:var(--accTx);border-radius:999px;padding:5px 13px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;margin-right:6px}
+.invqr{margin:14px auto 4px;width:232px;height:232px;border:1px solid var(--inBd);border-radius:12px;padding:6px;background:#fff}
+.invqr canvas{width:218px;height:218px;display:block}
+.invline{display:block;width:100%;border:none;border-radius:11px;background:#06c755;color:#fff;font-size:16px;font-weight:700;padding:13px;margin-top:12px;cursor:pointer;font-family:inherit}
+.invcode{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--inBd);border-radius:10px;padding:8px 10px 8px 12px;margin-top:10px;font-size:13px;color:var(--tx2)}
+.invcode b{font-size:20px;letter-spacing:3px;color:var(--tx)}
+.invcode .btn{width:auto;padding:5px 12px}
 .sttl{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 10px}
 .sttl>span{font-size:18px;font-weight:700}
 .sttl .btn{width:auto;padding:7px 16px}
@@ -627,6 +634,7 @@ details.tsec>.tbody{padding:2px 1px 15px}
   <div class="row" style="margin-top:10px"><button class="btn mini" id="setlGo" style="flex:1">結清勾選的人</button><button class="btn sub mini" id="setlClose" style="flex:1">關閉</button></div>
 </div></div>
 <div id="updBar" style="display:none;position:fixed;bottom:64px;left:50%;transform:translateX(-50%);z-index:40;background:var(--acc);color:var(--accOn);border-radius:20px;padding:9px 18px;font-size:14px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.3);cursor:pointer"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v6h-6"/></svg>有新版本，點此更新</div>
+<div class="modal" id="invModal"><div class="mbox" style="max-width:360px;text-align:center" id="invBody"></div></div>
 <div class="modal" id="shareModal"><div class="mbox" style="max-width:400px" id="shareBody"></div></div>
 <div class="modal" id="acctModal"><div class="mbox">
   <div id="amTitle" style="font-size:16px;font-weight:600;margin-bottom:6px"></div>
@@ -667,8 +675,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 75;
-var VER = 'T1029-03';
+var CODE_VERSION = 76;
+var VER = 'T1029-04';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -3839,12 +3847,13 @@ function renderTrip(){
         '</div>';
       }).join('') +
       '<button class="btn sub mini" id="btnAddPer">' + btnIco(IC.plus) + '新增季別</button>';
-    pop('set', secIcon('set') + '旅程設定', '<span style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap">' +
+    pop('set', secIcon('set') + '旅程設定', invBtn(t), !t.startDate);
+    var _oldSide = ('<span style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap">' +
       '<span style="display:inline-flex;align-items:stretch;border:1px solid var(--acc);border-radius:999px;overflow:hidden;font-size:13px">' +
         '<span id="secInvite" style="display:inline-flex;align-items:center;gap:4px;background:var(--accBg);padding:5px 12px;color:var(--accTx);cursor:pointer;border-right:1px solid var(--acc)">🔗<span>加入連結</span></span>' +
         '<span id="secCode" style="display:inline-flex;align-items:center;gap:4px;background:var(--accBg);padding:5px 12px;color:var(--accTx);cursor:pointer">📋<span>複製代碼</span></span>' +
       '</span>' +
-      '</span>', !t.startDate);
+      '</span>');
     cap();
     html += '<div class="hint" style="margin-bottom:6px">名單要含<b>你自己</b>與整團所有人（含小孩）。人頭數：大人 1、小孩 0.5、不分攤 0。</div>';
     if(t.members.length > 1){
@@ -3948,7 +3957,7 @@ function renderTrip(){
           (_meChange ? '<span class="chip" id="btnMeCxl">取消</span>' : '') +
           '</div><div class="hint" style="margin-top:6px">點自己的徽章。私人帳會歸在這個人名下，也會當預設付款人。</div>');
     pop('mem', secIcon('mem') + '成員設定',
-      t.members.length ? (t.members.length + ' 位' + (me() ? '' : '｜⚠️ 先選我是誰')) : '⚠️ 先新增成員',
+      invBtn(t) + (t.members.length ? (t.members.length + ' 位' + (me() ? '' : '｜⚠️ 先選我是誰')) : '⚠️ 先新增成員'),
       !t.members.length || !me() || !!_memEdit);
     cap();
     var keeperSel = '<select id="fKeep" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" style="width:auto;font-size:13px;padding:5px 8px;font-weight:400;color:var(--tx);max-width:120px"><option value="">未指定保管人</option>' +
@@ -4108,6 +4117,7 @@ function renderTrip(){
     document.getElementById('btnCpCode').onclick = function(){ copyText(t.code, '已複製旅程代碼'); };
     var _secCode = document.getElementById('secCode');
     if(_secCode){ _secCode.onmousedown = function(e){ e.stopPropagation(); }; _secCode.onclick = function(e){ e.preventDefault(); e.stopPropagation(); copyText(t.code, '已複製旅程代碼'); }; }
+    tb.querySelectorAll('[data-inv]').forEach(function(el){ el.onmousedown = function(e){ e.stopPropagation(); }; el.onclick = function(e){ e.preventDefault(); e.stopPropagation(); openInvite(t); }; });
     var _secInv = document.getElementById('secInvite');
     if(_secInv){ _secInv.onmousedown = function(e){ e.stopPropagation(); }; _secInv.onclick = function(e){ e.preventDefault(); e.stopPropagation(); shareInvite(t); }; }
     tb.querySelectorAll('[data-lg]').forEach(function(el){ el.onchange = function(){ var g = legById(t, el.dataset.lid); if(g){ g[el.dataset.lg] = el.value; bumpMeta('info'); save(); } }; });
@@ -4612,6 +4622,31 @@ function joinByCode(code){
   }).catch(function(){ toast('查詢失敗，請稍後再試'); });
 }
 function joinTrip(){ joinByCode(document.getElementById('joinCode').value); }
+function invBtn(t){ return (t && !t._demo) ? '<span class="invbtn" data-inv="1">' + btnIco(IC.uplus) + '邀請</span>' : ''; }
+function openInvite(t){
+  var md = document.getElementById('invModal'), b = document.getElementById('invBody');
+  if(!t || t._demo || !md || !b) return;
+  var url = joinUrl(t);
+  b.innerHTML = '<div style="font-size:17px;font-weight:700">邀請朋友加入「' + esc(t.name) + '」</div>' +
+    '<div style="font-size:13px;color:var(--tx2);margin-top:3px">朋友用手機相機掃描，免註冊直接加入</div>' +
+    '<div class="invqr"><canvas id="invCv" width="440" height="440"></canvas></div>' +
+    '<button class="invline" data-iv="share">傳給朋友（LINE、訊息…）</button>' +
+    '<div class="invcode"><span>旅程代碼</span><b>' + esc(t.code) + '</b><button class="btn sub mini" data-iv="code">複製</button></div>' +
+    '<button class="btn sub mini" data-iv="x" style="width:100%;margin-top:8px">關閉</button>';
+  var cv = document.getElementById('invCv');
+  if(!drawQR(cv.getContext('2d'), url, 0, 0, 440)) cv.parentNode.style.display = 'none';
+  var close = function(){ md.classList.remove('on'); };
+  md.onclick = function(ev){ if(ev.target === md) close(); };
+  b.querySelectorAll('[data-iv]').forEach(function(el){
+    el.onclick = function(){
+      var k = el.dataset.iv;
+      if(k === 'share') shareInvite(t);
+      else if(k === 'code') copyText(t.code, '已複製旅程代碼');
+      else close();
+    };
+  });
+  md.classList.add('on');
+}
 function shareInvite(t){
   if(!t) return;
   var url = location.href.split('#')[0].split('?')[0] + '?join=' + t.code;
@@ -4924,4 +4959,4 @@ try{
 </body>
 </html>
 
-<!-- T1029-03 deploy -->
+<!-- T1029-04 deploy -->
