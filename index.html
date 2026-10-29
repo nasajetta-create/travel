@@ -230,6 +230,31 @@ table.st.fbxtb th:first-child,table.st.fbxtb td:first-child{padding-left:10px}
 table.st.fbxtb th:last-child,table.st.fbxtb td:last-child{padding-right:10px}
 .fbx tr.fbxsum td{background:var(--accBg)!important;font-weight:600}
 .fbx.solo tr.fbxsum td{background:var(--ro)}
+.sttl{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 10px}
+.sttl>span{font-size:18px;font-weight:700}
+.sttl .btn{width:auto;padding:7px 16px}
+.ssum{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;color:var(--tx2)}
+.ssum b{font-size:19px;color:var(--warnTx)}
+.ssum.st2 b{color:var(--tx)}
+.paybar{display:flex;align-items:center;justify-content:space-between;gap:8px;border:2px solid var(--warnBd);background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:10px;cursor:pointer;font-size:14.5px;font-weight:600;color:var(--tx)}
+.paybar b{color:var(--warnTx);font-size:16.5px}
+.paybar .pgo{color:var(--acc);font-size:14px;white-space:nowrap}
+.sfoot{margin:4px 0 10px}
+.shtl{font-size:15px;font-weight:700;margin-bottom:4px}
+.shit{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid var(--inBd);background:var(--card);color:var(--tx);border-radius:10px;padding:11px 12px;font-size:14px;margin-top:6px;cursor:pointer;font-family:inherit}
+.mfamh{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:var(--accBg);border:1.5px solid color-mix(in srgb,var(--acc) 45%,transparent);border-radius:12px;padding:10px 13px;cursor:pointer}
+.mfamh .mn1b{font-size:16px;font-weight:600;color:var(--accTx)}
+.mfamh .mn2b{font-size:12px;color:var(--tx2);margin-top:2px}
+.mfamh .fcnt{font-size:12.5px;font-weight:400;color:var(--tx2)}
+.mfamh .fstack{display:flex;flex:0 0 auto;padding-left:6px}
+.mfamh .fstack>*{margin-left:-4px;box-shadow:0 0 0 2px var(--card)}
+.farr{display:inline-block;width:22px;font-size:22px;line-height:1;color:var(--acc);text-align:center;flex:0 0 auto;vertical-align:-2px}
+.fbtog{cursor:pointer}
+.fsub{font-size:11.5px;font-weight:400;color:var(--tx2);margin-top:1px}
+td .fsub{padding-left:22px}
+.reptag{display:inline-block;font-size:11px;border:1px solid var(--acc);color:var(--accTx);border-radius:8px;padding:0 6px;margin-left:5px;font-weight:600;vertical-align:2px}
+.repchip{border:1px solid var(--inBd);border-radius:16px;padding:6px 13px;font-size:14px;cursor:pointer;background:var(--card);color:var(--tx)}
+.repchip.on{border:2px solid var(--acc);background:var(--accBg);color:var(--accTx);font-weight:700}
 .msortbar{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:0 0 8px 16px}
 .msortbar.on{background:var(--accBg);border:1px solid var(--acc);border-radius:12px;padding:8px 10px}
 .msortbar.on span{flex:1;font-size:13px;color:var(--accTx)}
@@ -602,6 +627,7 @@ details.tsec>.tbody{padding:2px 1px 15px}
   <div class="row" style="margin-top:10px"><button class="btn mini" id="setlGo" style="flex:1">結清勾選的人</button><button class="btn sub mini" id="setlClose" style="flex:1">關閉</button></div>
 </div></div>
 <div id="updBar" style="display:none;position:fixed;bottom:64px;left:50%;transform:translateX(-50%);z-index:40;background:var(--acc);color:var(--accOn);border-radius:20px;padding:9px 18px;font-size:14px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.3);cursor:pointer"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v6h-6"/></svg>有新版本，點此更新</div>
+<div class="modal" id="shareModal"><div class="mbox" style="max-width:400px" id="shareBody"></div></div>
 <div class="modal" id="acctModal"><div class="mbox">
   <div id="amTitle" style="font-size:16px;font-weight:600;margin-bottom:6px"></div>
   <div id="amBankc" style="font-size:14px;color:var(--tx2);margin-bottom:8px"></div>
@@ -641,8 +667,8 @@ window.FIREBASE_CONFIG = {
   appId: "1:1098543658597:web:a53377a96498de2de4388c"
 };
 
-var CODE_VERSION = 74;
-var VER = 'T1029-02';
+var CODE_VERSION = 75;
+var VER = 'T1029-03';
 var LSKEY = 'tsplit_v1';
 var FUND = '_FUND';
 var CATS = [['food','🍽️','餐飲'],['trans','🚌','交通'],['stay','🏨','住宿'],['shop','🛍️','購物'],['tix','🎫','門票'],['daily','🧻','日用品'],['misc','📌','其他']];
@@ -731,7 +757,7 @@ var editId = null;
 var _ct = null;
 var _convCur = null;
 
-function loadS(){ var s = null; try{ s = JSON.parse(localStorage.getItem(LSKEY)); }catch(e){} if(!s || !s.trips){ s = { ver:1, cur:null, trips:{}, rateCache:{}, theme:'light', skin:'sky' }; } if(!s.me) s.me = {}; if(!s.privExp) s.privExp = {}; if(!s.lock) s.lock = {}; if(!s.theme) s.theme = ''; if(!s.chartView) s.chartView = 'donut'; if(!s.cv2){ s.cv2 = 1; s.chartView = 'donut'; } if(!s.pvView) s.pvView = 'date'; if(!s.pvScope) s.pvScope = 'me'; if(!s.skin) s.skin = ''; if(!s.tblView) s.tblView = 'detail'; if(!s.dismiss) s.dismiss = {}; if(!s.setFmt) s.setFmt = 'text'; if(!s.friends) s.friends = []; return s; }
+function loadS(){ var s = null; try{ s = JSON.parse(localStorage.getItem(LSKEY)); }catch(e){} if(!s || !s.trips){ s = { ver:1, cur:null, trips:{}, rateCache:{}, theme:'light', skin:'sky' }; } if(!s.me) s.me = {}; if(!s.privExp) s.privExp = {}; if(!s.lock) s.lock = {}; if(!s.theme) s.theme = ''; if(!s.chartView) s.chartView = 'donut'; if(!s.cv2){ s.cv2 = 1; s.chartView = 'donut'; } if(!s.pvView) s.pvView = 'date'; if(!s.pvScope) s.pvScope = 'me'; if(!s.skin) s.skin = ''; if(!s.tblView) s.tblView = 'detail'; if(!s.dismiss) s.dismiss = {}; if(!s.setFmt) s.setFmt = 'text'; if(!s.friends) s.friends = []; s.netOff = false; s.tblView = 'detail'; s.ovFam = false; return s; }
 function safeName(s){ return String(s || '').replace(/[\\/:*?"<>|]/g, '_'); }
 function money(home, v){ return '<span class="cur">' + home + ' </span>' + fmt(v); }
 function applyTheme(){
@@ -808,6 +834,27 @@ function bdgC(id){
 }
 function weightOf(t, id){ for(var i=0;i<t.members.length;i++){ if(t.members[i].id===id){ var w = Number(t.members[i].weight); return isNaN(w) ? 1 : w; } } return 1; }
 function famName(t, fid){ for(var i=0;i<t.families.length;i++){ if(t.families[i].id===fid) return t.families[i].name; } return null; }
+function famObj(t, fid){ for(var i=0;i<t.families.length;i++){ if(t.families[i].id===fid) return t.families[i]; } return null; }
+function famMemList(t, fid){ return t.members.filter(function(m){ return m.famId === fid; }); }
+function famRep(t, fid){
+  var f = famObj(t, fid); if(!f) return null;
+  var ms = famMemList(t, fid); if(!ms.length) return null;
+  if(f.rep && ms.some(function(m){ return m.id === f.rep; })) return f.rep;
+  for(var i = 0; i < ms.length; i++){ if(ms[i].name && ms[i].name + '家' === f.name) return ms[i].id; }
+  return ms[0].id;
+}
+function famPayee(t, fid){
+  var r = famRep(t, fid), ms = famMemList(t, fid);
+  var rm = ms.filter(function(m){ return m.id === r; })[0];
+  if(rm && (rm.bank || rm.acct)) return rm;
+  return ms.filter(function(m){ return m.bank || m.acct; })[0] || null;
+}
+function famIsOpen(k, id){ return !!(S[k] && S[k][id]); }
+function famTog(k, id){ S[k] = S[k] || {}; if(S[k][id]) delete S[k][id]; else S[k][id] = 1; saveLocal(); if(k === 'famOpenM') renderTrip(); else renderSettle(); }
+function famSub(t, fid){
+  var r = famRep(t, fid), rm = t.members.filter(function(m){ return m.id === r; })[0];
+  return '<div class="fsub">代表人 ' + esc(rm ? (rm.name || '?') : '?') + '｜' + famMemList(t, fid).length + ' 人</div>';
+}
 function isFam(id){ var t = trip(); var m = member(id); return !!(m && m.famId && famName(t, m.famId)); }
 function softBdg(id, px){
   px = px || 42;
@@ -2145,6 +2192,18 @@ var SEC_SVG = {
   look:'<path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.8 1.5-1.5 0-.4-.2-.8-.5-1-.3-.3-.5-.6-.5-1 0-.8.7-1.5 1.5-1.5H16a5 5 0 0 0 5-5c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10.5" r="1"/>'
 };
 function secIcon(key){ var t = SEC_TINT[key] || SEC_TINT.set; return '<span style="display:inline-flex;width:34px;height:34px;border-radius:9px;background:' + t[0] + ';align-items:center;justify-content:center;vertical-align:middle;margin-right:9px"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="' + t[1] + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (SEC_SVG[key] || '') + '</svg></span>'; }
+function rowWho(t, e){
+  var ids = e.split || [];
+  var nm = function(id){ return id === FUND ? '基金' : mname(id); };
+  var parts = ['<span style="color:' + (e.payer === FUND ? '#0f6e56' : bcolor(e.payer)) + ';font-weight:600">' + esc(nm(e.payer)) + '付</span>'];
+  var treats = (e.treat || []).filter(function(id){ return ids.indexOf(id) >= 0; });
+  var grp = {}, gord = [];
+  treats.forEach(function(id){ var by = (e.treatBy && e.treatBy[id]) || e.payer; if(!grp[by]){ grp[by] = []; gord.push(by); } grp[by].push(id); });
+  gord.forEach(function(by){ var tl = grp[by]; parts.push(esc(nm(by)) + '請' + (tl.length <= 2 ? tl.map(function(id){ return esc(nm(id)); }).join('、') : tl.length + ' 人')); });
+  parts.push(ids.length + ' 人分');
+  if(e.cur !== t.home) parts.push(e.cur + ' ' + fmt2(e.amt));
+  return parts.map(function(x){ return '<span style="white-space:nowrap">' + x + '</span>'; }).join('・');
+}
 function renderLedger(){
   var t = trip();
   var sum = document.getElementById('ledgerSum'), list = document.getElementById('ledgerList');
@@ -2190,11 +2249,9 @@ function renderLedger(){
     }
   }
   var lcols = [
-    '<div class="dcol"><p class="dl">今日</p><p class="dv acc">' + money(t.home, today) + '</p></div>',
     '<div class="dcol"><p class="dl">團體總支出</p><p class="dv">' + money(t.home, total) + '</p></div>'
   ];
   if(pes.length) lcols.push('<div class="dcol"><p class="dl">' + btnIco(IC.lock) + '我的私人</p><p class="dv">' + money(t.home, ptotal) + '</p></div>');
-  if(ft.fin > 0) lcols.push('<div class="dcol"><p class="dl">' + btnIco(IC_BANK) + '基金餘額</p><p class="dv' + (ft.bal < 0 ? ' warn' : '') + '">' + money(t.home, ft.bal) + '</p></div>');
   if(MU && myAll){
     lcols.push(myUnpaid > 0.5
       ? '<div class="dcol" id="dashUnpaid" style="cursor:pointer"><p class="dl">我還要付</p><p class="dv" style="color:#FCA5A5">' + money(t.home, myUnpaid) + '</p></div>'
@@ -2228,8 +2285,10 @@ function renderLedger(){
       '<button class="bx" id="a2hsX">✕</button></div>';
   }
   var myCard = '';
-  if(typeof Ms !== 'undefined' && Ms){
-    myCard = buildPayCard(t, Ms, true);
+  if(MU && typeof Ms !== 'undefined' && Ms){
+    var _toMe = netItems(t, Ms).filter(function(it){ return it.to === MU && tfState(t, it.key) === 1; }).length;
+    if(myUnpaid > 0.5) myCard = '<div class="paybar" onclick="go(\'settle\')"><span>你還要轉 <b>' + money(t.home, myUnpaid) + '</b></span><span class="pgo">去結算 →</span></div>';
+    else if(_toMe) myCard = '<div class="paybar" onclick="go(\'settle\')"><span>有 <b>' + _toMe + '</b> 筆轉給你，待你確認</span><span class="pgo">去確認 →</span></div>';
   }
   var es = ges.concat(pes);
   var _top = perSegHtml(t, false) + lockBarHtml(t) + perLockBarHtml(t, _lp) + actCardHtml(t), _bot = delCardHtml(t);
@@ -2245,7 +2304,7 @@ function renderLedger(){
     else { _k = e.date.slice(0,7); _lab = e.date.slice(0,4) + '/' + e.date.slice(5,7); }
     if(_k !== prevKey){ rows += '<div class="lmhead">' + _lab + '</div>'; prevKey = _k; }
     var sd;
-    if(e.priv){ sd = btnIco(IC.lock) + '私人（只有你看得到）'; }
+    if(e.priv){ sd = btnIco(IC.lock) + '私人' + (e.cur !== t.home ? '・' + e.cur + ' ' + fmt2(e.amt) : ''); }
     else if(e.kind === 'loan'){
       var _lender = e.payer, _borrower = (e.split||[])[0];
       sd = '<span style="display:inline-flex;align-items:center;gap:7px">' +
@@ -2254,27 +2313,11 @@ function renderLedger(){
         '<span style="color:var(--tx3)">' + esc(bchar(_borrower)) + '</span>' +
         '<span style="font-size:11px;color:var(--tx2);background:var(--card);border:1px solid var(--inBd);border-radius:999px;padding:1px 8px">借款</span></span>';
     }
-    else {
-      var treats = (e.treat||[]).filter(function(id){ return (e.split||[]).indexOf(id) >= 0; });
-      var ids = (e.split||[]);
-      var ordered = [];
-      if(e.payer) ordered.push(e.payer);
-      ids.forEach(function(id){ if(id !== e.payer) ordered.push(id); });
-      var segs = ordered.map(function(id){
-        var isPayer = (id === e.payer);
-        var ch = id === FUND ? svgi(IC_BANK, 16) : esc(bchar(id));
-        var gift = treats.indexOf(id) >= 0 ? btnIco(IC.gift) : '';
-        var stl = isPayer ? ('color:' + (id === FUND ? '#0f6e56' : bcolor(id)) + ';font-weight:600') : 'color:var(--tx3)';
-        return '<span style="' + stl + '">' + ch + gift + '</span>';
-      });
-      var divider = '<span style="width:1px;height:11px;background:var(--inBd);display:inline-block"></span>';
-      sd = '<span style="display:inline-flex;align-items:center;flex-wrap:wrap;gap:7px">' + segs.join(divider) +
-        '<span style="font-size:11px;color:var(--tx2);background:var(--card);border:1px solid var(--inBd);border-radius:999px;padding:1px 8px">分攤 ' + ids.length + '</span></span>';
-    }
+    else { sd = rowWho(t, e); }
     var ico = e.priv ? catIcon('priv') : (e.kind === 'loan' ? catIcon('loan') : catIcon(e.cat));
     var per = myPersonal(t, e);
     var amtH = '<div class="a1">' + money(t.home, homeAmt(e)) + (e.card ? ' ' + btnIco(IC.card) : '') + '</div>' +
-      (e.cur !== t.home ? '<div class="a2">' + e.cur + ' ' + fmt2(e.amt) + '</div>' : '') +
+      (e.kind === 'loan' && e.cur !== t.home ? '<div class="a2">' + e.cur + ' ' + fmt2(e.amt) + '</div>' : '') +
       (per && per.type === 'owe' ? '<div class="ap" style="color:#c02626">你要付 ' + fmt(per.amt) + '</div>' : '');
     rows += '<div class="lrow" data-eid="' + e.id + '">' +
       '<div class="ldate"><div class="d">' + e.date.slice(8,10) + '</div></div>' +
@@ -2284,7 +2327,8 @@ function renderLedger(){
   });
   var html = rows ? '<div class="card" style="padding:2px 12px">' + rows + '</div>' : '';
   var divSeg = (t.legs && t.legs.length) ? '<div class="seg" style="margin:2px 4px 8px"><span data-div="ym"' + (S.divMode !== 'leg' ? ' class="on"' : '') + '>年月</span><span data-div="leg"' + (S.divMode === 'leg' ? ' class="on"' : '') + '>所在地</span></div>' : '';
-  list.innerHTML = banner + _top + myCard + divSeg + '<div class="hint" style="margin:2px 4px 6px">點整列＝編輯｜👈 往左滑刪除' + (isLocked(t) ? '（鎖帳中只能看）' : '') + '</div>' + html + _bot;
+  list.innerHTML = banner + _top + myCard + divSeg + html + _bot;
+  if(!S.dismiss['lhint'] && !t._demo){ S.dismiss['lhint'] = true; saveLocal(); setTimeout(function(){ toast('點整列＝編輯，往左滑刪除'); }, 600); }
   bindGuard(list); bindPerSeg(list, renderLedger);
   list.querySelectorAll('[data-div]').forEach(function(el){ el.onclick = function(){ S.divMode = el.dataset.div; saveLocal(); renderLedger(); }; });
   var ax = document.getElementById('a2hsX');
@@ -2341,13 +2385,20 @@ function settledOf(t, id){
 function unitsMeta(t){
   var units = {};
   t.members.forEach(function(m){
-    var u = unitId(t, m);
-    if(!units[u]) units[u] = { id: u, name: (m.famId && famName(t, m.famId)) || m.name, bank: '', bankc: '', acct: '', mids: [], solo: !(m.famId && famName(t, m.famId)) ? m.id : null };
+    var u = unitId(t, m), isF = u.charAt(0) === 'f';
+    if(!units[u]) units[u] = { id: u, name: isF ? famName(t, m.famId) : m.name, bank: '', bankc: '', acct: '', mids: [], solo: isF ? null : m.id, rep: isF ? famRep(t, m.famId) : m.id, repName: '' };
     units[u].mids.push(m.id);
-    if(!units[u].bank && (m.bank || m.acct)){
-      units[u].bank = ((m.bank || '') + ' ' + (m.acct || '')).trim();
-      units[u].bankc = m.bank || '';
-      units[u].acct = m.acct || '';
+  });
+  Object.keys(units).forEach(function(u){
+    var U = units[u], fid = U.solo ? null : u.slice(1);
+    var pm = fid ? famPayee(t, fid) : t.members.filter(function(m){ return m.id === U.solo; })[0];
+    var rm = t.members.filter(function(m){ return m.id === U.rep; })[0];
+    U.repName = (fid && rm) ? (rm.name || '') : '';
+    if(pm && (pm.bank || pm.acct)){
+      var b = ((pm.bank || '') + ' ' + (pm.acct || '')).trim();
+      U.bank = (fid && pm.name) ? pm.name + ' ' + b : b;
+      U.bankc = pm.bank || '';
+      U.acct = pm.acct || '';
     }
   });
   return units;
@@ -2381,16 +2432,34 @@ function calcOver(t, es){
 }
 function shareCurHtml(t, share, shareCur){
   var h = '';
-  t.members.forEach(function(m){
+  var natOf = function(cur){ return Object.keys(cur).filter(function(c){ return Math.abs(cur[c]) >= 0.005; }); };
+  var rowOf = function(m, ind){
     var s = share[m.id] || 0, cur = shareCur[m.id] || {};
-    var keys = Object.keys(cur).filter(function(c){ return Math.abs(cur[c]) >= 0.005; });
-    if(s < 0.5 && !keys.length) return;
+    var keys = natOf(cur);
+    if(s < 0.5 && !keys.length) return '';
     var natTxt = keys.map(function(c){ return c + ' ' + _fmtNat(cur[c], c); }).join(' · ') || '—';
-    h += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:0.5px solid var(--line);font-size:13px">' +
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:0.5px solid var(--line);font-size:13px' + (ind ? ';padding-left:16px' : '') + '">' +
       bdg(m.id, 18) +
       '<span style="flex:1;min-width:0"><div>' + esc(m.name || '?') + '</div><div style="font-size:11px;color:var(--tx3)">' + natTxt + '</div></span>' +
       '<span style="font-weight:600;white-space:nowrap">' + t.home + ' ' + fmt(s) + '</span></div>';
-  });
+  };
+  var hasFam = t.members.some(function(m){ return m.famId && famName(t, m.famId); });
+  if(!hasFam){
+    t.members.forEach(function(m){ h += rowOf(m, false); });
+  } else {
+    famOrder(t).forEach(function(g){
+      if(!g.fam){ g.ms.forEach(function(m){ h += rowOf(m, false); }); return; }
+      var inner = '', tot = 0, cs = {};
+      g.ms.forEach(function(m){ inner += rowOf(m, true); tot += share[m.id] || 0; var c = shareCur[m.id] || {}; Object.keys(c).forEach(function(k){ cs[k] = (cs[k] || 0) + c[k]; }); });
+      if(!inner) return;
+      var op = famIsOpen('famOpenS', g.id);
+      var natTxt = natOf(cs).map(function(c){ return c + ' ' + _fmtNat(cs[c], c); }).join(' · ') || '—';
+      h += '<div class="fbtog" onclick="famTog(\'famOpenS\',\'' + g.id + '\')" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:0.5px solid var(--line);font-size:13px">' +
+        '<span class="farr">' + (op ? '▾' : '▸') + '</span>' +
+        '<span style="flex:1;min-width:0"><div style="font-weight:600;color:var(--accTx)">' + esc(g.name) + '</div>' + famSub(t, g.id.slice(1)) + '<div style="font-size:11px;color:var(--tx3)">' + natTxt + '</div></span>' +
+        '<span style="font-weight:600;white-space:nowrap">' + t.home + ' ' + fmt(tot) + '</span></div>' + (op ? inner : '');
+    });
+  }
   return h || '<div class="hint" style="padding:6px 0">還沒有分攤資料</div>';
 }
 function greedyTf(ub){
@@ -2515,7 +2584,7 @@ function payItems(t, M){
   });
   return arr;
 }
-function uLabel(u){ return u.solo ? bdg(u.solo, 18) : esc(u.name); }
+function uLabel(u){ return u.solo ? bdg(u.solo, 18) : esc(u.name) + (u.repName ? '<span style="font-weight:400;color:var(--tx2)">（' + esc(u.repName) + '）</span>' : ''); }
 function netItems(t, M){
   return (M.finalCalc.transfers || []).map(function(f){ return { key: netKey(t, f.from, f.to), date: null, from: f.from, to: f.to, amt: f.amt, units: M.finalCalc.units }; });
 }
@@ -2706,9 +2775,10 @@ function memberStatHtml(t, paid, share, opts){
           '<div><div class="cn">' + esc(m.name || '?') + (sm ? ' <span style="font-size:10px;color:var(--tx3);border:1px solid var(--inBd);border-radius:8px;padding:0 5px">已先結</span>' : '') + '</div><div class="cs">已付 ' + fmt(p) + '｜應付 ' + fmt(s) + '</div></div>' +
           '<span class="cv ' + (sm ? '' : (b > 0 ? 'pos' : (b < 0 ? 'neg' : ''))) + '"' + ((settled || sm) ? ' style="color:var(--tx3);font-size:13px"' : '') + '>' + (sm ? '已先結' : (settled ? '結清' : (b > 0 ? '+' : '') + fmt(b))) + '</span></div>';
       });
-      var gl = '';
-      if(g.fam){ var gt = grpTot(g, paid, share); gl = '<span>' + esc(g.name) + '</span><span class="' + (gt.b > 0 ? 'pos' : (gt.b < 0 ? 'neg' : '')) + '">小計 ' + (gt.b > 0 ? '+' : '') + fmt(gt.b) + '</span>'; }
-      h += g.flat ? inner : fbxOpen(g, gl) + '<div style="padding:0 8px">' + inner + '</div></div>';
+      var gl = '', fop = !(opts.fold && g.fam) || famIsOpen('famOpenS', g.id);
+      if(g.fam){ var gt = grpTot(g, paid, share); gl = '<span>' + (opts.fold ? '<span class="farr">' + (fop ? '▾' : '▸') + '</span>' : '') + esc(g.name) + (opts.fold ? famSub(t, g.id.slice(1)) : '') + '</span><span class="' + (gt.b > 0 ? 'pos' : (gt.b < 0 ? 'neg' : '')) + '">小計 ' + (gt.b > 0 ? '+' : '') + fmt(gt.b) + '</span>'; }
+      if(opts.fold && g.fam) gl = gl.replace('<span>', '<span class="fbtog" onclick="famTog(\'famOpenS\',\'' + g.id + '\')" style="flex:1;display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><span>') + '</span>';
+      h += g.flat ? inner : fbxOpen(g, gl) + (fop ? '<div style="padding:0 8px">' + inner + '</div>' : '') + '</div>';
     });
     return h;
   }
@@ -2729,12 +2799,12 @@ function memberStatHtml(t, paid, share, opts){
   var h2 = '<table class="st grid fbxtb">' + cg + head + '</table>';
   groups.forEach(function(g){
     var ms = g.ms.filter(vis); if(!ms.length) return;
-    var sumRow = '';
+    var sumRow = '', fop = !(opts.fold && g.fam) || famIsOpen('famOpenS', g.id);
     if(g.fam){
       var gt = grpTot(g, paid, share);
-      sumRow = '<tr class="fbxsum"><td' + (opts.weight ? ' colspan="2"' : '') + '>' + esc(g.name) + '</td><td>' + fmt(gt.p) + '</td><td>' + fmt(gt.s) + '</td><td class="' + (gt.b > 0 ? 'pos' : (gt.b < 0 ? 'neg' : '')) + '">' + (gt.b > 0 ? '+' : '') + fmt(gt.b) + '</td></tr>';
+      sumRow = '<tr class="fbxsum' + (opts.fold ? ' fbtog" onclick="famTog(\'famOpenS\',\'' + g.id + '\')' : '') + '"><td' + (opts.weight ? ' colspan="2"' : '') + '>' + (opts.fold ? '<span class="farr">' + (fop ? '▾' : '▸') + '</span>' : '') + esc(g.name) + (opts.fold ? famSub(t, g.id.slice(1)) : '') + '</td><td>' + fmt(gt.p) + '</td><td>' + fmt(gt.s) + '</td><td class="' + (gt.b > 0 ? 'pos' : (gt.b < 0 ? 'neg' : '')) + '">' + (gt.b > 0 ? '+' : '') + fmt(gt.b) + '</td></tr>';
     }
-    h2 += fbxOpen(g, '') + '<table class="st grid fbxtb">' + cg + sumRow + rowsOf(ms) + '</table></div>';
+    h2 += fbxOpen(g, '') + '<table class="st grid fbxtb">' + cg + sumRow + (fop ? rowsOf(ms) : '') + '</table></div>';
   });
   return h2;
 }
@@ -2839,11 +2909,14 @@ function memberFamHtml(t, paid, share){
       });
       return;
     }
-    h += '<div class="fbx"><table class="st fbxtb">' + cg + '<tr class="fbxsum"><td>' + esc(g.name) + '</td><td>' + fmt(g.p) + '</td><td>' + fmt(g.s) + '</td><td class="' + cl(g.b) + '">' + sg(g.b) + '</td></tr>';
-    g.rows.forEach(function(r){
-      h += '<tr><td style="padding-left:16px">' + esc(r.m.name || '?') + '</td><td>' + fmt(r.p) + '</td><td>' + fmt(r.s) + '</td><td class="' + cl(r.b) + '">' + sg(r.b) + '</td></tr>';
-    });
-    if(g.idle.length) h += '<tr><td colspan="4" style="text-align:left;padding-left:16px;color:var(--tx3);font-size:12.5px">' + esc(g.idle.map(function(m){ return m.name || '?'; }).join('、')) + '（不分攤）</td></tr>';
+    var op = famIsOpen('famOpenS', g.id);
+    h += '<div class="fbx"><table class="st fbxtb">' + cg + '<tr class="fbxsum fbtog" onclick="famTog(\'famOpenS\',\'' + g.id + '\')"><td><span class="farr">' + (op ? '▾' : '▸') + '</span>' + esc(g.name) + famSub(t, g.id.slice(1)) + '</td><td>' + fmt(g.p) + '</td><td>' + fmt(g.s) + '</td><td class="' + cl(g.b) + '">' + sg(g.b) + '</td></tr>';
+    if(op){
+      g.rows.forEach(function(r){
+        h += '<tr><td style="padding-left:16px">' + esc(r.m.name || '?') + '</td><td>' + fmt(r.p) + '</td><td>' + fmt(r.s) + '</td><td class="' + cl(r.b) + '">' + sg(r.b) + '</td></tr>';
+      });
+      if(g.idle.length) h += '<tr><td colspan="4" style="text-align:left;padding-left:16px;color:var(--tx3);font-size:12.5px">' + esc(g.idle.map(function(m){ return m.name || '?'; }).join('、')) + '（不分攤）</td></tr>';
+    }
     h += '</table></div>';
   });
   return h;
@@ -2889,7 +2962,7 @@ function finalCardHtml(t, M){
     h += '<div style="border-top:1px solid var(--line);margin-top:8px;padding-top:6px;font-size:13px;color:var(--tx2)">已沖抵借款：' +
       loans.map(function(e){ return esc(mname(e.payer)) + ' → ' + esc((e.split || []).map(function(id){ return mname(id); }).join('、')) + ' ' + fmt(homeAmt(e)); }).join('｜') + '</div>';
   }
-  h += '<div class="hint" style="margin-top:4px">轉完帳打勾＝已轉，收款人再按確認＝核銷（與「你的待付」同步）。這是把所有未結清日子合併後的最少轉帳。</div></div>';
+  h += '<div class="hint" style="margin-top:4px">轉完打勾，收款人確認後核銷。</div></div>';
   return h;
 }
 function renderSettle(){
@@ -2897,17 +2970,10 @@ function renderSettle(){
   var box = document.getElementById('settleBox');
   if(!t){ box.innerHTML = '<div class="empty">還沒有旅程</div>'; return; }
   var M = settleModel(t);
-  var cols = [
-    '<div class="dcol"><p class="dl">旅程總支出</p><p class="dv">' + money(t.home, M.totalSpend) + '</p></div>',
-    '<div class="dcol"><p class="dl">已結清</p><p class="dv acc">' + money(t.home, M.settled) + '</p></div>',
-    '<div class="dcol"><p class="dl">未結清</p><p class="dv warn">' + money(t.home, M.unsettled) + '</p></div>'
-  ];
-  if(M.ft.fin > 0) cols.push('<div class="dcol"><p class="dl">' + btnIco(IC_BANK) + '基金餘額</p><p class="dv">' + money(t.home, M.ft.bal) + '</p></div>');
-  var html = perSegHtml(t, true) + lockBarHtml(t, !perList(t).length) + perLockBarHtml(t, M.per) + '<div class="dash" style="padding:12px 4px 10px"><div style="display:flex">' + cols.join('<div class="divv"></div>') + '</div>' +
-    '<p class="dnote" style="margin:7px 10px 0;padding-top:6px;border-top:1px solid var(--dashBar);text-align:center">每天轉完帳打勾＝當日結清；總結算只算未結清的部分</p></div>';
-  if(me()){
-    html += buildPayCard(t, M);
-  } else if(t.members.length){
+  var html = perSegHtml(t, true) + lockBarHtml(t, false) + perLockBarHtml(t, M.per) +
+    '<div class="sttl"><span>結算</span><button class="btn mini" id="btnShare">' + btnIco(IC.copy) + '分享</button></div>' +
+    '<div class="card ssum"><span>未結清 <b>' + money(t.home, M.unsettled) + '</b></span><span>總支出 ' + fmt(M.totalSpend) + '</span></div>';
+  if(!me() && t.members.length){
     html += '<div class="card" style="border:2px solid var(--warnBd)"><div class="hint">⚠️ 尚未設定「我是誰」，看不到你的個人待付與提醒。</div>' +
       '<button class="btn sub mini" id="btnGoMe" style="margin-top:6px">去旅程頁設定我是誰 →</button></div>';
   }
@@ -2916,18 +2982,19 @@ function renderSettle(){
     html += finalCardHtml(t, M);
   }
   var _hasFam = t.members.some(function(m){ return m.famId && famName(t, m.famId); });
-  var _famV = _hasFam && S.ovFam;
+  var _famV = false;
   var _ovZero = t.members.filter(function(m){ return (M.overall.paid[m.id]||0) < 0.5 && (M.overall.share[m.id]||0) < 0.5; }).length;
   html += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><span class="lbl" style="margin:0;font-weight:600;color:var(--tx)">成員總覽（' + (M.per ? esc(M.per.name) : '全程') + '）<span data-ovhelp="1" style="cursor:pointer;color:var(--tx3);font-weight:400;margin-left:5px">❓</span></span>' +
-    '<span style="display:inline-flex;gap:6px">' + (_hasFam ? '<span class="cseg"><span data-ovf="0"' + (!_famV ? ' class="on"' : '') + '>每人</span><span data-ovf="1"' + (_famV ? ' class="on"' : '') + '>按戶</span></span>' : '') + (_famV ? '' : tbvSeg()) + '</span></div>' +
-    (_famV ? memberFamHtml(t, M.overall.paid, M.overall.share) : memberStatHtml(t, M.overall.paid, M.overall.share, { weight: true, skipZero: !_ovAll })) +
+    '</div>' +
+    (_famV ? memberFamHtml(t, M.overall.paid, M.overall.share) : memberStatHtml(t, M.overall.paid, M.overall.share, { weight: true, skipZero: !_ovAll, fold: true })) +
     (_ovZero && !_famV ? '<div style="margin-top:8px"><span data-ovall="1" style="font-size:12.5px;color:var(--acc);cursor:pointer">' + (_ovAll ? '收起沒帳的成員' : '顯示全部成員（' + _ovZero + ' 位沒帳）') + '</span></div>' : '') +
     '</div>';
   html += '<div class="card"><details class="advsec"><summary style="font-weight:600;color:var(--tx)">每人分攤總額（原幣）</summary><div style="margin-top:8px">' +
     shareCurHtml(t, M.overall.share, M.overall.shareCur) +
     '<div class="hint" style="margin-top:8px">各幣別原幣小計＋台幣合計，不含借款與私人帳。</div></div></details></div>';
   var _nSet = Object.keys(t.settled || {}).filter(function(id){ return member(id); }).length;
-  html += '<div style="margin:0 0 10px"><button class="btn sub mini" style="width:100%;box-sizing:border-box" onclick="openSettleMem()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M10 12h10"/><path d="M17 9l3 3-3 3"/></svg>提前結清成員（有人要先走）' + (_nSet ? '　·　已先結 ' + _nSet + ' 位' : '') + '</button></div>';
+  var _pre = html; html = '';
+  var _setlUnused = ('<div style="margin:0 0 10px"><button class="btn sub mini" style="width:100%;box-sizing:border-box" onclick="openSettleMem()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M10 12h10"/><path d="M17 9l3 3-3 3"/></svg>提前結清成員（有人要先走）' + (_nSet ? '　·　已先結 ' + _nSet + ' 位' : '') + '</button></div>');
   if(t.legs && t.legs.length){ html += '<div class="seg" style="margin:2px 4px 8px"><span data-div="ym"' + (S.divMode !== 'leg' ? ' class="on"' : '') + '>年月</span><span data-div="leg"' + (S.divMode === 'leg' ? ' class="on"' : '') + '>所在地</span></div>'; }
   var tday = todayISO();
   var useLegS = S.divMode === 'leg' && t.legs && t.legs.length;
@@ -2966,6 +3033,7 @@ function renderSettle(){
     loanDays.forEach(function(dy){ dy.calc.transfers.forEach(function(f, i){ html += tfRow(t, dy.calc.units, f, dy.keys[i], false); }); });
     html += '</div></details>';
   }
+  var _days = html; html = _pre;
   if(M.ft.fin > 0){
     html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">' + btnIco(IC_BANK) + '基金結算</div>' +
       '<div class="sumrow" style="color:var(--tx2)"><span>入金 ' + fmt(M.ft.fin) + '｜基金支付 ' + fmt(M.ft.fout) + '</span><span>餘額 <b>' + fmt(M.ft.bal) + '</b></span></div>';
@@ -2991,21 +3059,18 @@ function renderSettle(){
   } else if(M.per && !M.per.closed){
     html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">季末</div><button class="btn sub" data-roll="1">結算本季並開下一季</button></div>';
   }
-  var fmtNow = S.setFmt || 'text';
-  html += '<div class="card"><div class="lbl" style="margin:0 0 8px;font-weight:600;color:var(--tx)">📤 匯出／分享</div>' +
-    '<div style="font-size:12.5px;color:var(--tx2);margin-bottom:4px">結算（誰付誰、應轉帳）</div>' +
-    '<div class="seg" id="fmtSeg"><span data-fmt="text"' + (fmtNow === 'text' ? ' class="on"' : '') + '>文字</span>' +
-    '<span data-fmt="table"' + (fmtNow === 'table' ? ' class="on"' : '') + '>表格對齊</span>' +
-    '<span data-fmt="brief"' + (fmtNow === 'brief' ? ' class="on"' : '') + '>精簡</span></div>' +
-    '<div class="row" style="margin-top:8px"><button class="btn sub mini" id="btnExport" style="flex:1">' + btnIco(IC.copy) + '複製文字</button>' +
-    '<button class="btn mini fix" id="btnImg">' + btnIco(IC.photo) + '存成圖片</button></div>' +
-    '<label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-top:8px;color:var(--tx2)"><input type="checkbox" id="imgAcct"' + (S.imgAcct !== false ? ' checked' : '') + ' style="width:16px;height:16px">圖片含收款帳號</label>' +
-    '<div style="border-top:1px solid var(--line);margin:12px 0 8px"></div>' +
-    '<div style="font-size:12.5px;color:var(--tx2);margin-bottom:4px">旅程總結（花費統計）</div>' +
-    '<div class="row"><button class="btn sub mini" id="btnReport" style="flex:1">' + btnIco(IC.copy) + '複製報告</button><button class="btn mini fix" id="btnRepImg">' + btnIco(IC.photo) + '存成圖片</button></div>' +
-    '<div class="hint" style="margin-top:8px">CSV 明細在「旅程 → 備份與匯出」。</div></div>';
+  if(_days){
+    var _nUnd = M.days.filter(function(dy){ return !dy.done; }).length;
+    html += '<details class="card advsec" id="daysSec"' + (S.daysOpen ? ' open' : '') + '><summary style="font-weight:600;color:var(--tx)">按日明細<span style="float:right;font-weight:400;font-size:13px;color:var(--tx2);margin-top:5px">' + (_nUnd ? _nUnd + ' 天未結清' : '全部已結清') + '</span></summary><div style="margin-top:8px">' + _days + '</div></details>';
+  }
+  html += '<div class="sbtns sfoot"><button onclick="openSettleMem()">提前結清成員' + (_nSet ? '（已先結 ' + _nSet + '）' : '') + '</button>' +
+    (perList(t).length ? '' : '<button data-lockbtn="1">' + (isLocked(t) ? '解鎖' : '鎖帳') + '</button>') + '</div>';
   box.innerHTML = html;
   bindGuard(box); bindPerSeg(box, renderSettle);
+  var _ds = document.getElementById('daysSec');
+  if(_ds) _ds.addEventListener('toggle', function(){ S.daysOpen = _ds.open; saveLocal(); });
+  var _bs = document.getElementById('btnShare');
+  if(_bs) _bs.onclick = function(){ openShare(t, M); };
   box.querySelectorAll('[data-tbv]').forEach(function(el){
     el.onclick = function(){ S.tblView = el.dataset.tbv; saveLocal(); renderSettle(); };
   });
@@ -3016,18 +3081,37 @@ function renderSettle(){
   bindPay(box, renderSettle);
   var gm = document.getElementById('btnGoMe');
   if(gm) gm.onclick = function(){ go('trip'); toast('到「我是誰」點自己的徽章'); };
-  box.querySelectorAll('[data-fmt]').forEach(function(el){
-    el.onclick = function(){ S.setFmt = el.dataset.fmt; saveLocal(); renderSettle(); };
-  });
+}
+function openShare(t, M){
+  var md = document.getElementById('shareModal'), b = document.getElementById('shareBody');
+  if(!md || !b) return;
+  b.innerHTML = '<div class="shtl">分享結算</div>' +
+    '<button class="shit" data-sh="text">' + btnIco(IC.copy) + '複製結算文字</button>' +
+    '<button class="shit" data-sh="table">' + btnIco(IC.copy) + '複製結算（表格對齊）</button>' +
+    '<button class="shit" data-sh="brief">' + btnIco(IC.copy) + '複製結算（精簡）</button>' +
+    '<button class="shit" data-sh="img">' + btnIco(IC.photo) + '存成結算圖片</button>' +
+    '<label style="display:flex;align-items:center;gap:6px;font-size:13px;margin:8px 2px 0;color:var(--tx2)"><input type="checkbox" id="imgAcct"' + (S.imgAcct !== false ? ' checked' : '') + ' style="width:16px;height:16px">圖片含收款帳號</label>' +
+    '<div class="shtl" style="margin-top:14px">旅程總結</div>' +
+    '<button class="shit" data-sh="rep">' + btnIco(IC.copy) + '複製旅程總結</button>' +
+    '<button class="shit" data-sh="repimg">' + btnIco(IC.photo) + '旅程總結存成圖片</button>' +
+    '<div class="hint" style="margin-top:8px">CSV 明細在「旅程 → 備份與匯出」。</div>' +
+    '<button class="btn sub mini" data-sh="x" style="width:100%;margin-top:10px">關閉</button>';
+  var close = function(){ md.classList.remove('on'); };
+  md.onclick = function(ev){ if(ev.target === md) close(); };
   document.getElementById('imgAcct').onchange = function(){ S.imgAcct = this.checked; saveLocal(); };
-  document.getElementById('btnExport').onclick = function(){
-    var f = S.setFmt || 'text';
-    var txt = f === 'table' ? settleTextTable(t, M) : f === 'brief' ? settleTextBrief(t, M) : settleText(t, M);
-    copyText(txt, '已複製結算文字');
-  };
-  document.getElementById('btnImg').onclick = function(){ settleImage(t, M); };
-  document.getElementById('btnReport').onclick = function(){ copyText(reportText(t, M), '已複製旅程總結'); };
-  document.getElementById('btnRepImg').onclick = function(){ reportImage(t, M); };
+  b.querySelectorAll('[data-sh]').forEach(function(el){
+    el.onclick = function(){
+      var k = el.dataset.sh; close();
+      if(k === 'text' || k === 'table' || k === 'brief'){
+        S.setFmt = k; saveLocal();
+        copyText(k === 'table' ? settleTextTable(t, M) : k === 'brief' ? settleTextBrief(t, M) : settleText(t, M), '已複製結算文字');
+      }
+      else if(k === 'img') settleImage(t, M);
+      else if(k === 'rep') copyText(reportText(t, M), '已複製旅程總結');
+      else if(k === 'repimg') reportImage(t, M);
+    };
+  });
+  md.classList.add('on');
 }
 function settleText(t, M){
   var L = [];
@@ -3464,7 +3548,11 @@ function renderStats(){
     if(!e.priv) byPayer[e.payer] = (byPayer[e.payer] || 0) + h;
     if(e.payer === FUND) fund += h; else if(e.card) card += h; else cash += h;
   });
-  var html = '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">錢花去哪（含私人）</div>';
+  var _td = todayISO(), _tdSum = 0;
+  perEs(t, false).forEach(function(e){ if(e.kind !== 'loan' && e.date === _td) _tdSum += homeAmt(e); });
+  var _sft = fundTotals(t, _stp);
+  var html = '<div class="card ssum st2"><span>今日 <b>' + money(t.home, _tdSum) + '</b></span>' + (_sft.fin > 0 ? '<span>基金餘額 <b>' + money(t.home, _sft.bal) + '</b></span>' : '') + '</div>';
+  html += '<div class="card"><div class="lbl" style="font-weight:600;color:var(--tx)">錢花去哪（含私人）</div>';
   var cats = Object.keys(byCat).sort(function(a,b){ return byCat[b] - byCat[a]; });
   var maxC = byCat[cats[0]] || 1;
   cats.forEach(function(c){
@@ -3632,6 +3720,16 @@ function secBox(id, title, side, body, defOpen){
   var open = (S.tsec && S.tsec[id] !== undefined) ? !!S.tsec[id] : !!defOpen;
   return '<details class="tsec" data-sec="' + id + '"' + (open ? ' open' : '') + '><summary><span class="car">▶</span><span>' + title + '</span><span class="tsx">' + side + '</span></summary><div class="tbody">' + body + '</div></details>';
 }
+function famHeadHtml(t, fid, ids, open){
+  var rid = famRep(t, fid), rm = member(rid), pm = famPayee(t, fid);
+  var acc = pm ? ((pm.id !== rid ? '用' + esc(pm.name || '?') + '的帳戶 ' : '') + esc(((pm.bank || '') + (pm.acct ? ' ••••' + String(pm.acct).slice(-4) : '')).trim()))
+               : '<span style="color:var(--warnTx)">未登記帳戶</span>';
+  return '<div class="mrw"><div class="mgut"></div><div class="mfamh' + (open ? ' open' : '') + '" onclick="famTog(\'famOpenM\',\'' + fid + '\')">' +
+    '<span class="farr">' + (open ? '▾' : '▸') + '</span>' +
+    '<div style="flex:1;min-width:0"><div class="mn1b">' + esc(famName(t, fid)) + ' <span class="fcnt">' + ids.length + ' 人</span></div>' +
+    '<div class="mn2b">代表人 ' + esc(rm ? (rm.name || '?') : '?') + '｜' + acc + '</div></div>' +
+    (open ? '' : '<span class="fstack">' + ids.map(function(id){ return bdg(id, 24); }).join('') + '</span>') + '</div></div>';
+}
 function renderTrip(){
   var t = trip();
   S.tsec = S.tsec || {};
@@ -3759,6 +3857,13 @@ function renderTrip(){
     var _famList = {};
     _ord.forEach(function(m){ if(m.famId && famName(t, m.famId)){ (_famList[m.famId] = _famList[m.famId] || []).push(m.id); } });
     _ord.forEach(function(m){
+      var _fid = (m.famId && famName(t, m.famId)) ? m.famId : null;
+      if(_fid && !_memSort && _famList[_fid].length > 1){
+        var _fms = _famList[_fid];
+        var _fop = famIsOpen('famOpenM', _fid) || (_memEdit && _fms.indexOf(_memEdit) >= 0);
+        if(_fms[0] === m.id) html += famHeadHtml(t, _fid, _fms, _fop);
+        if(!_fop) return;
+      }
       var used = t.expenses.some(function(e){ return !e._del && (e.payer === m.id || (e.split || []).indexOf(m.id) >= 0); });
       var grp = (m.famId && famName(t, m.famId)) ? _famList[m.famId] : null;
       var gLine = '';
@@ -3803,6 +3908,10 @@ function renderTrip(){
           if(m.famId && famName(t, m.famId)){
             html += '<div class="lbl" style="margin-top:10px">戶名（結算合併顯示用）</div>' +
               '<input type="text" data-famname="' + m.famId + '" value="' + esc(famName(t, m.famId)) + '" placeholder="例：雨潔家">';
+            var _fr = famRep(t, m.famId);
+            html += '<div class="lbl" style="margin-top:10px">代表人</div><div class="chips">' +
+              famMemList(t, m.famId).map(function(x){ return '<span class="repchip' + (x.id === _fr ? ' on' : '') + '" data-famrep="' + m.famId + '|' + x.id + '">' + esc(x.name || '?') + '</span>'; }).join('') +
+              '</div><div class="hint" style="margin-top:4px">代表人負責收付款，結算轉帳用他的帳號；他沒填帳號時改用同戶其他人的。</div>';
           }
         }
         html += '</details>' +
@@ -3818,7 +3927,7 @@ function renderTrip(){
         if(w2b !== 1) m2.push('計數 ' + w2b);
         if(m.offAt) m2.push('<span style="color:var(--warnTx)">' + (perOf(t, m.offAt) ? esc(perOf(t, m.offAt).name) : m.offAt.replace(/-/g, '/')) + ' 起停用</span>');
         html += '<div class="mrw"><div class="mgut">' + gLine + '</div><div class="mcard2"' + (_memSort ? '' : ' data-medit="' + m.id + '"') + '>' + softBdg(m.id, 42) +
-          '<div style="flex:1;min-width:0"><div class="mn1b">' + (m.name ? esc(m.name) + ' ' + acctTag : '<span style="color:var(--tx3)">未命名，點我編輯</span>') + '</div>' +
+          '<div style="flex:1;min-width:0"><div class="mn1b">' + (m.name ? esc(m.name) + ((fn2 && famRep(t, m.famId) === m.id) ? '<span class="reptag">代表人</span>' : '') + ' ' + acctTag : '<span style="color:var(--tx3)">未命名，點我編輯</span>') + '</div>' +
           (m2.length ? '<div class="mn2b">' + m2.join(' · ') + '</div>' : '') + '</div>' +
           (_memSort ? '<span class="marr"><button data-mup="' + m.id + '" aria-label="上移">▲</button><button data-mdn="' + m.id + '" aria-label="下移">▼</button></span>' : '<span style="color:var(--tx3);font-size:14px">✏️</span>') + '</div></div>';
       }
@@ -4136,6 +4245,14 @@ function renderTrip(){
         if(hit) toast('已重置 ' + hit + ' 筆相關轉帳勾選');
       };
     });
+    tb.querySelectorAll('[data-famrep]').forEach(function(el){
+      el.onclick = function(){
+        var p = el.dataset.famrep.split('|'), f = famObj(t, p[0]);
+        if(!f || f.rep === p[1]) return;
+        f.rep = p[1];
+        bumpMeta('members'); saveLocal(); pushCloud(); renderTrip();
+      };
+    });
     tb.querySelectorAll('input[data-famname]').forEach(function(inp){
       inp.onchange = function(){
         var fid = inp.dataset.famname, nm = (inp.value || '').trim();
@@ -4152,7 +4269,7 @@ function renderTrip(){
         if(joined){ x.famId = null; }
         else if(m.famId && famName(t, m.famId)){ x.famId = m.famId; }
         else if(x.famId && famName(t, x.famId)){ m.famId = x.famId; }
-        else { var f = { id: uid(), name: (m.name || '一') + '家' }; t.families.push(f); m.famId = f.id; x.famId = f.id; }
+        else { var f = { id: uid(), name: (m.name || '一') + '家', rep: m.id }; t.families.push(f); m.famId = f.id; x.famId = f.id; }
         dissolveSingletons(t);
         var affected = before.concat([unitId(t, m), unitId(t, x)]).filter(function(v, i, a){ return a.indexOf(v) === i; });
         var hit = hhResetTf(t, affected);
@@ -4807,4 +4924,4 @@ try{
 </body>
 </html>
 
-<!-- T1029-02 deploy -->
+<!-- T1029-03 deploy -->
